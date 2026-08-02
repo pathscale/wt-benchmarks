@@ -18,6 +18,12 @@ The suite covers four different questions:
 See [the benchmark catalog](docs/BENCHMARK_CATALOG.md) for the port queue and
 [the methodology](docs/METHODOLOGY.md) for reporting rules.
 
+The [comparison layers](docs/COMPARISON_LAYERS.md) keep raw Rust collections,
+concurrent maps, in-process tables, and durable stores from being presented as
+if they offered identical semantics. [Result tracks](docs/RESULT_TRACKS.md)
+define the deliberately narrow paper figures and the broader worktable.dev
+benchmark publication.
+
 ## Current runnable port: YCSB A-F
 
 The first port implements the operation mixes from the Apache-licensed Yahoo!
@@ -60,6 +66,23 @@ MODE=versioned THREADS="1 2 4 8" scripts/run-ycsb-matrix.sh
 
 The script stores ignored raw JSONL plus a matching environment capture under
 `results/`; review them before force-adding any curated result.
+
+## Runnable comparison ladder
+
+```bash
+cargo run --release --bin micro-layers -- \
+  --rows 1000000 --operations 1000000 \
+  --scan-operations 10000 --scan-length 100 --repetitions 5
+```
+
+The initial ladder includes `Vec<T>`, `Vec<RwLock<T>>`, `HashMap`, `BTreeMap`,
+`RwLock<HashMap>`, DashMap, and WorkTable. Reads are explicitly labeled
+borrowed or materialized in JSONL; do not combine those bars without explaining
+the semantic difference.
+
+`scripts/run-micro-matrix.sh` sweeps payload and range widths with an attached
+environment manifest. The complete official-run ordering and time budget are in
+[RUN_CAMPAIGN.md](docs/RUN_CAMPAIGN.md).
 
 ## Repository rules
 
