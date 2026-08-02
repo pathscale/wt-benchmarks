@@ -1,0 +1,27 @@
+[package]
+name = "wt-benchmarks"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Reproducible benchmark suite for WorkTable and comparable embedded data structures"
+publish = false
+
+[features]
+default = []
+versioned-row-publication = ["worktable/versioned-row-publication"]
+
+[dependencies]
+derive_more = { version = "2.0.1", features = ["from", "error", "display", "debug", "into"] }
+eyre = "0.6"
+futures = "0.3"
+rkyv = { version = "0.8.9", features = ["uuid-1"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
+uuid = "1"
+worktable = { path = "../WorkTable" }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+debug = "line-tables-only"

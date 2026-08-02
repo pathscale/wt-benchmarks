@@ -1,0 +1,9 @@
+/target/
+/results/*.jsonl
+/results/*.csv
+/results/*.json
+.DS_Store
+
+# Captured result files are ignored until a run has been reviewed. Curated
+# manifests and summaries can be force-added deliberately.
+
