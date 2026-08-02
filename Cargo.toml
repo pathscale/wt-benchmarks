@@ -9,6 +9,8 @@ publish = false
 [features]
 default = []
 versioned-row-publication = ["worktable/versioned-row-publication"]
+redb-adapter = ["dep:redb", "dep:tempfile"]
+external-adapters = ["redb-adapter"]
 
 [dependencies]
 dashmap = "6"
@@ -16,9 +18,11 @@ derive_more = { version = "2.0.1", features = ["from", "error", "display", "debu
 eyre = "0.6"
 futures = "0.3"
 parking_lot = "0.12"
+redb = { version = "4.1.0", optional = true }
 rkyv = { version = "0.8.9", features = ["uuid-1"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tempfile = { version = "3", optional = true }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 uuid = "1"
 worktable = { path = "../WorkTable" }
@@ -27,3 +31,8 @@ worktable = { path = "../WorkTable" }
 lto = "fat"
 codegen-units = 1
 debug = "line-tables-only"
+
+[[bin]]
+name = "kv-redb"
+path = "src/bin/kv-redb.rs"
+required-features = ["redb-adapter"]

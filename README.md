@@ -84,6 +84,18 @@ the semantic difference.
 environment manifest. The complete official-run ordering and time budget are in
 [RUN_CAMPAIGN.md](docs/RUN_CAMPAIGN.md).
 
+The first external-store adapter is feature-gated:
+
+```bash
+cargo run --release --features redb-adapter --bin kv-redb -- \
+  --rows 100000 --operations 100000 \
+  --durability relaxed --transaction-scope per-operation
+```
+
+Both durability (`relaxed` versus `durable`) and transaction scope
+(`per-operation` versus `batch`) are emitted with every result. They are
+different semantic experiments and must remain separate in charts.
+
 ## Repository rules
 
 - Never publish an unreviewed one-shot number.
