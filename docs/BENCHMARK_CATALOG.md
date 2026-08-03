@@ -26,7 +26,7 @@ Priorities are:
 | P0 | db_bench core | fillseq, fillrandom, overwrite, readrandom, readseq, readreverse, seekrandom, delete; fixed key/value widths | WorkTable shared core runner is runnable now; redb uses the same driver. Reverse/seek variants and the RocksDB adapter remain. Report that WorkTable is typed rows, not an LSM KV store. |
 | P0 | redb embedded suite | bulk/sequential/random writes, random and multithreaded reads, range reads, removals, memory/storage size | Directly useful Rust embedded comparison; run the upstream adapter as well as a shared driver. |
 | P0 | SQLite speedtest1 core | transactional bulk insert, indexed point/range reads, ordered scans, updates, deletes, text and integer keys | Core integer/text insert, point/range/index reads, ordered scan, update, and delete shapes are runnable now. Bulk-transaction semantics and unsupported SQL groups are explicitly not claimed. |
-| P1 | BenchBase TATP | subscriber lookup, access-data lookup, call-forwarding lookup/insert/delete, subscriber/location updates | Excellent small-row telecom OLTP and high-throughput accessor workload. |
+| P1 | BenchBase TATP | subscriber lookup, access-data lookup, call-forwarding lookup/insert/delete, subscriber/location updates | WorkTable's four-table runner and all seven canonical transaction types are runnable now. Expected aborts and the absence of automatic cross-table atomicity are explicit; a transactional-engine adapter remains. |
 | P1 | BenchBase SmallBank shape | balance, deposit, checking/savings transfer, account amalgamation | Host-Rust procedure/coordination test. WorkTable does not promise automatic multi-table atomicity, so conservation failures and the locking protocol must be explicit. |
 | P1 | BenchBase SEATS subset | customer/flight/reservation lookups, reservation create/update/delete using secondary indexes | Strong host-Rust indexed-join/procedure workload; disclose per-table rather than cross-table transaction semantics. |
 | P1 | LinkBench | link add/delete/update/count/get, node get/update, ID and time range queries with social-graph skew | Published operation mix is runnable now over a synthetic Zipf graph. Empirical degree distribution, trace-compatible loading, and concurrency remain. Apache-2.0. |
@@ -174,8 +174,9 @@ automatic multi-table transactions.
    production schemas.
 5. Implement desktop startup/project-view and SaaS support-chat/TechEmpower
    workloads.
-6. Add TATP, LinkBench, SEATS/SmallBank-shaped host-Rust procedures, then the
-   deferred analytical and graph boundary tests.
+6. Finish TATP/LinkBench comparator and concurrency coverage, add
+   SEATS/SmallBank-shaped host-Rust procedures, then the deferred analytical
+   and graph boundary tests.
 
 ## Primary research sources
 

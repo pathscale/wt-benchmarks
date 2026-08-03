@@ -10,7 +10,7 @@ it does not make an official comparability claim.
 | Shared embedded KV core | `kv-worktable`, `kv-redb` | Runnable sequential insert, random point read, overwrite, range scan, and random delete with common configuration/result schema | WorkTable/redb semantic alignment audit; SQLite/LMDB/RocksDB adapters; reverse and seek variants |
 | SQLite speedtest1 core shape | `speedtest1-worktable` | Runnable integer/text inserts, point/range/secondary reads, ordered scan, updates, and deletes | SQLite adapter, transaction-equivalent bulk phase, and any additional query groups that WorkTable can represent honestly |
 | LinkBench | `linkbench-worktable` | Runnable published Facebook request percentages, link/node operations, fan-out index, time filter, synthetic Zipf hot nodes | Empirical graph-degree loader, multithreaded request driver, history/time distribution audit, and external backend adapter |
-| TATP | — | Specification reviewed | WorkTable tables, standard transaction mix, expected-miss accounting, and explicit cross-table atomicity labels |
+| TATP | `tatp-worktable` | Runnable four-table load and all seven BenchBase procedures at the canonical 2/35/10/35/2/14/2 mix; deterministic streams, expected-abort accounting, host-Rust join, and gated concurrent mode | SQL/transactional engine adapter, automatic cross-table atomicity (not a WorkTable claim), and official campaign results |
 | Production HFT/desktop/SaaS | — | Schemas and workload list drafted | Sanitized generators and executable runners |
 
 All runnable ports are independent Rust implementations. See

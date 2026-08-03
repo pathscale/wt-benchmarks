@@ -6,7 +6,7 @@ drivers unless a future adapter explicitly says otherwise.
 | Workload | Upstream | Upstream license / policy | Local treatment |
 |---|---|---|---|
 | YCSB A-F | https://github.com/brianfrankcooper/YCSB | Apache-2.0 | Independently implemented operation mixes; attribution retained here and in the catalog. |
-| BenchBase catalog | https://github.com/cmu-db/benchbase | Apache-2.0 | Candidate workload definitions only; each port must record deviations and data provenance. |
+| BenchBase TATP | https://github.com/cmu-db/benchbase | Apache-2.0 | Independently implemented four-table schema shape and canonical 2/35/10/35/2/14/2 transaction mix; no upstream driver code copied. Fixed arrays compact repeated subscriber columns, composite SQL keys are packed into typed `u128` primary keys, and host Rust performs the selective join. |
 | LinkBench | https://github.com/facebookarchive/linkbench | Apache-2.0 | Independently implemented published request mix with synthetic Zipf graph; no upstream source copied. Empirical degree distribution and concurrency remain pending. |
 | SQLite speedtest1 | https://sqlite.org/cgi/src/file/test/speedtest1.c | Public domain | Independently implemented core operation shapes; no upstream source copied. Unsupported SQL groups and bulk-transaction semantics are not claimed. |
 | RocksDB db_bench | https://github.com/facebook/rocksdb/wiki/Benchmarking-tools | Apache-2.0 / GPL-2.0 dual-license repository | Shared WorkTable/redb operation-compatible core exists; RocksDB adapter remains pending. No upstream source copied. |

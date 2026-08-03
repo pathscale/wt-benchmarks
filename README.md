@@ -100,7 +100,7 @@ different semantic experiments and must remain separate in charts.
 
 ## Embedded and application-shaped ports
 
-Three additional WorkTable runners are executable now:
+Four additional WorkTable runners are executable now:
 
 ```bash
 # Shared embedded key/value shape: insert, point read, overwrite, range, delete.
@@ -116,6 +116,11 @@ cargo run --release --bin speedtest1-worktable -- \
 cargo run --release --bin linkbench-worktable -- \
   --nodes 100000 --links-per-node 20 --operations 1000000 \
   --repetitions 5
+
+# BenchBase TATP's four-table telecom workload and seven-transaction mix.
+cargo run --release --bin tatp-worktable -- \
+  --subscribers 100000 --operations 1000000 --threads 1 \
+  --repetitions 5
 ```
 
 These are independent Rust implementations; no upstream driver code is copied.
@@ -125,6 +130,14 @@ published request mix, but its current graph uses a synthetic Zipf source
 distribution rather than LinkBench's empirical degree distribution. Those
 limitations are embedded in every JSONL result and tracked in
 [PORT_STATUS.md](docs/PORT_STATUS.md).
+
+The TATP runner implements subscriber, access-info, special-facility, and
+call-forwarding tables plus all seven canonical procedures at BenchBase's
+2/35/10/35/2/14/2 weights. Duplicate inserts, missing facilities, and missing
+deletes are reported as expected aborts rather than benchmark errors. Its
+multi-table procedures are compiled application Rust and explicitly do not
+claim automatic cross-table atomicity. Concurrent read/write runs require the
+`versioned-row-publication` feature, just like mixed YCSB runs.
 
 ## Repository rules
 
