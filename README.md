@@ -24,7 +24,9 @@ if they offered identical semantics. [Result tracks](docs/RESULT_TRACKS.md)
 define the deliberately narrow paper figures and the broader worktable.dev
 benchmark publication.
 
-## Current runnable port: YCSB A-F
+## Runnable workload ports
+
+### YCSB A-F
 
 The first port implements the operation mixes from the Apache-licensed Yahoo!
 Cloud Serving Benchmark. It uses a ten-field, approximately 1 KiB record and
@@ -95,6 +97,34 @@ cargo run --release --features redb-adapter --bin kv-redb -- \
 Both durability (`relaxed` versus `durable`) and transaction scope
 (`per-operation` versus `batch`) are emitted with every result. They are
 different semantic experiments and must remain separate in charts.
+
+## Embedded and application-shaped ports
+
+Three additional WorkTable runners are executable now:
+
+```bash
+# Shared embedded key/value shape: insert, point read, overwrite, range, delete.
+cargo run --release --bin kv-worktable -- \
+  --rows 100000 --operations 100000 --scan-operations 10000 \
+  --scan-length 100 --repetitions 5
+
+# Public-domain SQLite speedtest1-inspired core operation shapes.
+cargo run --release --bin speedtest1-worktable -- \
+  --rows 100000 --operations 100000 --repetitions 5
+
+# Apache-2.0 LinkBench operation mix over a synthetic Zipf graph.
+cargo run --release --bin linkbench-worktable -- \
+  --nodes 100000 --links-per-node 20 --operations 1000000 \
+  --repetitions 5
+```
+
+These are independent Rust implementations; no upstream driver code is copied.
+The SQLite runner covers its named core shapes but does not claim unsupported
+SQL groups or transactional bulk inserts. The LinkBench runner preserves the
+published request mix, but its current graph uses a synthetic Zipf source
+distribution rather than LinkBench's empirical degree distribution. Those
+limitations are embedded in every JSONL result and tracked in
+[PORT_STATUS.md](docs/PORT_STATUS.md).
 
 ## Repository rules
 

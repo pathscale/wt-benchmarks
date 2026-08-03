@@ -94,6 +94,9 @@ impl Default for KvConfig {
 impl KvConfig {
     pub fn from_args(engine: &str) -> Result<Self, String> {
         let mut config = Self::default();
+        if engine == "worktable" {
+            config.durability = DurabilityMode::Memory;
+        }
         let mut args = std::env::args().skip(1);
         while let Some(flag) = args.next() {
             if flag == "--help" || flag == "-h" {
@@ -240,6 +243,18 @@ pub fn value_checksum(value: &[u8]) -> u64 {
     u64::from_le_bytes(prefix).wrapping_add(value.len() as u64)
 }
 
+pub fn text_value(key: u64, payload_bytes: usize) -> String {
+    let mut rng = Rng::new(key ^ 0x517c_c1b7_2722_0a95);
+    let bytes: Vec<u8> = (0..payload_bytes)
+        .map(|_| b'!' + rng.below((b'~' - b'!') as u64 + 1) as u8)
+        .collect();
+    String::from_utf8(bytes).expect("generated payload is printable ASCII")
+}
+
+pub fn text_checksum(key: u64, value: &str) -> u64 {
+    key.wrapping_add(value.len() as u64)
+}
+
 fn keys(count: u64, upper: u64, seed: u64) -> Vec<u64> {
     let mut rng = Rng::new(seed);
     (0..count).map(|_| rng.below(upper)).collect()
@@ -254,5 +269,13 @@ mod tests {
         let encoded = value(42, 64);
         assert_eq!(encoded.len(), 72);
         assert_eq!(value_checksum(&encoded), 114);
+    }
+
+    #[test]
+    fn text_value_is_ascii_and_sized() {
+        let encoded = text_value(42, 64);
+        assert_eq!(encoded.len(), 64);
+        assert!(encoded.is_ascii());
+        assert_eq!(text_checksum(42, &encoded), 106);
     }
 }

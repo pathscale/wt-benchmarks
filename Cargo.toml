@@ -36,3 +36,15 @@ debug = "line-tables-only"
 name = "kv-redb"
 path = "src/bin/kv-redb.rs"
 required-features = ["redb-adapter"]
+
+[[bin]]
+name = "kv-worktable"
+path = "src/bin/kv-worktable.rs"
+
+[[bin]]
+name = "speedtest1-worktable"
+path = "src/bin/speedtest1-worktable.rs"
+
+[[bin]]
+name = "linkbench-worktable"
+path = "src/bin/linkbench-worktable.rs"
