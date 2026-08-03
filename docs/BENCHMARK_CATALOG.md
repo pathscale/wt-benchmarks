@@ -25,7 +25,7 @@ Priorities are:
 | P0 | YCSB F | 50% read, 50% read-then-update | Read/modify/write behavior. Runnable now. |
 | P0 | db_bench core | fillseq, fillrandom, overwrite, readrandom, readseq, readreverse, seekrandom, delete; fixed key/value widths | WorkTable shared core runner is runnable now; redb uses the same driver. Reverse/seek variants and the RocksDB adapter remain. Report that WorkTable is typed rows, not an LSM KV store. |
 | P0 | redb embedded suite | bulk/sequential/random writes, random and multithreaded reads, range reads, removals, memory/storage size | Directly useful Rust embedded comparison; run the upstream adapter as well as a shared driver. |
-| P0 | SQLite speedtest1 core | transactional bulk insert, indexed point/range reads, ordered scans, updates, deletes, text and integer keys | Core integer/text insert, point/range/index reads, ordered scan, update, and delete shapes are runnable now. Bulk-transaction semantics and unsupported SQL groups are explicitly not claimed. |
+| P0 | SQLite speedtest1 core | transactional bulk insert, indexed point/range reads, ordered scans, updates, deletes, text and integer keys | Paired WorkTable and SQLite `:memory:` runners now execute nine matching core phases. Bulk-transaction, WAL/durable, and unsupported SQL groups are explicitly not claimed. |
 | P1 | BenchBase TATP | subscriber lookup, access-data lookup, call-forwarding lookup/insert/delete, subscriber/location updates | WorkTable's four-table runner and all seven canonical transaction types are runnable now. Expected aborts and the absence of automatic cross-table atomicity are explicit; a transactional-engine adapter remains. |
 | P1 | BenchBase SmallBank shape | balance, deposit, checking/savings transfer, account amalgamation | Host-Rust procedure/coordination test. WorkTable does not promise automatic multi-table atomicity, so conservation failures and the locking protocol must be explicit. |
 | P1 | BenchBase SEATS subset | customer/flight/reservation lookups, reservation create/update/delete using secondary indexes | Strong host-Rust indexed-join/procedure workload; disclose per-table rather than cross-table transaction semantics. |
@@ -169,7 +169,8 @@ automatic multi-table transactions.
 1. Finish the YCSB runner and add the shared JSONL/result manifest.
 2. Move the existing paper micro/contention/ablation/compile-cost programs into
    adapters under this repository without changing their semantics.
-3. Add `Vec`/map/DashMap and redb/SQLite/LMDB adapters behind features.
+3. Add the remaining LMDB/RocksDB adapters and SQLite WAL/durable mode behind
+   features; the `Vec`/map/DashMap, redb, and SQLite `:memory:` targets run now.
 4. Implement HFT order-book and order-lifecycle workloads from the local
    production schemas.
 5. Implement desktop startup/project-view and SaaS support-chat/TechEmpower

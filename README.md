@@ -112,6 +112,10 @@ cargo run --release --bin kv-worktable -- \
 cargo run --release --bin speedtest1-worktable -- \
   --rows 100000 --operations 100000 --repetitions 5
 
+# The same nine phases and deterministic inputs through SQLite :memory:.
+cargo run --release --features sqlite-adapter --bin speedtest1-sqlite -- \
+  --rows 100000 --operations 100000 --repetitions 5
+
 # Apache-2.0 LinkBench operation mix over a synthetic Zipf graph.
 cargo run --release --bin linkbench-worktable -- \
   --nodes 100000 --links-per-node 20 --operations 1000000 \
@@ -124,12 +128,14 @@ cargo run --release --bin tatp-worktable -- \
 ```
 
 These are independent Rust implementations; no upstream driver code is copied.
-The SQLite runner covers its named core shapes but does not claim unsupported
-SQL groups or transactional bulk inserts. The LinkBench runner preserves the
-published request mix, but its current graph uses a synthetic Zipf source
-distribution rather than LinkBench's empirical degree distribution. Those
-limitations are embedded in every JSONL result and tracked in
-[PORT_STATUS.md](docs/PORT_STATUS.md).
+The paired speedtest1 runners use the same inputs and nine phase names; their
+checksums must match. SQLite is explicitly `:memory:` with one autocommit
+statement per operation. Neither runner claims unsupported SQL groups,
+transactional bulk inserts, or durable-mode equivalence. The LinkBench runner
+preserves the published request mix, but its current graph uses a synthetic
+Zipf source distribution rather than LinkBench's empirical degree
+distribution. Those limitations are embedded in every JSONL result and tracked
+in [PORT_STATUS.md](docs/PORT_STATUS.md).
 
 The TATP runner implements subscriber, access-info, special-facility, and
 call-forwarding tables plus all seven canonical procedures at BenchBase's
