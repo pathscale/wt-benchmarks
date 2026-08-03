@@ -1,0 +1,17 @@
+[package]
+name = "wt-index-backend-campaign"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[dependencies]
+derive_more = { version = "2.0.1", features = ["from", "error", "display", "debug", "into"] }
+futures = "0.3"
+libc = "0.2"
+rkyv = { version = "0.8.9", features = ["uuid-1"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+uuid = "1"
+worktable = { git = "https://github.com/pathscale/WorkTable", branch = "feat/index-backend-using" }
