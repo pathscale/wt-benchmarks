@@ -61,8 +61,14 @@ cargo run --release --features sqlite-adapter --bin ycsb-sqlite -- \
 For concurrent SQLite runs, each worker gets a connection to the same
 shared-memory database. `retryable_errors` reports every SQLite busy/locked
 retry, including successful retries; `errors` remains the final failed
-operation count. Concurrent Workload D still needs an ordering-aware expected
-miss classification in both engines, so it is not publication-ready yet.
+operation count. Workload D resolves reads against an execution-time frontier
+that advances only after every preceding insert has succeeded, matching YCSB's
+acknowledged-counter semantics instead of treating pre-generated future keys as
+readable. SQLite's concurrent D correctness run now completes without misses.
+WorkTable's versioned mode still shows rare transient primary-index misses
+during ongoing inserts (an immediate retry finds the row), so concurrent
+WorkTable D remains outside publication results until that index behavior is
+resolved.
 
 The runner refuses multi-threaded A/B/D/E/F runs unless
 `versioned-row-publication` is enabled. WorkTable's default page path requires

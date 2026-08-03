@@ -7,7 +7,9 @@ use std::time::{Duration, Instant};
 use rusqlite::{Connection, ErrorCode, OpenFlags, params};
 use wt_benchmarks::config::Config;
 use wt_benchmarks::result::{LatencySummary, RunResult};
-use wt_benchmarks::ycsb::{FIELD_COUNT, Operation, OperationKind, generate_streams, make_fields};
+use wt_benchmarks::ycsb::{
+    AcknowledgedKeyspace, FIELD_COUNT, Operation, OperationKind, generate_streams, make_fields,
+};
 
 static NEXT_DATABASE_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -17,6 +19,7 @@ struct WorkerResult {
     errors: u64,
     retryable_errors: u64,
     counts: [u64; 5],
+    error_counts: [u64; 5],
     latency: [Vec<u64>; 5],
 }
 
@@ -84,12 +87,14 @@ fn run_repetition(config: &Config, repetition: usize) -> RunResult {
     let distribution = config
         .distribution_override
         .unwrap_or_else(|| config.workload.default_distribution());
-    let streams = generate_streams(config);
+    let generated = generate_streams(config);
+    let acknowledged = generated.acknowledged;
     let ready = Arc::new(Barrier::new(config.threads + 1));
     let start = Arc::new(Barrier::new(config.threads + 1));
     let mut handles = Vec::with_capacity(config.threads);
-    for stream in streams {
+    for stream in generated.streams {
         let uri = uri.clone();
+        let acknowledged = acknowledged.as_ref().map(Arc::clone);
         let ready = Arc::clone(&ready);
         let start = Arc::clone(&start);
         let sample_every = config.sample_every;
@@ -97,7 +102,7 @@ fn run_repetition(config: &Config, repetition: usize) -> RunResult {
             let connection = open(&uri).expect("open SQLite YCSB worker connection");
             ready.wait();
             start.wait();
-            run_worker(&connection, stream, sample_every)
+            run_worker(&connection, stream, sample_every, acknowledged)
         }));
     }
 
@@ -112,15 +117,21 @@ fn run_repetition(config: &Config, repetition: usize) -> RunResult {
         combined.retryable_errors += worker.retryable_errors;
         for kind in OperationKind::ALL {
             combined.counts[kind as usize] += worker.counts[kind as usize];
+            combined.error_counts[kind as usize] += worker.error_counts[kind as usize];
             combined.latency[kind as usize].append(&mut worker.latency[kind as usize]);
         }
     }
     let elapsed_ns = measured_started.elapsed().as_nanos();
 
     let mut operation_counts = BTreeMap::new();
+    let mut operation_errors = BTreeMap::new();
     let mut latency = BTreeMap::new();
     for kind in OperationKind::ALL {
         operation_counts.insert(kind.as_str().to_owned(), combined.counts[kind as usize]);
+        operation_errors.insert(
+            kind.as_str().to_owned(),
+            combined.error_counts[kind as usize],
+        );
         latency.insert(
             kind.as_str().to_owned(),
             LatencySummary::from_samples(std::mem::take(&mut combined.latency[kind as usize])),
@@ -137,6 +148,7 @@ fn run_repetition(config: &Config, repetition: usize) -> RunResult {
         load_elapsed_ns,
         elapsed_ns,
         operation_counts,
+        operation_errors,
         latency,
         "SQLite :memory: shared-cache; one autocommit statement per operation; read-modify-write uses two statements",
         "SQLite values decoded into owned Rust rows",
@@ -155,7 +167,12 @@ fn open(uri: &str) -> rusqlite::Result<Connection> {
     Ok(connection)
 }
 
-fn run_worker(connection: &Connection, stream: Vec<Operation>, sample_every: u64) -> WorkerResult {
+fn run_worker(
+    connection: &Connection,
+    stream: Vec<Operation>,
+    sample_every: u64,
+    acknowledged: Option<Arc<AcknowledgedKeyspace>>,
+) -> WorkerResult {
     let mut result = WorkerResult::default();
     let sample_capacity = stream.len() / sample_every as usize + 1;
     for samples in &mut result.latency {
@@ -165,7 +182,25 @@ fn run_worker(connection: &Connection, stream: Vec<Operation>, sample_every: u64
         let kind = operation.kind();
         let sampled = (index as u64).is_multiple_of(sample_every);
         let started = sampled.then(Instant::now);
-        let (success, retries) = execute_with_retry(connection, &operation);
+        let acknowledged_read = match &operation {
+            Operation::ReadAcknowledged {
+                sample,
+                distribution,
+            } => Some(
+                acknowledged
+                    .as_deref()
+                    .expect("acknowledged read requires Workload D state")
+                    .resolve(*sample, *distribution),
+            ),
+            _ => None,
+        };
+        let (success, retries) = execute_with_retry(connection, &operation, acknowledged_read);
+        if success
+            && let Operation::Insert { key, .. } = &operation
+            && let Some(acknowledged) = acknowledged.as_deref()
+        {
+            acknowledged.acknowledge(*key);
+        }
         if let Some(started) = started {
             result.latency[kind as usize]
                 .push(started.elapsed().as_nanos().min(u64::MAX as u128) as u64);
@@ -173,15 +208,20 @@ fn run_worker(connection: &Connection, stream: Vec<Operation>, sample_every: u64
         result.counts[kind as usize] += 1;
         result.completed += u64::from(success);
         result.errors += u64::from(!success);
+        result.error_counts[kind as usize] += u64::from(!success);
         result.retryable_errors += retries;
     }
     result
 }
 
-fn execute_with_retry(connection: &Connection, operation: &Operation) -> (bool, u64) {
+fn execute_with_retry(
+    connection: &Connection,
+    operation: &Operation,
+    acknowledged_read: Option<u64>,
+) -> (bool, u64) {
     let mut retries = 0_u64;
     loop {
-        match execute(connection, operation) {
+        match execute(connection, operation, acknowledged_read) {
             Ok(success) => return (success, retries),
             Err(error) if retryable(&error) && retries < 1_000 => {
                 retries += 1;
@@ -204,9 +244,17 @@ fn retryable(error: &rusqlite::Error) -> bool {
     )
 }
 
-fn execute(connection: &Connection, operation: &Operation) -> rusqlite::Result<bool> {
+fn execute(
+    connection: &Connection,
+    operation: &Operation,
+    acknowledged_read: Option<u64>,
+) -> rusqlite::Result<bool> {
     match operation {
         Operation::Read { key } => read(connection, *key),
+        Operation::ReadAcknowledged { .. } => read(
+            connection,
+            acknowledged_read.expect("acknowledged read key must be resolved before execution"),
+        ),
         Operation::Update { key, field, value } => update(connection, *key, *field, value),
         Operation::Insert { key, fields } => connection
             .prepare_cached(
@@ -352,6 +400,26 @@ mod tests {
             threads: 4,
             repetitions: 1,
             sample_every: 100,
+            seed: 42,
+            field_bytes: 16,
+            scan_max: 10,
+            zipf_theta: 0.99,
+            distribution_override: None,
+        };
+        let result = run_repetition(&config, 1);
+        assert_eq!(result.errors, 0);
+        assert_eq!(result.operations_completed, config.operations);
+    }
+
+    #[test]
+    fn concurrent_workload_d_never_reads_unacknowledged_inserts() {
+        let config = Config {
+            workload: Workload::D,
+            records: 1_000,
+            operations: 20_000,
+            threads: 8,
+            repetitions: 1,
+            sample_every: 256,
             seed: 42,
             field_bytes: 16,
             scan_max: 10,

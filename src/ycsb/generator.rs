@@ -1,3 +1,7 @@
+use std::collections::BTreeSet;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
+
 use crate::config::Config;
 use crate::rng::{Rng, mix64};
 use crate::ycsb::{Distribution, Workload};
@@ -39,6 +43,10 @@ pub enum Operation {
     Read {
         key: u64,
     },
+    ReadAcknowledged {
+        sample: u64,
+        distribution: Distribution,
+    },
     Update {
         key: u64,
         field: u8,
@@ -62,7 +70,7 @@ pub enum Operation {
 impl Operation {
     pub fn kind(&self) -> OperationKind {
         match self {
-            Self::Read { .. } => OperationKind::Read,
+            Self::Read { .. } | Self::ReadAcknowledged { .. } => OperationKind::Read,
             Self::Update { .. } => OperationKind::Update,
             Self::Insert { .. } => OperationKind::Insert,
             Self::Scan { .. } => OperationKind::Scan,
@@ -71,7 +79,76 @@ impl Operation {
     }
 }
 
-pub fn generate_streams(config: &Config) -> Vec<Vec<Operation>> {
+pub struct GeneratedWorkload {
+    pub streams: Vec<Vec<Operation>>,
+    pub acknowledged: Option<Arc<AcknowledgedKeyspace>>,
+}
+
+pub struct AcknowledgedKeyspace {
+    frontier: AtomicU64,
+    pending: Mutex<BTreeSet<u64>>,
+    zipf: ZipfCdf,
+}
+
+impl AcknowledgedKeyspace {
+    fn new(initial_records: u64, zipf: ZipfCdf) -> Self {
+        assert!(initial_records > 0, "acknowledged keyspace cannot be empty");
+        Self {
+            frontier: AtomicU64::new(initial_records - 1),
+            pending: Mutex::new(BTreeSet::new()),
+            zipf,
+        }
+    }
+
+    pub fn resolve(&self, sample: u64, distribution: Distribution) -> u64 {
+        let frontier = self.frontier.load(Ordering::Acquire);
+        let key_count = frontier
+            .checked_add(1)
+            .expect("YCSB acknowledged key count overflowed");
+        match distribution {
+            Distribution::Uniform => ((sample as u128 * key_count as u128) >> 64) as u64,
+            Distribution::Zipfian => {
+                let rank = self.zipf.sample_token(sample, key_count as usize) as u64;
+                mix64(rank) % key_count
+            }
+            Distribution::Latest => {
+                let rank = self.zipf.sample_token(sample, key_count as usize) as u64;
+                frontier - rank
+            }
+        }
+    }
+
+    pub fn acknowledge(&self, key: u64) {
+        if key <= self.frontier.load(Ordering::Acquire) {
+            return;
+        }
+
+        let mut pending = self
+            .pending
+            .lock()
+            .expect("YCSB acknowledged-key mutex poisoned");
+        let mut frontier = self.frontier.load(Ordering::Relaxed);
+        if key <= frontier {
+            return;
+        }
+        pending.insert(key);
+        while frontier < u64::MAX {
+            let next = frontier + 1;
+            if !pending.remove(&next) {
+                break;
+            }
+            frontier = next;
+        }
+        self.frontier.store(frontier, Ordering::Release);
+    }
+
+    #[cfg(test)]
+    fn frontier(&self) -> u64 {
+        self.frontier.load(Ordering::Acquire)
+    }
+}
+
+pub fn generate_streams(config: &Config) -> GeneratedWorkload {
     let mut zipf = ZipfCdf::new(config.records as usize, config.zipf_theta);
     let distribution = config
         .distribution_override
@@ -91,10 +168,15 @@ pub fn generate_streams(config: &Config) -> Vec<Vec<Operation>> {
             Workload::B if choice < 9_500 => read(&mut rng, &zipf, distribution, key_count),
             Workload::B => update(&mut rng, &zipf, distribution, key_count, config.field_bytes),
             Workload::C => read(&mut rng, &zipf, distribution, key_count),
-            Workload::D if choice < 9_500 => read(&mut rng, &zipf, distribution, key_count),
+            Workload::D if choice < 9_500 => Operation::ReadAcknowledged {
+                sample: rng.next_u64(),
+                distribution,
+            },
             Workload::D => {
                 let key = key_count;
-                key_count += 1;
+                key_count = key_count
+                    .checked_add(1)
+                    .expect("YCSB generated key count overflowed");
                 Operation::Insert {
                     key,
                     fields: Box::new(make_fields(key ^ config.seed, config.field_bytes)),
@@ -106,7 +188,9 @@ pub fn generate_streams(config: &Config) -> Vec<Vec<Operation>> {
             },
             Workload::E => {
                 let key = key_count;
-                key_count += 1;
+                key_count = key_count
+                    .checked_add(1)
+                    .expect("YCSB generated key count overflowed");
                 Operation::Insert {
                     key,
                     fields: Box::new(make_fields(key ^ config.seed, config.field_bytes)),
@@ -123,7 +207,13 @@ pub fn generate_streams(config: &Config) -> Vec<Vec<Operation>> {
         streams[operation_index as usize % config.threads].push(operation);
     }
 
-    streams
+    zipf.ensure(key_count as usize);
+    let acknowledged = (config.workload == Workload::D)
+        .then(|| Arc::new(AcknowledgedKeyspace::new(config.records, zipf)));
+    GeneratedWorkload {
+        streams,
+        acknowledged,
+    }
 }
 
 fn read(rng: &mut Rng, zipf: &ZipfCdf, distribution: Distribution, key_count: u64) -> Operation {
@@ -192,8 +282,14 @@ impl ZipfCdf {
     }
 
     fn sample(&self, rng: &mut Rng, bound: usize) -> usize {
+        self.sample_token(rng.next_u64(), bound)
+    }
+
+    fn sample_token(&self, sample: u64, bound: usize) -> usize {
         debug_assert!(bound > 0 && bound <= self.cumulative.len());
-        let target = rng.unit_f64() * self.cumulative[bound - 1];
+        const SCALE: f64 = 1.0 / ((1_u64 << 53) as f64);
+        let unit = ((sample >> 11) as f64) * SCALE;
+        let target = unit * self.cumulative[bound - 1];
         self.cumulative[..bound].partition_point(|value| *value < target)
     }
 }
@@ -215,7 +311,11 @@ mod tests {
 
     fn counts(workload: Workload) -> [u64; 5] {
         let mut result = [0; 5];
-        for operation in generate_streams(&config(workload)).into_iter().flatten() {
+        for operation in generate_streams(&config(workload))
+            .streams
+            .into_iter()
+            .flatten()
+        {
             result[operation.kind() as usize] += 1;
         }
         result
@@ -249,5 +349,35 @@ mod tests {
         let fields = make_fields(7, 100);
         assert!(fields.iter().all(|field| field.len() == 100));
         assert_ne!(fields[0], fields[1]);
+    }
+
+    #[test]
+    fn acknowledged_frontier_advances_only_across_contiguous_inserts() {
+        let keyspace = AcknowledgedKeyspace::new(10, ZipfCdf::new(20, 0.99));
+        keyspace.acknowledge(12);
+        assert_eq!(keyspace.frontier(), 9);
+        keyspace.acknowledge(10);
+        assert_eq!(keyspace.frontier(), 10);
+        keyspace.acknowledge(11);
+        assert_eq!(keyspace.frontier(), 12);
+    }
+
+    #[test]
+    fn workload_d_reads_resolve_only_to_acknowledged_keys() {
+        let generated = generate_streams(&config(Workload::D));
+        let acknowledged = generated.acknowledged.expect("workload D keyspace");
+        for operation in generated.streams.into_iter().flatten() {
+            match operation {
+                Operation::ReadAcknowledged {
+                    sample,
+                    distribution,
+                } => {
+                    let key = acknowledged.resolve(sample, distribution);
+                    assert!(key <= acknowledged.frontier());
+                }
+                Operation::Insert { key, .. } => acknowledged.acknowledge(key),
+                _ => panic!("unexpected Workload D operation"),
+            }
+        }
     }
 }

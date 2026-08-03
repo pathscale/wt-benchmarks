@@ -64,6 +64,7 @@ pub struct RunResult {
     pub target_arch: &'static str,
     pub target_os: &'static str,
     pub operation_counts: BTreeMap<String, u64>,
+    pub operation_errors: BTreeMap<String, u64>,
     pub latency: BTreeMap<String, LatencySummary>,
 }
 
@@ -78,6 +79,7 @@ impl RunResult {
         load_elapsed_ns: u128,
         elapsed_ns: u128,
         operation_counts: BTreeMap<String, u64>,
+        operation_errors: BTreeMap<String, u64>,
         latency: BTreeMap<String, LatencySummary>,
     ) -> Self {
         let seconds = elapsed_ns as f64 / 1_000_000_000.0;
@@ -108,6 +110,7 @@ impl RunResult {
             target_arch: std::env::consts::ARCH,
             target_os: std::env::consts::OS,
             operation_counts,
+            operation_errors,
             latency,
         }
     }
@@ -124,6 +127,7 @@ impl RunResult {
         load_elapsed_ns: u128,
         elapsed_ns: u128,
         operation_counts: BTreeMap<String, u64>,
+        operation_errors: BTreeMap<String, u64>,
         latency: BTreeMap<String, LatencySummary>,
         transaction_semantics: &'static str,
         read_ownership: &'static str,
@@ -138,6 +142,7 @@ impl RunResult {
             load_elapsed_ns,
             elapsed_ns,
             operation_counts,
+            operation_errors,
             latency,
         );
         result.engine = engine;

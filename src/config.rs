@@ -96,6 +96,9 @@ impl Config {
         if !(0.0..1.0).contains(&self.zipf_theta) {
             return Err("--zipf-theta must be in [0, 1)".into());
         }
+        if self.records.checked_add(self.operations).is_none() {
+            return Err("--records plus --operations must fit u64".into());
+        }
         Ok(())
     }
 }

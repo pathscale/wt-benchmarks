@@ -10,7 +10,7 @@ use worktable::worktable;
 use crate::config::Config;
 use crate::result::{LatencySummary, RunResult};
 use crate::ycsb::generator::{
-    FIELD_COUNT, Operation, OperationKind, generate_streams, make_fields,
+    AcknowledgedKeyspace, FIELD_COUNT, Operation, OperationKind, generate_streams, make_fields,
 };
 
 worktable!(
@@ -49,6 +49,7 @@ struct WorkerResult {
     completed: u64,
     errors: u64,
     counts: [u64; 5],
+    error_counts: [u64; 5],
     latency: [Vec<u64>; 5],
 }
 
@@ -66,20 +67,22 @@ pub async fn run_repetition(config: &Config, repetition: usize) -> RunResult {
     let distribution = config
         .distribution_override
         .unwrap_or_else(|| config.workload.default_distribution());
-    let streams = generate_streams(config);
+    let generated = generate_streams(config);
+    let acknowledged = generated.acknowledged;
     let ready = Arc::new(Barrier::new(config.threads + 1));
     let start = Arc::new(Barrier::new(config.threads + 1));
     let mut handles = Vec::with_capacity(config.threads);
 
-    for stream in streams {
+    for stream in generated.streams {
         let table = Arc::clone(&table);
+        let acknowledged = acknowledged.as_ref().map(Arc::clone);
         let ready = Arc::clone(&ready);
         let start = Arc::clone(&start);
         let sample_every = config.sample_every;
         handles.push(tokio::spawn(async move {
             ready.wait().await;
             start.wait().await;
-            run_worker(table, stream, sample_every).await
+            run_worker(table, stream, sample_every, acknowledged).await
         }));
     }
 
@@ -94,15 +97,21 @@ pub async fn run_repetition(config: &Config, repetition: usize) -> RunResult {
         combined.errors += worker.errors;
         for kind in OperationKind::ALL {
             combined.counts[kind as usize] += worker.counts[kind as usize];
+            combined.error_counts[kind as usize] += worker.error_counts[kind as usize];
             combined.latency[kind as usize].extend(worker.latency[kind as usize].iter().copied());
         }
     }
     let elapsed_ns = measured_started.elapsed().as_nanos();
 
     let mut operation_counts = BTreeMap::new();
+    let mut operation_errors = BTreeMap::new();
     let mut latency = BTreeMap::new();
     for kind in OperationKind::ALL {
         operation_counts.insert(kind.as_str().to_owned(), combined.counts[kind as usize]);
+        operation_errors.insert(
+            kind.as_str().to_owned(),
+            combined.error_counts[kind as usize],
+        );
         latency.insert(
             kind.as_str().to_owned(),
             LatencySummary::from_samples(std::mem::take(&mut combined.latency[kind as usize])),
@@ -118,6 +127,7 @@ pub async fn run_repetition(config: &Config, repetition: usize) -> RunResult {
         load_elapsed_ns,
         elapsed_ns,
         operation_counts,
+        operation_errors,
         latency,
     )
 }
@@ -126,6 +136,7 @@ async fn run_worker(
     table: Arc<YcsbWorkTable>,
     stream: Vec<Operation>,
     sample_every: u64,
+    acknowledged: Option<Arc<AcknowledgedKeyspace>>,
 ) -> WorkerResult {
     let mut result = WorkerResult::default();
     let sample_capacity = stream.len() / sample_every as usize + 1;
@@ -137,7 +148,7 @@ async fn run_worker(
         let kind = operation.kind();
         let sampled = (index as u64).is_multiple_of(sample_every);
         let started = sampled.then(Instant::now);
-        let success = execute(&table, operation).await;
+        let success = execute(&table, operation, acknowledged.as_deref()).await;
         if let Some(started) = started {
             let elapsed = started.elapsed().as_nanos().min(u64::MAX as u128) as u64;
             result.latency[kind as usize].push(elapsed);
@@ -145,15 +156,35 @@ async fn run_worker(
         result.counts[kind as usize] += 1;
         result.completed += u64::from(success);
         result.errors += u64::from(!success);
+        result.error_counts[kind as usize] += u64::from(!success);
     }
     result
 }
 
-async fn execute(table: &YcsbWorkTable, operation: Operation) -> bool {
+async fn execute(
+    table: &YcsbWorkTable,
+    operation: Operation,
+    acknowledged: Option<&AcknowledgedKeyspace>,
+) -> bool {
     match operation {
         Operation::Read { key } => black_box(table.select(key)).is_some(),
+        Operation::ReadAcknowledged {
+            sample,
+            distribution,
+        } => {
+            let key = acknowledged
+                .expect("acknowledged read requires Workload D state")
+                .resolve(sample, distribution);
+            black_box(table.select(key)).is_some()
+        }
         Operation::Update { key, field, value } => update_field(table, key, field, value).await,
-        Operation::Insert { key, fields } => table.insert(row(key, *fields)).is_ok(),
+        Operation::Insert { key, fields } => {
+            let inserted = table.insert(row(key, *fields)).is_ok();
+            if inserted && let Some(acknowledged) = acknowledged {
+                acknowledged.acknowledge(key);
+            }
+            inserted
+        }
         Operation::Scan { start, length } => {
             let end = start.saturating_add(length.saturating_sub(1));
             match table.select_by_pk_range(start..=end).execute() {
@@ -245,5 +276,53 @@ fn row(key: u64, fields: [String; FIELD_COUNT]) -> YcsbRow {
         field7,
         field8,
         field9,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ycsb::Workload;
+
+    #[tokio::test]
+    async fn workload_d_completes_with_an_acknowledged_single_worker_stream() {
+        let config = Config {
+            workload: Workload::D,
+            records: 1_000,
+            operations: 20_000,
+            threads: 1,
+            repetitions: 1,
+            sample_every: 256,
+            seed: 42,
+            field_bytes: 16,
+            scan_max: 10,
+            zipf_theta: 0.99,
+            distribution_override: None,
+        };
+        let result = run_repetition(&config, 1).await;
+        assert_eq!(result.errors, 0);
+        assert_eq!(result.operations_completed, config.operations);
+    }
+
+    #[cfg(feature = "versioned-row-publication")]
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    #[ignore = "exposes rare transient WorkTablesIndex misses during concurrent inserts"]
+    async fn concurrent_workload_d_has_no_committed_key_misses() {
+        let config = Config {
+            workload: Workload::D,
+            records: 10_000,
+            operations: 100_000,
+            threads: 8,
+            repetitions: 1,
+            sample_every: 256,
+            seed: 42,
+            field_bytes: 16,
+            scan_max: 10,
+            zipf_theta: 0.99,
+            distribution_override: None,
+        };
+        let result = run_repetition(&config, 1).await;
+        assert_eq!(result.errors, 0);
+        assert_eq!(result.operations_completed, config.operations);
     }
 }
