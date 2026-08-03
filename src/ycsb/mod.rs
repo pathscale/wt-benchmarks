@@ -1,4 +1,5 @@
 mod generator;
+#[cfg(feature = "worktable-adapter")]
 mod worktable_adapter;
 
 use std::fmt::{Display, Formatter};
@@ -8,6 +9,7 @@ pub use generator::{
     AcknowledgedKeyspace, FIELD_COUNT, GeneratedWorkload, Operation, OperationKind,
     generate_streams, make_fields,
 };
+#[cfg(feature = "worktable-adapter")]
 pub use worktable_adapter::run_repetition;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
