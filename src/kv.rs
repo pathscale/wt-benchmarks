@@ -94,7 +94,7 @@ impl Default for KvConfig {
 impl KvConfig {
     pub fn from_args(engine: &str) -> Result<Self, String> {
         let mut config = Self::default();
-        if engine == "worktable" {
+        if engine == "worktable" || engine == "sqlite" {
             config.durability = DurabilityMode::Memory;
         }
         let mut args = std::env::args().skip(1);
@@ -209,7 +209,11 @@ pub fn emit(
         schema_version: 1,
         suite: "embedded-kv-layers",
         engine,
-        layer: "L3/L4",
+        layer: match config.durability {
+            DurabilityMode::Memory => "L2",
+            DurabilityMode::Relaxed => "L3",
+            DurabilityMode::Durable => "L4",
+        },
         operation,
         repetition,
         rows: config.rows,

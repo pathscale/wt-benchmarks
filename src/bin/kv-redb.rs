@@ -2,7 +2,9 @@ use std::hint::black_box;
 use std::time::Instant;
 
 use redb::{Database, Durability, ReadableDatabase, TableDefinition};
-use wt_benchmarks::kv::{DurabilityMode, KvConfig, TransactionScope, emit, value, value_checksum};
+use wt_benchmarks::kv::{
+    DurabilityMode, KvConfig, TransactionScope, emit, text_checksum, text_value,
+};
 
 const TABLE: TableDefinition<u64, &[u8]> = TableDefinition::new("kv");
 type BenchResult<T> = Result<T, Box<dyn std::error::Error>>;
@@ -75,6 +77,19 @@ fn main() -> BenchResult<()> {
             started.elapsed().as_nanos(),
             checksum,
         );
+
+        let started = Instant::now();
+        let deleted = delete_rows(&database, &config, &point_keys)?;
+        emit(
+            &config,
+            "redb",
+            "delete_random",
+            repetition,
+            config.operations,
+            "not-applicable",
+            started.elapsed().as_nanos(),
+            deleted,
+        );
     }
     Ok(())
 }
@@ -101,12 +116,12 @@ fn insert_rows(database: &Database, config: &KvConfig) -> BenchResult<()> {
     match config.transaction_scope {
         TransactionScope::PerOperation => {
             for key in 0..config.rows {
-                let encoded = value(key, config.payload_bytes);
+                let encoded = text_value(key, config.payload_bytes);
                 let mut transaction = database.begin_write()?;
                 set_durability(&mut transaction, config)?;
                 {
                     let mut table = transaction.open_table(TABLE)?;
-                    table.insert(key, encoded.as_slice())?;
+                    table.insert(key, encoded.as_bytes())?;
                 }
                 transaction.commit()?;
             }
@@ -117,8 +132,8 @@ fn insert_rows(database: &Database, config: &KvConfig) -> BenchResult<()> {
             {
                 let mut table = transaction.open_table(TABLE)?;
                 for key in 0..config.rows {
-                    let encoded = value(key, config.payload_bytes);
-                    table.insert(key, encoded.as_slice())?;
+                    let encoded = text_value(key, config.payload_bytes);
+                    table.insert(key, encoded.as_bytes())?;
                 }
             }
             transaction.commit()?;
@@ -135,7 +150,10 @@ fn read_points(database: &Database, config: &KvConfig, keys: &[u64]) -> BenchRes
                 let transaction = database.begin_read()?;
                 let table = transaction.open_table(TABLE)?;
                 let row = table.get(*key)?.expect("loaded key");
-                checksum = checksum.wrapping_add(value_checksum(black_box(row.value())));
+                checksum = checksum.wrapping_add(text_checksum(
+                    *key,
+                    std::str::from_utf8(black_box(row.value()))?,
+                ));
             }
         }
         TransactionScope::Batch => {
@@ -143,7 +161,10 @@ fn read_points(database: &Database, config: &KvConfig, keys: &[u64]) -> BenchRes
             let table = transaction.open_table(TABLE)?;
             for key in keys {
                 let row = table.get(*key)?.expect("loaded key");
-                checksum = checksum.wrapping_add(value_checksum(black_box(row.value())));
+                checksum = checksum.wrapping_add(text_checksum(
+                    *key,
+                    std::str::from_utf8(black_box(row.value()))?,
+                ));
             }
         }
     }
@@ -154,12 +175,12 @@ fn update_rows(database: &Database, config: &KvConfig, keys: &[u64]) -> BenchRes
     match config.transaction_scope {
         TransactionScope::PerOperation => {
             for key in keys {
-                let encoded = value(key.wrapping_mul(17), config.payload_bytes);
+                let encoded = text_value(key.wrapping_mul(17), config.payload_bytes);
                 let mut transaction = database.begin_write()?;
                 set_durability(&mut transaction, config)?;
                 {
                     let mut table = transaction.open_table(TABLE)?;
-                    table.insert(*key, encoded.as_slice())?;
+                    table.insert(*key, encoded.as_bytes())?;
                 }
                 transaction.commit()?;
             }
@@ -170,8 +191,8 @@ fn update_rows(database: &Database, config: &KvConfig, keys: &[u64]) -> BenchRes
             {
                 let mut table = transaction.open_table(TABLE)?;
                 for key in keys {
-                    let encoded = value(key.wrapping_mul(17), config.payload_bytes);
-                    table.insert(*key, encoded.as_slice())?;
+                    let encoded = text_value(key.wrapping_mul(17), config.payload_bytes);
+                    table.insert(*key, encoded.as_bytes())?;
                 }
             }
             transaction.commit()?;
@@ -188,8 +209,11 @@ fn scan_rows(database: &Database, config: &KvConfig, starts: &[u64]) -> BenchRes
                 let transaction = database.begin_read()?;
                 let table = transaction.open_table(TABLE)?;
                 for row in table.range(*start..)?.take(config.scan_length as usize) {
-                    let (_, value) = row?;
-                    checksum = checksum.wrapping_add(value_checksum(value.value()));
+                    let (key, value) = row?;
+                    checksum = checksum.wrapping_add(text_checksum(
+                        key.value(),
+                        std::str::from_utf8(value.value())?,
+                    ));
                 }
             }
         }
@@ -198,11 +222,43 @@ fn scan_rows(database: &Database, config: &KvConfig, starts: &[u64]) -> BenchRes
             let table = transaction.open_table(TABLE)?;
             for start in starts {
                 for row in table.range(*start..)?.take(config.scan_length as usize) {
-                    let (_, value) = row?;
-                    checksum = checksum.wrapping_add(value_checksum(value.value()));
+                    let (key, value) = row?;
+                    checksum = checksum.wrapping_add(text_checksum(
+                        key.value(),
+                        std::str::from_utf8(value.value())?,
+                    ));
                 }
             }
         }
     }
     Ok(checksum)
+}
+
+fn delete_rows(database: &Database, config: &KvConfig, keys: &[u64]) -> BenchResult<u64> {
+    let mut deleted = 0_u64;
+    match config.transaction_scope {
+        TransactionScope::PerOperation => {
+            for key in keys {
+                let mut transaction = database.begin_write()?;
+                set_durability(&mut transaction, config)?;
+                {
+                    let mut table = transaction.open_table(TABLE)?;
+                    deleted += u64::from(table.remove(*key)?.is_some());
+                }
+                transaction.commit()?;
+            }
+        }
+        TransactionScope::Batch => {
+            let mut transaction = database.begin_write()?;
+            set_durability(&mut transaction, config)?;
+            {
+                let mut table = transaction.open_table(TABLE)?;
+                for key in keys {
+                    deleted += u64::from(table.remove(*key)?.is_some());
+                }
+            }
+            transaction.commit()?;
+        }
+    }
+    Ok(deleted)
 }

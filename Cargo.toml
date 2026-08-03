@@ -44,6 +44,11 @@ name = "kv-worktable"
 path = "src/bin/kv-worktable.rs"
 
 [[bin]]
+name = "kv-sqlite"
+path = "src/bin/kv-sqlite.rs"
+required-features = ["sqlite-adapter"]
+
+[[bin]]
 name = "speedtest1-worktable"
 path = "src/bin/speedtest1-worktable.rs"
 
