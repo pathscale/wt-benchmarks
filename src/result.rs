@@ -48,6 +48,7 @@ pub struct RunResult {
     pub operations_requested: u64,
     pub operations_completed: u64,
     pub errors: u64,
+    pub retryable_errors: u64,
     pub threads: usize,
     pub field_bytes: usize,
     pub fields: usize,
@@ -57,6 +58,9 @@ pub struct RunResult {
     pub elapsed_ns: u128,
     pub ops_per_second: f64,
     pub feature_versioned_row_publication: bool,
+    pub transaction_semantics: &'static str,
+    pub read_ownership: &'static str,
+    pub engine_version: Option<&'static str>,
     pub target_arch: &'static str,
     pub target_os: &'static str,
     pub operation_counts: BTreeMap<String, u64>,
@@ -88,6 +92,7 @@ impl RunResult {
             operations_requested: config.operations,
             operations_completed: completed,
             errors,
+            retryable_errors: 0,
             threads: config.threads,
             field_bytes: config.field_bytes,
             fields: 10,
@@ -97,11 +102,50 @@ impl RunResult {
             elapsed_ns,
             ops_per_second: completed as f64 / seconds,
             feature_versioned_row_publication: cfg!(feature = "versioned-row-publication"),
+            transaction_semantics: "WorkTable operations; read-modify-write is two application calls",
+            read_ownership: "materialized-owned-row",
+            engine_version: None,
             target_arch: std::env::consts::ARCH,
             target_os: std::env::consts::OS,
             operation_counts,
             latency,
         }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn for_engine(
+        config: &Config,
+        repetition: usize,
+        distribution: &str,
+        engine: &'static str,
+        completed: u64,
+        errors: u64,
+        retryable_errors: u64,
+        load_elapsed_ns: u128,
+        elapsed_ns: u128,
+        operation_counts: BTreeMap<String, u64>,
+        latency: BTreeMap<String, LatencySummary>,
+        transaction_semantics: &'static str,
+        read_ownership: &'static str,
+        engine_version: Option<&'static str>,
+    ) -> Self {
+        let mut result = Self::new(
+            config,
+            repetition,
+            distribution,
+            completed,
+            errors,
+            load_elapsed_ns,
+            elapsed_ns,
+            operation_counts,
+            latency,
+        );
+        result.engine = engine;
+        result.retryable_errors = retryable_errors;
+        result.transaction_semantics = transaction_semantics;
+        result.read_ownership = read_ownership;
+        result.engine_version = engine_version;
+        result
     }
 }
 

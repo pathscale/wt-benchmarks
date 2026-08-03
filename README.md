@@ -50,6 +50,20 @@ all parameters. The path dependency in `Cargo.toml` intentionally targets the
 local sibling WorkTable checkout while the benchmark APIs are still changing;
 replace it with a released version or pinned Git revision before publishing.
 
+The same A-F streams can run through SQLite `:memory:`:
+
+```bash
+cargo run --release --features sqlite-adapter --bin ycsb-sqlite -- \
+  --workload A --records 100000 --operations 1000000 \
+  --threads 1 --repetitions 5
+```
+
+For concurrent SQLite runs, each worker gets a connection to the same
+shared-memory database. `retryable_errors` reports every SQLite busy/locked
+retry, including successful retries; `errors` remains the final failed
+operation count. Concurrent Workload D still needs an ordering-aware expected
+miss classification in both engines, so it is not publication-ready yet.
+
 The runner refuses multi-threaded A/B/D/E/F runs unless
 `versioned-row-publication` is enabled. WorkTable's default page path requires
 the application to exclude reads overlapping page mutation, so silently

@@ -4,7 +4,7 @@ mod worktable_adapter;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-pub use generator::{Operation, OperationKind, generate_streams, make_fields};
+pub use generator::{FIELD_COUNT, Operation, OperationKind, generate_streams, make_fields};
 pub use worktable_adapter::run_repetition;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

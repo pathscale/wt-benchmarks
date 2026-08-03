@@ -58,5 +58,10 @@ path = "src/bin/speedtest1-sqlite.rs"
 required-features = ["sqlite-adapter"]
 
 [[bin]]
+name = "ycsb-sqlite"
+path = "src/bin/ycsb-sqlite.rs"
+required-features = ["sqlite-adapter"]
+
+[[bin]]
 name = "linkbench-worktable"
 path = "src/bin/linkbench-worktable.rs"

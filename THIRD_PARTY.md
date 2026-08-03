@@ -5,7 +5,7 @@ drivers unless a future adapter explicitly says otherwise.
 
 | Workload | Upstream | Upstream license / policy | Local treatment |
 |---|---|---|---|
-| YCSB A-F | https://github.com/brianfrankcooper/YCSB | Apache-2.0 | Independently implemented operation mixes; attribution retained here and in the catalog. |
+| YCSB A-F | https://github.com/brianfrankcooper/YCSB | Apache-2.0 | Independently implemented operation mixes; attribution retained here and in the catalog. WorkTable and feature-gated SQLite `:memory:` adapters consume the same generated streams; SQLite shared-cache lock retries are reported rather than hidden. |
 | BenchBase TATP | https://github.com/cmu-db/benchbase | Apache-2.0 | Independently implemented four-table schema shape and canonical 2/35/10/35/2/14/2 transaction mix; no upstream driver code copied. Fixed arrays compact repeated subscriber columns, composite SQL keys are packed into typed `u128` primary keys, and host Rust performs the selective join. |
 | LinkBench | https://github.com/facebookarchive/linkbench | Apache-2.0 | Independently implemented published request mix with synthetic Zipf graph; no upstream source copied. Empirical degree distribution and concurrency remain pending. |
 | SQLite speedtest1 / shared KV | https://sqlite.org/cgi/src/file/test/speedtest1.c | Public domain | Independently implemented nine speedtest1-core shapes and a five-phase shared KV adapter; no upstream source copied. Feature-gated `rusqlite` 0.40.1 embeds SQLite and runs the same deterministic inputs/checksums as WorkTable. Unsupported SQL groups, bulk-transaction semantics, and durable-mode equivalence are not claimed. |
