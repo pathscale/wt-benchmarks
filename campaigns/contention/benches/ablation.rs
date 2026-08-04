@@ -1,5 +1,13 @@
-//! Specialization ablation (paper Table 1 / C3): the specialized `worktable!`
-//! build vs the dynamic twin, per operation, measured with Criterion.
+//! Specialization comparison (paper Table 1 / C3): the specialized `worktable!`
+//! build vs the naive dynamic baseline (`DynTable`), per operation, via Criterion.
+//!
+//! DELIBERATELY UNEVEN: WorkTable is not expected to beat the naive dynamic
+//! baseline on raw point ops — see the note in `dynamic.rs`. A bare Vec+BTreeMap
+//! skips real storage/indexing, so it looks fast on trivial point work; the
+//! comparison exposes what that shortcut costs. This is the "apple" of the
+//! paper's fruit basket (naive dynamic); the "lemon" (SQLite) and "grape"
+//! (DuckDB) live in the KV bench. WorkTable ("orange") is contrasted against all
+//! three, and is meant to win some and, by design, not others.
 //!
 //! Each op is a `BenchmarkGroup` with `Throughput::Elements(ROWS)` so Criterion
 //! reports elements/sec directly (no homebrew ops/sec math) alongside its

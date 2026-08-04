@@ -1,17 +1,23 @@
-//! The "dynamic twin" for the specialization ablation (paper Table 1).
+//! The naive dynamic baseline for the specialization comparison (paper Table 1).
 //!
-//! Models what a dynamic-schema engine is forced to do on every operation:
+//! This is deliberately the "dirty dynamic Vec" engine — what you get when you
+//! reach for a slot vector + BTreeMap + tagged values instead of a real table:
 //!   * rows are vectors of tagged values (boxed representation)
 //!   * a runtime catalog maps column name -> position (hash lookup per access)
 //!   * rows are encoded/decoded through a tag-dispatched serializer per access
 //!   * row locking is a coarse per-row mutex from a dynamic lock table
 //!
-//! FAIRNESS NOTE (review before trusting numbers): this v1 twin does NOT share
-//! WorkTable's page allocator or B-tree; it uses a slot vector + BTreeMap.
-//! That is *favorable* to the twin for point ops (no page indirection), so a
-//! win for the specialized engine here is conservative. A v2 twin sharing the
-//! page/index machinery with only the row representation dynamized would
-//! isolate the typing cost even more precisely.
+//! WHAT THIS BASELINE IS FOR (do not "fix" it to be faster or fairer):
+//! WorkTable is NOT expected to beat this on raw point ops, and by design it may
+//! not. That is the point. A bare Vec + BTreeMap skips a real page allocator,
+//! B-tree, secondary indexes, and durable structure, so it *should* look fast on
+//! a trivial point workload. The comparison shows the cost of that shortcut:
+//! DynTable buys point-op speed by throwing away everything a table gives you.
+//! It sits alongside the real dynamic engines (SQLite, DuckDB) so the paper can
+//! contrast WorkTable against three different kinds of alternative — a naive
+//! hand-rolled dynamic store, an embedded SQL engine, and a columnar SQL engine
+//! — rather than a single strawman. A "win" here would mean the baseline is
+//! secretly doing WorkTable's work; keep it naive on purpose.
 
 use parking_lot::{Mutex, RwLock};
 use std::collections::{BTreeMap, HashMap};
