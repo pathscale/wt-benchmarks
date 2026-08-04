@@ -142,12 +142,252 @@ mod sqlite_engine {
     }
 }
 
+// ----------------------------------------------------------------- redb
+#[cfg(feature = "redb-adapter")]
+mod redb_engine {
+    use super::*;
+    use redb::{Database, ReadableDatabase, TableDefinition};
+
+    const T: TableDefinition<u64, &[u8]> = TableDefinition::new("kv");
+
+    fn fresh() -> (tempfile::TempDir, Database) {
+        let dir = tempfile::tempdir().unwrap();
+        let db = Database::create(dir.path().join("b.redb")).unwrap();
+        {
+            let wt = db.begin_write().unwrap();
+            wt.open_table(T).unwrap();
+            wt.commit().unwrap();
+        }
+        (dir, db)
+    }
+    fn load() -> (tempfile::TempDir, Database) {
+        let (dir, db) = fresh();
+        let wt = db.begin_write().unwrap();
+        {
+            let mut t = wt.open_table(T).unwrap();
+            for k in 0..ROWS {
+                t.insert(k, text_value(k, PAYLOAD).as_bytes()).unwrap();
+            }
+        }
+        wt.commit().unwrap();
+        (dir, db)
+    }
+    pub fn insert(g: &mut BenchmarkGroup<'_, WallTime>) {
+        // One database; delete the table's rows before each batch instead of
+        // creating a new file per iteration.
+        let (_dir, db) = fresh();
+        g.bench_function("redb", |b| {
+            b.iter_batched(
+                || {
+                    let wt = db.begin_write().unwrap();
+                    {
+                        let mut t = wt.open_table(T).unwrap();
+                        t.retain(|_, _| false).unwrap();
+                    }
+                    wt.commit().unwrap();
+                },
+                |()| {
+                    let wt = db.begin_write().unwrap();
+                    {
+                        let mut t = wt.open_table(T).unwrap();
+                        for k in 0..ROWS {
+                            t.insert(k, text_value(k, PAYLOAD).as_bytes()).unwrap();
+                        }
+                    }
+                    wt.commit().unwrap();
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+    }
+    pub fn point_read(g: &mut BenchmarkGroup<'_, WallTime>, keys: &[u64]) {
+        let (_dir, db) = load();
+        g.bench_function("redb", |b| {
+            b.iter(|| {
+                let rt = db.begin_read().unwrap();
+                let t = rt.open_table(T).unwrap();
+                let mut sum = 0u64;
+                for k in keys {
+                    let v = t.get(*k).unwrap().unwrap();
+                    sum = sum.wrapping_add(text_checksum(*k, std::str::from_utf8(v.value()).unwrap()));
+                }
+                sum
+            })
+        });
+    }
+    pub fn range_scan(g: &mut BenchmarkGroup<'_, WallTime>, starts: &[u64]) {
+        let (_dir, db) = load();
+        g.bench_function("redb", |b| {
+            b.iter(|| {
+                let rt = db.begin_read().unwrap();
+                let t = rt.open_table(T).unwrap();
+                let mut sum = 0u64;
+                for s in starts {
+                    for row in t.range(*s..).unwrap().take(SCAN_LEN as usize) {
+                        let (k, v) = row.unwrap();
+                        sum = sum.wrapping_add(text_checksum(k.value(), std::str::from_utf8(v.value()).unwrap()));
+                    }
+                }
+                sum
+            })
+        });
+    }
+}
+
+// ----------------------------------------------------------------- lmdb
+#[cfg(feature = "lmdb-adapter")]
+mod lmdb_engine {
+    use super::*;
+    use heed::types::{Bytes, U64};
+    use heed::{byteorder::BigEndian, Database, Env, EnvOpenOptions};
+
+    type K = U64<BigEndian>;
+    // 256 MiB is ample for 10k small rows and avoids exhausting mmap/fd limits
+    // when Criterion opens many environments across batch iterations.
+    const MAP: usize = 256 * 1024 * 1024;
+
+    fn open() -> (tempfile::TempDir, Env, Database<K, Bytes>) {
+        let dir = tempfile::tempdir().unwrap();
+        let env = unsafe {
+            EnvOpenOptions::new().map_size(MAP).max_dbs(1).open(dir.path()).unwrap()
+        };
+        let db = {
+            let mut w = env.write_txn().unwrap();
+            let db = env.create_database(&mut w, None).unwrap();
+            w.commit().unwrap();
+            db
+        };
+        (dir, env, db)
+    }
+    fn load() -> (tempfile::TempDir, Env, Database<K, Bytes>) {
+        let (dir, env, db) = open();
+        let mut w = env.write_txn().unwrap();
+        for k in 0..ROWS {
+            db.put(&mut w, &k, text_value(k, PAYLOAD).as_bytes()).unwrap();
+        }
+        w.commit().unwrap();
+        (dir, env, db)
+    }
+    pub fn insert(g: &mut BenchmarkGroup<'_, WallTime>) {
+        // Reuse ONE environment; clear the db before each measured insert batch
+        // rather than opening a fresh mmap per iteration (which exhausts OS
+        // resources under Criterion's repeated sampling).
+        let (_dir, env, db) = open();
+        g.bench_function("lmdb", |b| {
+            b.iter_batched(
+                || {
+                    let mut w = env.write_txn().unwrap();
+                    db.clear(&mut w).unwrap();
+                    w.commit().unwrap();
+                },
+                |()| {
+                    let mut w = env.write_txn().unwrap();
+                    for k in 0..ROWS {
+                        db.put(&mut w, &k, text_value(k, PAYLOAD).as_bytes()).unwrap();
+                    }
+                    w.commit().unwrap();
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+    }
+    pub fn point_read(g: &mut BenchmarkGroup<'_, WallTime>, keys: &[u64]) {
+        let (_dir, env, db) = load();
+        g.bench_function("lmdb", |b| {
+            b.iter(|| {
+                let r = env.read_txn().unwrap();
+                let mut sum = 0u64;
+                for k in keys {
+                    let v = db.get(&r, k).unwrap().unwrap();
+                    sum = sum.wrapping_add(text_checksum(*k, std::str::from_utf8(v).unwrap()));
+                }
+                sum
+            })
+        });
+    }
+    pub fn range_scan(g: &mut BenchmarkGroup<'_, WallTime>, starts: &[u64]) {
+        let (_dir, env, db) = load();
+        g.bench_function("lmdb", |b| {
+            b.iter(|| {
+                let r = env.read_txn().unwrap();
+                let mut sum = 0u64;
+                for s in starts {
+                    for row in db.range(&r, &(*s..)).unwrap().take(SCAN_LEN as usize) {
+                        let (k, v) = row.unwrap();
+                        sum = sum.wrapping_add(text_checksum(k, std::str::from_utf8(v).unwrap()));
+                    }
+                }
+                sum
+            })
+        });
+    }
+}
+
+// ---------------------------------------------------------------- duckdb
+#[cfg(feature = "duckdb-adapter")]
+mod duckdb_engine {
+    use super::*;
+    use duckdb::{params, Connection};
+
+    fn load() -> Connection {
+        let c = Connection::open_in_memory().unwrap();
+        c.execute_batch("CREATE TABLE kv (id UBIGINT PRIMARY KEY, payload VARCHAR NOT NULL);").unwrap();
+        {
+            let mut s = c.prepare("INSERT INTO kv VALUES (?,?)").unwrap();
+            for k in 0..ROWS {
+                s.execute(params![k, text_value(k, PAYLOAD)]).unwrap();
+            }
+        }
+        c
+    }
+    pub fn insert(g: &mut BenchmarkGroup<'_, WallTime>) {
+        g.bench_function("duckdb", |b| {
+            b.iter_batched(
+                || {
+                    let c = Connection::open_in_memory().unwrap();
+                    c.execute_batch("CREATE TABLE kv (id UBIGINT PRIMARY KEY, payload VARCHAR NOT NULL);").unwrap();
+                    c
+                },
+                |c| {
+                    let mut s = c.prepare("INSERT INTO kv VALUES (?,?)").unwrap();
+                    for k in 0..ROWS {
+                        s.execute(params![k, text_value(k, PAYLOAD)]).unwrap();
+                    }
+                    drop(s);
+                    c
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+    }
+    pub fn point_read(g: &mut BenchmarkGroup<'_, WallTime>, keys: &[u64]) {
+        let c = load();
+        g.bench_function("duckdb", |b| {
+            b.iter(|| {
+                let mut s = c.prepare("SELECT payload FROM kv WHERE id=?").unwrap();
+                let mut sum = 0u64;
+                for k in keys {
+                    let p: String = s.query_row(params![*k], |r| r.get(0)).unwrap();
+                    sum = sum.wrapping_add(text_checksum(*k, &p));
+                }
+                sum
+            })
+        });
+    }
+}
+
 fn bench_insert(c: &mut Criterion) {
     let mut g = grp(c, "kv/insert", ROWS);
     #[cfg(feature = "worktable-adapter")]
     worktable_engine::insert(&mut g);
     #[cfg(feature = "sqlite-adapter")]
     sqlite_engine::insert(&mut g);
+    #[cfg(feature = "redb-adapter")]
+    redb_engine::insert(&mut g);
+    #[cfg(feature = "lmdb-adapter")]
+    lmdb_engine::insert(&mut g);
+    #[cfg(feature = "duckdb-adapter")]
+    duckdb_engine::insert(&mut g);
     g.finish();
 }
 
@@ -158,6 +398,12 @@ fn bench_point_read(c: &mut Criterion) {
     worktable_engine::point_read(&mut g, &keys);
     #[cfg(feature = "sqlite-adapter")]
     sqlite_engine::point_read(&mut g, &keys);
+    #[cfg(feature = "redb-adapter")]
+    redb_engine::point_read(&mut g, &keys);
+    #[cfg(feature = "lmdb-adapter")]
+    lmdb_engine::point_read(&mut g, &keys);
+    #[cfg(feature = "duckdb-adapter")]
+    duckdb_engine::point_read(&mut g, &keys);
     g.finish();
 }
 
@@ -174,6 +420,10 @@ fn bench_range_scan(c: &mut Criterion) {
     let mut g = grp(c, "kv/range_scan", SCAN_OPS * SCAN_LEN);
     #[cfg(feature = "worktable-adapter")]
     worktable_engine::range_scan(&mut g, &starts);
+    #[cfg(feature = "redb-adapter")]
+    redb_engine::range_scan(&mut g, &starts);
+    #[cfg(feature = "lmdb-adapter")]
+    lmdb_engine::range_scan(&mut g, &starts);
     g.finish();
 }
 
