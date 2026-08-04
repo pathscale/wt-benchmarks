@@ -52,6 +52,11 @@ criterion = { version = "0.8", features = ["async_tokio"] }
 name = "kv"
 harness = false
 
+# YCSB two-port bench: throughput (Throughput::Elements) + latency (p99).
+[[bench]]
+name = "ycsb"
+harness = false
+
 [profile.release]
 lto = "fat"
 codegen-units = 1
