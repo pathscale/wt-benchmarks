@@ -81,6 +81,23 @@ principle: if we want the comparison to read as standard rather than
 self-serving, anchor it to a fixed, externally-recognized app spec and vary only
 the store.
 
-**Status.** Framing note. If pursued, RealWorld/Conduit is the actionable
-external spec (already implemented across many backends including Postgres, so a
-WorkTable backend would slot into an established comparison).
+**Reuse existing Postgres backends as the starting point.** We do NOT build the
+Postgres side from scratch. Full-stack todo/CRUD apps with a Postgres backend
+already exist in abundance; take one as the base and swap in a WorkTable store,
+so the work is "replace the data layer of a working reference app" rather than
+"write a Postgres app." The comparison inherits the app's legitimacy.
+
+**Which base to grab (important nuance).**
+- Classic `tastejs/todomvc` is **frontend-only** (JS framework demos, no
+  backend or DB). Do not use it expecting a Postgres layer.
+- The **backend + Postgres** versions are either (a) community full-stack
+  TodoMVC takes (todo app + REST API + Postgres) — plentiful, smaller, but not
+  standardized; or (b) **RealWorld / Conduit** — a standardized full-stack spec
+  with a fixed API contract and many backend implementations across Postgres and
+  other databases, so implementations are directly comparable.
+- For a quick base: a full-stack TodoMVC backend. For a legitimate, recognized
+  standard: RealWorld/Conduit. Either lets us start from an existing
+  Postgres implementation and only swap the store.
+
+**Status.** Framing note; existing Postgres backends are the base to start from,
+not a from-scratch build.
