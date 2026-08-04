@@ -8,20 +8,45 @@ repetitions="${REPETITIONS:-5}"
 sample_every="${SAMPLE_EVERY:-1024}"
 mode="${MODE:-default}"
 thread_list="${THREADS:-1}"
+allow_unsafe_concurrent_d="${ALLOW_UNSAFE_CONCURRENT_D:-false}"
 
 mkdir -p "$repo_root/results"
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
-output="$repo_root/results/ycsb-${mode}-${stamp}.jsonl"
-environment="$repo_root/results/ycsb-${mode}-${stamp}.environment.txt"
+output="${CAMPAIGN_RESULTS:-$repo_root/results/ycsb-${mode}-${stamp}.jsonl}"
+environment="${CAMPAIGN_ENVIRONMENT:-${output%.jsonl}.environment.txt}"
+
+if [[ -e "$output" ]]; then
+    echo "error: refusing to overwrite existing results: $output" >&2
+    exit 2
+fi
+if [[ -e "$environment" ]]; then
+    echo "error: refusing to overwrite existing environment capture: $environment" >&2
+    exit 2
+fi
 
 "$repo_root/scripts/capture-environment.sh" >"$environment"
+{
+    echo "campaign_mode=$mode"
+    echo "campaign_records=$records"
+    echo "campaign_operations=$operations"
+    echo "campaign_repetitions=$repetitions"
+    echo "campaign_sample_every=$sample_every"
+    echo "campaign_threads=$thread_list"
+    echo "allow_unsafe_concurrent_d=$allow_unsafe_concurrent_d"
+} >>"$environment"
 
-features=()
 if [[ "$mode" == "versioned" ]]; then
-    features=(--features versioned-row-publication)
+    feature_name="versioned-row-publication"
+    binary_name="ycsb-worktable"
+elif [[ "$mode" == "sqlite" ]]; then
+    feature_name="sqlite-adapter"
+    binary_name="ycsb-sqlite"
 elif [[ "$mode" != "default" ]]; then
-    echo "MODE must be default or versioned" >&2
+    echo "MODE must be default, versioned, or sqlite" >&2
     exit 2
+else
+    feature_name=""
+    binary_name="ycsb-worktable"
 fi
 
 for workload in A B C D E F; do
@@ -29,8 +54,17 @@ for workload in A B C D E F; do
         if [[ "$mode" == "default" && "$threads" != "1" && "$workload" != "C" ]]; then
             continue
         fi
-        cargo run --quiet --release "${features[@]}" --manifest-path "$repo_root/Cargo.toml" \
-            --bin ycsb-worktable -- \
+        if [[ "$mode" == "versioned" && "$threads" != "1" && "$workload" == "D" \
+            && "$allow_unsafe_concurrent_d" != "true" ]]
+        then
+            continue
+        fi
+        cargo_command=(cargo run --quiet --release)
+        if [[ -n "$feature_name" ]]; then
+            cargo_command+=(--features "$feature_name")
+        fi
+        cargo_command+=(--manifest-path "$repo_root/Cargo.toml" --bin "$binary_name" --)
+        "${cargo_command[@]}" \
             --workload "$workload" \
             --records "$records" \
             --operations "$operations" \
@@ -40,6 +74,13 @@ for workload in A B C D E F; do
     done
 done
 
+if command -v jq >/dev/null 2>&1; then
+    jq -e -s '
+        all(.errors == 0 and .operations_completed == .operations_requested)
+    ' "$output" >/dev/null
+else
+    echo "warning: jq not found; YCSB completion validation was skipped" >&2
+fi
+
 echo "$output"
 echo "$environment"
-

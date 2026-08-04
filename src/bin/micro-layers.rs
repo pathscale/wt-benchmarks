@@ -125,6 +125,7 @@ struct ResultRow<'a> {
     rows: u64,
     operations: u64,
     payload_bytes: usize,
+    scan_length: u64,
     elapsed_ns: u128,
     ops_per_second: f64,
     checksum: u64,
@@ -155,6 +156,7 @@ fn emit(
         rows: config.rows,
         operations,
         payload_bytes: config.payload_bytes,
+        scan_length: config.scan_length,
         elapsed_ns,
         ops_per_second: operations as f64 / (elapsed_ns as f64 / 1_000_000_000.0),
         checksum,
@@ -637,4 +639,33 @@ fn payload(seed: u64, length: usize) -> String {
         .map(|_| b'!' + rng.below((b'~' - b'!') as u64 + 1) as u8)
         .collect();
     String::from_utf8(bytes).expect("ASCII payload")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn result_schema_records_scan_length() {
+        let row = ResultRow {
+            schema_version: 1,
+            suite: "micro-layers",
+            engine: "test",
+            layer: "L0",
+            operation: "range_scan",
+            repetition: 1,
+            rows: 100,
+            operations: 10,
+            payload_bytes: 32,
+            scan_length: 17,
+            elapsed_ns: 1,
+            ops_per_second: 1.0,
+            checksum: 0,
+            feature_versioned_row_publication: false,
+            target_arch: "test",
+            target_os: "test",
+        };
+        let encoded = serde_json::to_value(row).expect("result serializes");
+        assert_eq!(encoded["scan_length"], 17);
+    }
 }

@@ -2,10 +2,28 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+worktable_dir="${WORKTABLE_DIR:-$repo_root/../WorkTable}"
+benchmark_lockfile="${BENCHMARK_LOCKFILE:-$repo_root/Cargo.lock}"
+
+tree_state() {
+    local repository="$1"
+    if [[ -n "$(git -C "$repository" status --porcelain 2>/dev/null)" ]]; then
+        echo dirty
+    else
+        echo clean
+    fi
+}
 
 echo "captured_at_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo "suite_commit=$(git -C "$repo_root" rev-parse --verify HEAD 2>/dev/null || echo uncommitted)"
-echo "worktable_commit=$(git -C "$repo_root/../WorkTable" rev-parse --verify HEAD 2>/dev/null || echo unknown)"
+echo "suite_tree=$(tree_state "$repo_root")"
+echo "worktable_dir=$worktable_dir"
+echo "worktable_commit=$(git -C "$worktable_dir" rev-parse --verify HEAD 2>/dev/null || echo unknown)"
+echo "worktable_tree=$(tree_state "$worktable_dir")"
+if [[ -f "$benchmark_lockfile" ]]; then
+    echo "benchmark_lockfile=$benchmark_lockfile"
+    echo "benchmark_lock_hash=$(git hash-object "$benchmark_lockfile")"
+fi
 echo "target=$(rustc -vV | sed -n 's/^host: //p')"
 rustc -vV
 cargo -V

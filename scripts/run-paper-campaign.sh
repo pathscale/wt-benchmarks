@@ -23,6 +23,12 @@ mkdir -p "$outdir"
 if [[ "$PROFILE" == "smoke" ]]; then
   ROWS=100000; REPS=1; THREADS="1 2 4"; YCSB_RECORDS=50000; YCSB_OPS=200000
   CONTENTION_OPS=30000; TORTURE_RECORDS=1500; TORTURE_OPS=15000
+elif [[ "$PROFILE" == "macbook" ]]; then
+  # Reduced-scale full pipeline for an Apple-silicon laptop: 1M rows and a
+  # thread ladder capped at 16 (M-series core budget). Real numbers, ~15-25 min,
+  # not the load-bearing AWS paper run but relayable as MacBook figures.
+  ROWS=1000000; REPS=5; THREADS="1 2 4 8 16"; YCSB_RECORDS=1000000; YCSB_OPS=2000000
+  CONTENTION_OPS=500000; TORTURE_RECORDS=10000; TORTURE_OPS=100000
 else # paper
   ROWS=10000000; REPS=10; THREADS="1 2 4 8 16 32"; YCSB_RECORDS=1000000; YCSB_OPS=5000000
   CONTENTION_OPS=1000000; TORTURE_RECORDS=10000; TORTURE_OPS=200000

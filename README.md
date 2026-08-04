@@ -65,19 +65,25 @@ operation count. Workload D resolves reads against an execution-time frontier
 that advances only after every preceding insert has succeeded, matching YCSB's
 acknowledged-counter semantics instead of treating pre-generated future keys as
 readable. SQLite's concurrent D correctness run now completes without misses.
-The WorkTable index-backend campaign found two valid concurrent-D
-configurations: memory-only Congee/Arctic produced no transient misses, while
-WorkTablesIndex/IndexSet require the separately gated bounded confirmation in
-`stable-index-read-retry`. See
+The WorkTable index-backend campaign found two valid concurrent-D classes: the
+stabilized WorkTablesIndex candidate confirms provider misses internally, and
+memory-only Congee/Arctic produced no transient misses. Vanilla IndexSet is
+retained only as an experimental quiescent/single-thread baseline. See
 [`docs/YCSB_D_CONCURRENT_INDEX_BACKENDS.md`](docs/YCSB_D_CONCURRENT_INDEX_BACKENDS.md)
 for the correctness matrix, paired performance screening, and publication
 boundaries.
 
-The runner refuses multi-threaded A/B/D/E/F runs unless
+The runner refuses multi-threaded A/B/E/F runs unless
 `versioned-row-publication` is enabled. WorkTable's default page path requires
 the application to exclude reads overlapping page mutation, so silently
 running those mixes would benchmark outside its documented contract. Workload
-C is read-only and may run concurrently in either mode.
+C is read-only and may run concurrently in either mode. Concurrent Workload D
+also needs a safe index configuration, so the standard versioned sweep keeps D
+at one thread until the stabilized dependencies are published and selected.
+Use `campaigns/ycsb-index-backends` for stabilized WorkTablesIndex or ART
+configurations. `ALLOW_UNSAFE_CONCURRENT_D=true`
+exists only to reproduce the acknowledged transient-miss diagnostic on older
+compositions.
 
 For a complete local sweep:
 
@@ -85,12 +91,24 @@ For a complete local sweep:
 # Default mode: thread 1 for mixed workloads, any requested threads for C.
 THREADS="1 2 4 8" scripts/run-ycsb-matrix.sh
 
-# Strong publication mode: all requested thread counts for all A-F workloads.
+# Strong page-publication mode: all threads for A/B/C/E/F; D stays at thread 1.
 MODE=versioned THREADS="1 2 4 8" scripts/run-ycsb-matrix.sh
+
+# SQLite shared-memory comparison: all requested thread counts for all A-F.
+MODE=sqlite THREADS="1 2 4 8" scripts/run-ycsb-matrix.sh
 ```
 
 The script stores ignored raw JSONL plus a matching environment capture under
 `results/`; review them before force-adding any curated result.
+
+Criterion comparisons from WorkTable itself can be normalized to JSONL with:
+
+```bash
+scripts/summarize-criterion-changes.sh /path/to/cargo-target
+```
+
+The input target must contain Criterion `change/estimates.json` files produced
+by a saved baseline comparison. Negative changes are faster elapsed time.
 
 ## Runnable comparison ladder
 
@@ -173,6 +191,18 @@ deletes are reported as expected aborts rather than benchmark errors. Its
 multi-table procedures are compiled application Rust and explicitly do not
 claim automatic cross-table atomicity. Concurrent read/write runs require the
 `versioned-row-publication` feature, just like mixed YCSB runs.
+
+Run the complete KV, speedtest1-shape, LinkBench, and TATP application matrix
+with matching environment capture and cross-engine checksum validation using:
+
+```bash
+scripts/run-application-matrix.sh
+```
+
+The default matrix keeps in-memory WorkTable and SQLite separate from relaxed
+redb, records both per-operation and batch redb transactions, and runs TATP at
+1, 4, and 8 threads. Every dimension can be overridden with the
+`CAMPAIGN_*` variables at the top of the script.
 
 ## Repository rules
 

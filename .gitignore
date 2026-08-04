@@ -11,3 +11,4 @@
 
 # Captured campaign result data (add curated results deliberately)
 campaigns/**/results-*.csv
+/results/paper-*/

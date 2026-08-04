@@ -306,7 +306,7 @@ mod tests {
 
     #[cfg(feature = "versioned-row-publication")]
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-    #[ignore = "baseline sibling WorkTable lacks the separately tested stable-index-read-retry gate"]
+    #[ignore = "root suite tracks released WorkTable; run concurrent D against PR 187 in the dedicated campaign"]
     async fn concurrent_workload_d_has_no_committed_key_misses() {
         let config = Config {
             workload: Workload::D,
