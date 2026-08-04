@@ -1,0 +1,25 @@
+ycsb/throughput/A       time:   [513.15 ms 515.28 ms 517.45 ms]
+                        thrpt:  [386.51 Kelem/s 388.13 Kelem/s 389.75 Kelem/s]
+ycsb/throughput/B       time:   [94.972 ms 96.673 ms 98.492 ms]
+                        thrpt:  [2.0306 Melem/s 2.0688 Melem/s 2.1059 Melem/s]
+Found 3 outliers among 10 measurements (30.00%)
+  1 (10.00%) low mild
+  2 (20.00%) high severe
+ycsb/throughput/C       time:   [21.549 ms 21.795 ms 22.097 ms]
+                        thrpt:  [9.0511 Melem/s 9.1764 Melem/s 9.2813 Melem/s]
+ycsb/throughput/F       time:   [534.31 ms 541.64 ms 552.40 ms]
+                        thrpt:  [362.05 Kelem/s 369.25 Kelem/s 374.31 Kelem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+
+ycsb/latency_p99/A      time:   [2.9251 µs 3.5813 µs 4.5335 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+ycsb/latency_p99/B      time:   [2.4384 µs 2.5915 µs 2.7504 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+ycsb/latency_p99/C      time:   [2.3534 µs 2.4452 µs 2.5703 µs]
+ycsb/latency_p99/F      time:   [2.6061 µs 3.0478 µs 3.6355 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+

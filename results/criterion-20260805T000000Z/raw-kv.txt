@@ -1,0 +1,68 @@
+kv/insert/worktable     time:   [4.9186 ms 4.9285 ms 4.9354 ms]
+                        thrpt:  [2.0262 Melem/s 2.0290 Melem/s 2.0331 Melem/s]
+kv/insert/sqlite        time:   [6.0677 ms 6.0793 ms 6.0953 ms]
+                        thrpt:  [1.6406 Melem/s 1.6449 Melem/s 1.6481 Melem/s]
+kv/insert/redb          time:   [9.4961 ms 9.6040 ms 9.6697 ms]
+                        thrpt:  [1.0342 Melem/s 1.0412 Melem/s 1.0531 Melem/s]
+kv/insert/lmdb          time:   [7.7446 ms 7.9521 ms 8.1473 ms]
+                        thrpt:  [1.2274 Melem/s 1.2575 Melem/s 1.2912 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+kv/insert/duckdb        time:   [734.93 ms 739.51 ms 744.50 ms]
+                        thrpt:  [13.432 Kelem/s 13.522 Kelem/s 13.607 Kelem/s]
+
+kv/point_read/worktable time:   [1.5316 ms 1.5404 ms 1.5532 ms]
+                        thrpt:  [6.4383 Melem/s 6.4918 Melem/s 6.5290 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) low mild
+kv/point_read/sqlite    time:   [2.8653 ms 2.8740 ms 2.8828 ms]
+                        thrpt:  [3.4688 Melem/s 3.4794 Melem/s 3.4901 Melem/s]
+kv/point_read/redb      time:   [1.5610 ms 1.5667 ms 1.5722 ms]
+                        thrpt:  [6.3604 Melem/s 6.3828 Melem/s 6.4063 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+kv/point_read/lmdb      time:   [1.8238 ms 1.8300 ms 1.8388 ms]
+                        thrpt:  [5.4384 Melem/s 5.4644 Melem/s 5.4830 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) high mild
+kv/point_read/duckdb    time:   [570.36 ms 572.52 ms 574.94 ms]
+                        thrpt:  [17.393 Kelem/s 17.467 Kelem/s 17.533 Kelem/s]
+
+kv/overwrite/worktable  time:   [33.307 ms 33.527 ms 33.730 ms]
+                        thrpt:  [296.47 Kelem/s 298.27 Kelem/s 300.24 Kelem/s]
+kv/overwrite/sqlite     time:   [3.7244 ms 3.7331 ms 3.7474 ms]
+                        thrpt:  [2.6685 Melem/s 2.6787 Melem/s 2.6850 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+kv/overwrite/redb       time:   [10.867 ms 10.978 ms 11.189 ms]
+                        thrpt:  [893.72 Kelem/s 910.91 Kelem/s 920.22 Kelem/s]
+kv/overwrite/lmdb       time:   [7.9166 ms 8.0164 ms 8.0738 ms]
+                        thrpt:  [1.2386 Melem/s 1.2474 Melem/s 1.2632 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) high mild
+kv/overwrite/duckdb     time:   [869.93 ms 874.32 ms 879.67 ms]
+                        thrpt:  [11.368 Kelem/s 11.437 Kelem/s 11.495 Kelem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+
+kv/range_scan/worktable time:   [1.4108 ms 1.4124 ms 1.4132 ms]
+                        thrpt:  [14.152 Melem/s 14.161 Melem/s 14.177 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+kv/range_scan/redb      time:   [1.1667 ms 1.1690 ms 1.1717 ms]
+                        thrpt:  [17.070 Melem/s 17.108 Melem/s 17.142 Melem/s]
+kv/range_scan/lmdb      time:   [801.67 µs 802.95 µs 805.38 µs]
+                        thrpt:  [24.833 Melem/s 24.908 Melem/s 24.948 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+kv/range_scan/sqlite    time:   [2.1766 ms 2.1817 ms 2.1893 ms]
+                        thrpt:  [9.1354 Melem/s 9.1672 Melem/s 9.1885 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+kv/range_scan/duckdb    time:   [28.210 ms 28.303 ms 28.417 ms]
+                        thrpt:  [703.82 Kelem/s 706.63 Kelem/s 708.97 Kelem/s]
+

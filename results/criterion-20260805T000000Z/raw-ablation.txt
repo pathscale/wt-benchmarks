@@ -1,0 +1,25 @@
+insert/specialized      time:   [5.8444 ms 5.8744 ms 5.9051 ms]
+                        thrpt:  [1.6935 Melem/s 1.7023 Melem/s 1.7110 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+insert/dynamic          time:   [650.50 µs 652.59 µs 654.91 µs]
+                        thrpt:  [15.269 Melem/s 15.324 Melem/s 15.373 Melem/s]
+
+point_read/specialized  time:   [1.1655 ms 1.1715 ms 1.1820 ms]
+                        thrpt:  [8.4605 Melem/s 8.5358 Melem/s 8.5798 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+point_read/dynamic      time:   [785.96 µs 799.14 µs 810.92 µs]
+                        thrpt:  [12.332 Melem/s 12.513 Melem/s 12.723 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+
+update_field/specialized
+                        time:   [13.594 ms 13.655 ms 13.770 ms]
+                        thrpt:  [726.23 Kelem/s 732.33 Kelem/s 735.63 Kelem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+update_field/dynamic    time:   [1.2327 ms 1.2375 ms 1.2415 ms]
+                        thrpt:  [8.0547 Melem/s 8.0809 Melem/s 8.1126 Melem/s]
+

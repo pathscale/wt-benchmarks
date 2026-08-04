@@ -1,0 +1,7 @@
+captured_utc=2026-08-05
+machine=Apple M4 Max 16-logical
+os=Darwin 25.5.0
+rustc=rustc 1.97.0 (2d8144b78 2026-07-07) (Homebrew)
+wt_commit=7eab7c168a39c5c8404ad4a837b9b5bc6ddbeeb4
+bench_commit=291cac25b919bc81573dfff8283f6b831cf81c48
+harness=Criterion 0.8, Throughput::Elements; micro scale (KV 10k rows, YCSB 50k/200k, 4 threads)
