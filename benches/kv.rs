@@ -140,6 +140,35 @@ mod sqlite_engine {
             })
         });
     }
+    pub fn overwrite(g: &mut BenchmarkGroup<'_, WallTime>, keys: &[u64]) {
+        let c = load();
+        g.bench_function("sqlite", |b| {
+            b.iter(|| {
+                let mut s = c.prepare("UPDATE kv SET payload=? WHERE id=?").unwrap();
+                for k in keys {
+                    s.execute(params![text_value(k.wrapping_mul(17), PAYLOAD), *k as i64]).unwrap();
+                }
+            })
+        });
+    }
+    pub fn range_scan(g: &mut BenchmarkGroup<'_, WallTime>, starts: &[u64]) {
+        let c = load();
+        g.bench_function("sqlite", |b| {
+            b.iter(|| {
+                let mut s = c.prepare("SELECT id,payload FROM kv WHERE id>=? ORDER BY id LIMIT ?").unwrap();
+                let mut sum = 0u64;
+                for start in starts {
+                    let mut rows = s.query(params![*start as i64, SCAN_LEN as i64]).unwrap();
+                    while let Some(row) = rows.next().unwrap() {
+                        let id: i64 = row.get(0).unwrap();
+                        let p: String = row.get(1).unwrap();
+                        sum = sum.wrapping_add(text_checksum(id as u64, &p));
+                    }
+                }
+                sum
+            })
+        });
+    }
 }
 
 // ----------------------------------------------------------------- redb
@@ -212,6 +241,21 @@ mod redb_engine {
                     sum = sum.wrapping_add(text_checksum(*k, std::str::from_utf8(v.value()).unwrap()));
                 }
                 sum
+            })
+        });
+    }
+    pub fn overwrite(g: &mut BenchmarkGroup<'_, WallTime>, keys: &[u64]) {
+        let (_dir, db) = load();
+        g.bench_function("redb", |b| {
+            b.iter(|| {
+                let wt = db.begin_write().unwrap();
+                {
+                    let mut t = wt.open_table(T).unwrap();
+                    for k in keys {
+                        t.insert(*k, text_value(k.wrapping_mul(17), PAYLOAD).as_bytes()).unwrap();
+                    }
+                }
+                wt.commit().unwrap();
             })
         });
     }
@@ -321,6 +365,18 @@ mod lmdb_engine {
             })
         });
     }
+    pub fn overwrite(g: &mut BenchmarkGroup<'_, WallTime>, keys: &[u64]) {
+        let (_dir, env, db) = load();
+        g.bench_function("lmdb", |b| {
+            b.iter(|| {
+                let mut w = env.write_txn().unwrap();
+                for k in keys {
+                    db.put(&mut w, k, text_value(k.wrapping_mul(17), PAYLOAD).as_bytes()).unwrap();
+                }
+                w.commit().unwrap();
+            })
+        });
+    }
 }
 
 // ---------------------------------------------------------------- duckdb
@@ -374,6 +430,35 @@ mod duckdb_engine {
             })
         });
     }
+    pub fn overwrite(g: &mut BenchmarkGroup<'_, WallTime>, keys: &[u64]) {
+        let c = load();
+        g.bench_function("duckdb", |b| {
+            b.iter(|| {
+                let mut s = c.prepare("UPDATE kv SET payload=? WHERE id=?").unwrap();
+                for k in keys {
+                    s.execute(params![text_value(k.wrapping_mul(17), PAYLOAD), *k]).unwrap();
+                }
+            })
+        });
+    }
+    pub fn range_scan(g: &mut BenchmarkGroup<'_, WallTime>, starts: &[u64]) {
+        let c = load();
+        g.bench_function("duckdb", |b| {
+            b.iter(|| {
+                let mut s = c.prepare("SELECT id,payload FROM kv WHERE id>=? ORDER BY id LIMIT ?").unwrap();
+                let mut sum = 0u64;
+                for start in starts {
+                    let mut rows = s.query(params![*start, SCAN_LEN]).unwrap();
+                    while let Some(row) = rows.next().unwrap() {
+                        let id: u64 = row.get(0).unwrap();
+                        let p: String = row.get(1).unwrap();
+                        sum = sum.wrapping_add(text_checksum(id, &p));
+                    }
+                }
+                sum
+            })
+        });
+    }
 }
 
 fn bench_insert(c: &mut Criterion) {
@@ -412,6 +497,14 @@ fn bench_overwrite(c: &mut Criterion) {
     let mut g = grp(c, "kv/overwrite", OPS);
     #[cfg(feature = "worktable-adapter")]
     worktable_engine::overwrite(&mut g, &keys);
+    #[cfg(feature = "sqlite-adapter")]
+    sqlite_engine::overwrite(&mut g, &keys);
+    #[cfg(feature = "redb-adapter")]
+    redb_engine::overwrite(&mut g, &keys);
+    #[cfg(feature = "lmdb-adapter")]
+    lmdb_engine::overwrite(&mut g, &keys);
+    #[cfg(feature = "duckdb-adapter")]
+    duckdb_engine::overwrite(&mut g, &keys);
     g.finish();
 }
 
@@ -424,6 +517,10 @@ fn bench_range_scan(c: &mut Criterion) {
     redb_engine::range_scan(&mut g, &starts);
     #[cfg(feature = "lmdb-adapter")]
     lmdb_engine::range_scan(&mut g, &starts);
+    #[cfg(feature = "sqlite-adapter")]
+    sqlite_engine::range_scan(&mut g, &starts);
+    #[cfg(feature = "duckdb-adapter")]
+    duckdb_engine::range_scan(&mut g, &starts);
     g.finish();
 }
 
