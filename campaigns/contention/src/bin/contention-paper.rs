@@ -95,6 +95,11 @@ struct Args {
     ops_per_thread: u64,
     warmup_ops: u64,
     repetition: usize,
+    /// Number of distinct hot rows workers spread across. Defaults to the thread
+    /// count so field_granular has one row per worker (nothing to serialize on),
+    /// while overlap/single_mutex still contend. A single hot row (the old
+    /// behavior, --hot-rows 1) cannot show granular lock scaling.
+    hot_rows: usize,
 }
 
 fn parse_args() -> Result<Args, String> {
@@ -103,13 +108,15 @@ fn parse_args() -> Result<Args, String> {
     let mut ops_per_thread = 200_000u64;
     let mut warmup_ops = 20_000u64;
     let mut repetition = 1usize;
+    let mut hot_rows = None;
 
     let mut it = std::env::args().skip(1);
     while let Some(flag) = it.next() {
         if flag == "-h" || flag == "--help" {
             eprintln!(
                 "contention-paper --mode <field_granular|overlap|whole_row|single_mutex> \
-                 --threads N [--ops-per-thread M] [--warmup-ops W] [--repetition R]"
+                 --threads N [--ops-per-thread M] [--warmup-ops W] [--repetition R] \
+                 [--hot-rows H]"
             );
             std::process::exit(0);
         }
@@ -120,15 +127,18 @@ fn parse_args() -> Result<Args, String> {
             "--ops-per-thread" => ops_per_thread = val.parse().map_err(|_| "bad --ops-per-thread")?,
             "--warmup-ops" => warmup_ops = val.parse().map_err(|_| "bad --warmup-ops")?,
             "--repetition" => repetition = val.parse().map_err(|_| "bad --repetition")?,
+            "--hot-rows" => hot_rows = Some(val.parse().map_err(|_| "bad --hot-rows")?),
             other => return Err(format!("unknown option {other}")),
         }
     }
+    let threads = threads.ok_or("--threads is required")?;
     Ok(Args {
         mode: mode.ok_or("--mode is required")?,
-        threads: threads.ok_or("--threads is required")?,
+        threads,
         ops_per_thread,
         warmup_ops,
         repetition,
+        hot_rows: hot_rows.unwrap_or(threads).max(1),
     })
 }
 
@@ -143,6 +153,7 @@ struct CellResult {
     threads: usize,
     repetition: usize,
     // workload
+    hot_rows: usize,
     ops_per_thread: u64,
     warmup_ops: u64,
     operations_completed: u64,
@@ -194,28 +205,37 @@ async fn main() {
     let feature_versioned = cfg!(feature = "versioned-row-publication");
 
     let table = Arc::new(BenchWorkTable::default());
-    let pk = table.insert(mk_row(&table, 0)).unwrap();
-    let pk_val: u64 = pk.into();
+    // Insert `hot_rows` distinct rows. Workers spread across them so
+    // field_granular has genuine row-level parallelism; a single row would make
+    // every worker contend on one row's pages/publication regardless of mode.
+    let pk_vals: Arc<Vec<u64>> = Arc::new(
+        (0..args.hot_rows)
+            .map(|r| table.insert(mk_row(&table, r as u64)).unwrap().into())
+            .collect(),
+    );
 
-    // Warmup: touch the row so pages/locks/publication maps are hot. Not timed,
-    // not counted toward the correctness sum (we zero the fields after).
+    // Warmup: touch every hot row so pages/locks/publication maps are hot. Not
+    // timed, not counted toward the correctness sum (we zero the fields after).
     for i in 0..args.warmup_ops {
-        let _ = inc_field(&table, (i as usize) % args.threads.max(1), pk_val).await;
+        let pk = pk_vals[(i as usize) % args.hot_rows];
+        let _ = inc_field(&table, (i as usize) % args.threads.max(1), pk).await;
     }
-    // Reset all fields to 0 so the post-run sum starts from a known baseline,
-    // using the same all-columns in_place closure (set, not increment).
-    table
-        .update_inc_all_in_place(
-            |(f0, f1, f2, f3, f4, f5, f6, f7)| {
-                *f0 = 0u64.into(); *f1 = 0u64.into();
-                *f2 = 0u64.into(); *f3 = 0u64.into();
-                *f4 = 0u64.into(); *f5 = 0u64.into();
-                *f6 = 0u64.into(); *f7 = 0u64.into();
-            },
-            pk_val,
-        )
-        .await
-        .unwrap();
+    // Reset all fields on every hot row to 0 so the post-run sum starts from a
+    // known baseline, using the all-columns in_place closure (set, not inc).
+    for &pk in pk_vals.iter() {
+        table
+            .update_inc_all_in_place(
+                |(f0, f1, f2, f3, f4, f5, f6, f7)| {
+                    *f0 = 0u64.into(); *f1 = 0u64.into();
+                    *f2 = 0u64.into(); *f3 = 0u64.into();
+                    *f4 = 0u64.into(); *f5 = 0u64.into();
+                    *f6 = 0u64.into(); *f7 = 0u64.into();
+                },
+                pk,
+            )
+            .await
+            .unwrap();
+    }
 
     let completed = Arc::new(AtomicU64::new(0));
     let errors = Arc::new(AtomicU64::new(0));
@@ -231,6 +251,10 @@ async fn main() {
         let big_lock = big_lock.clone();
         let mode = args.mode;
         let ops = args.ops_per_thread;
+        let pk_vals = pk_vals.clone();
+        // Worker i owns hot row (i % hot_rows). With the default hot_rows =
+        // threads, each worker gets a distinct row.
+        let pk_val = pk_vals[i % pk_vals.len()];
         handles.push(tokio::spawn(async move {
             while !start.load(Ordering::Acquire) {
                 tokio::task::yield_now().await;
@@ -241,21 +265,28 @@ async fn main() {
                 // absolute write of (current+1) is NOT safe across modes, so we
                 // use the in_place closure for the granular/overlap paths where
                 // available, and rely on the sum invariant below.
+                // Shared row for the collapse modes: overlap, whole_row, and
+                // single_mutex must contend on ONE row to show coarse locking
+                // collapsing. field_granular uses the worker's own row so the
+                // per-column locks give genuine row-level parallelism.
+                let shared_pk = pk_vals[0];
                 let op = match mode {
-                    // worker i atomically increments field (i % CONTENTION_FIELDS)
+                    // worker i increments field (i % CONTENTION_FIELDS) on its
+                    // OWN row: disjoint rows x disjoint fields -> scales.
                     Mode::FieldGranular => inc_field(&table, i, pk_val).await,
-                    // every worker atomically increments the SAME field (f0):
-                    // identical write sets fully serialize on one field lock
+                    // every worker increments the SAME field (f0) of the SAME
+                    // row: identical write sets fully serialize on one field lock
                     Mode::Overlap => {
-                        table.update_inc_f_0_in_place(|f| *f += 1, pk_val).await.map(|_| ())
+                        table.update_inc_f_0_in_place(|f| *f += 1, shared_pk).await.map(|_| ())
                     }
-                    // every worker takes the all-columns lock, atomically
-                    // incrementing all eight fields (8 increments/op)
-                    Mode::WholeRow => inc_all_by_one(&table, pk_val).await,
-                    // field-granular work wrapped in one external mutex
+                    // every worker takes the all-columns lock of the shared row,
+                    // atomically incrementing all eight fields (8 increments/op)
+                    Mode::WholeRow => inc_all_by_one(&table, shared_pk).await,
+                    // field-granular work on the shared row wrapped in one
+                    // external mutex: everything serializes globally.
                     Mode::SingleMutex => {
                         let _g = big_lock.lock().await;
-                        inc_field(&table, i, pk_val).await
+                        inc_field(&table, i, shared_pk).await
                     }
                 };
                 if op.is_err() {
@@ -278,10 +309,16 @@ async fn main() {
     let ops_completed = completed.load(Ordering::Relaxed);
     let err_count = errors.load(Ordering::Relaxed);
 
-    // Correctness: read the row back and sum the touched fields.
-    let row = table.select(pk_val).expect("hot row must exist");
-    let observed_sum =
-        row.f0 + row.f1 + row.f2 + row.f3 + row.f4 + row.f5 + row.f6 + row.f7;
+    // Correctness: sum the touched fields across ALL hot rows. field_granular
+    // spreads increments across every worker's row; the collapse modes land
+    // entirely on row 0. Summing all rows covers both.
+    let observed_sum: u64 = pk_vals
+        .iter()
+        .map(|&pk| {
+            let row = table.select(pk).expect("hot row must exist");
+            row.f0 + row.f1 + row.f2 + row.f3 + row.f4 + row.f5 + row.f6 + row.f7
+        })
+        .sum();
     // whole_row increments all 8 fields per op; the others increment exactly 1.
     let per_op_increments: u64 = match args.mode {
         Mode::WholeRow => CONTENTION_FIELDS as u64,
@@ -301,6 +338,7 @@ async fn main() {
         lock_discipline: args.mode.lock_discipline(),
         threads: args.threads,
         repetition: args.repetition,
+        hot_rows: args.hot_rows,
         ops_per_thread: args.ops_per_thread,
         warmup_ops: args.warmup_ops,
         operations_completed: ops_completed,

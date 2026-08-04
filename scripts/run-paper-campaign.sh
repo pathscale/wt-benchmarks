@@ -24,11 +24,11 @@ if [[ "$PROFILE" == "smoke" ]]; then
   ROWS=100000; REPS=1; THREADS="1 2 4"; YCSB_RECORDS=50000; YCSB_OPS=200000
   CONTENTION_OPS=30000; TORTURE_RECORDS=1500; TORTURE_OPS=15000
 elif [[ "$PROFILE" == "macbook" ]]; then
-  # Reduced-scale full pipeline for an Apple-silicon laptop: 1M rows and a
-  # thread ladder capped at 16 (M-series core budget). Real numbers, ~15-25 min,
-  # not the load-bearing AWS paper run but relayable as MacBook figures.
-  ROWS=1000000; REPS=5; THREADS="1 2 4 8 16"; YCSB_RECORDS=1000000; YCSB_OPS=2000000
-  CONTENTION_OPS=500000; TORTURE_RECORDS=10000; TORTURE_OPS=100000
+  # Fast reduced-scale full pipeline for an Apple-silicon laptop, tuned to finish
+  # in ~5-10 min. Enough signal to see scaling shape and ratios; NOT the
+  # load-bearing AWS paper run. Bump YCSB_* / REPS for tighter numbers.
+  ROWS=200000; REPS=3; THREADS="1 2 4 8"; YCSB_RECORDS=200000; YCSB_OPS=400000
+  CONTENTION_OPS=200000; TORTURE_RECORDS=4000; TORTURE_OPS=40000
 else # paper
   ROWS=10000000; REPS=10; THREADS="1 2 4 8 16 32"; YCSB_RECORDS=1000000; YCSB_OPS=5000000
   CONTENTION_OPS=1000000; TORTURE_RECORDS=10000; TORTURE_OPS=200000
@@ -47,7 +47,10 @@ export ROWS REPS SCAN_LOOKUPS=3000 RANGE_WIDTH=100 RANGE_LOOKUPS=3000
 for bin in baselines slotmap_baseline vec_janky vec_realistic; do
   ./target/release/$bin 2>/dev/null | tail -n +2 >> "$ladder"
 done
-./target/release/ablation 2>/dev/null | grep specialized >> "$ladder"
+# Emit BOTH the specialized and dynamic-twin rows: the paper's specialized-vs-
+# runtime-schema throughput ratio is derived from the two. Drop only the
+# binary's own header line.
+./target/release/ablation 2>/dev/null | grep -E '^ablation,(specialized|dynamic),' >> "$ladder"
 echo "  -> $ladder ($(wc -l <"$ladder") rows)"
 
 # ---- 2. contention matrix (C2: lock-granularity, publication on/off) ----
