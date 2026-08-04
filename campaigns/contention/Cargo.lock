@@ -1140,6 +1140,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
+name = "slotmap"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bdd58c3c93c3d278ca835519292445cb4b0d4dc59ccfdf7ceadaab3f8aeb4038"
+dependencies = [
+ "version_check",
+]
+
+[[package]]
 name = "smallvec"
 version = "1.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1487,7 +1496,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wt-benchmarks"
+name = "wt-contention-campaign"
 version = "0.1.0"
 dependencies = [
  "dashmap",
@@ -1498,24 +1507,10 @@ dependencies = [
  "rkyv 0.8.17",
  "serde",
  "serde_json",
- "tokio",
- "uuid",
-]
-
-[[package]]
-name = "wt-ycsb-index-backends"
-version = "0.1.0"
-dependencies = [
- "derive_more 2.1.1",
- "eyre",
- "futures",
- "rkyv 0.8.17",
- "serde",
- "serde_json",
+ "slotmap",
  "tokio",
  "uuid",
  "worktable",
- "wt-benchmarks",
 ]
 
 [[package]]

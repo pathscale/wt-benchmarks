@@ -1,0 +1,91 @@
+[package]
+name = "wt-footprint-campaign"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[workspace]
+
+[features]
+default = ["tables-1"]
+tables-1 = []
+tables-2 = ["tables-1"]
+tables-4 = ["tables-2"]
+tables-8 = ["tables-4"]
+worktable-backend = [
+    "dep:derive_more",
+    "dep:eyre",
+    "dep:futures",
+    "dep:rkyv",
+    "dep:tokio",
+    "dep:uuid",
+    "dep:worktable",
+]
+sqlite-backend = ["dep:rusqlite"]
+redb-backend = ["dep:redb"]
+
+[dependencies]
+derive_more = { version = "2.0.1", features = ["debug", "display", "from", "into"], optional = true }
+eyre = { version = "0.6", optional = true }
+futures = { version = "0.3", optional = true }
+redb = { version = "4.1.0", optional = true }
+rkyv = { version = "0.8.9", features = ["uuid-1"], optional = true }
+rusqlite = { version = "0.40.1", features = ["bundled"], optional = true }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"], optional = true }
+uuid = { version = "1", optional = true }
+worktable = { path = "../../../WorkTable", optional = true }
+
+[profile.paper-speed]
+inherits = "release"
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+debug = false
+strip = "symbols"
+panic = "abort"
+incremental = false
+
+[profile.paper-size]
+inherits = "release"
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+debug = false
+strip = "symbols"
+panic = "abort"
+incremental = false
+
+[[bin]]
+name = "footprint-control"
+path = "src/bin/footprint-control.rs"
+
+[[bin]]
+name = "footprint-worktable"
+path = "src/bin/footprint-worktable.rs"
+required-features = ["worktable-backend"]
+
+[[bin]]
+name = "footprint-sqlite"
+path = "src/bin/footprint-sqlite.rs"
+required-features = ["sqlite-backend"]
+
+[[bin]]
+name = "footprint-redb"
+path = "src/bin/footprint-redb.rs"
+required-features = ["redb-backend"]
+
+[[bin]]
+name = "storage-worktable"
+path = "src/bin/storage-worktable.rs"
+required-features = ["worktable-backend"]
+
+[[bin]]
+name = "storage-sqlite"
+path = "src/bin/storage-sqlite.rs"
+required-features = ["sqlite-backend"]
+
+[[bin]]
+name = "storage-redb"
+path = "src/bin/storage-redb.rs"
+required-features = ["redb-backend"]

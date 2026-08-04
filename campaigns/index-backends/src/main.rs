@@ -163,6 +163,7 @@ struct Config {
     backend: Backend,
     rows: u64,
     operations: u64,
+    range_operations: u64,
     mutations: u64,
     sample_every: u64,
     repetition: usize,
@@ -174,6 +175,7 @@ impl Default for Config {
             backend: Backend::WorkTablesIndex,
             rows: 100_000,
             operations: 1_000_000,
+            range_operations: 200,
             mutations: 50_000,
             sample_every: 128,
             repetition: 1,
@@ -192,6 +194,7 @@ impl Config {
                      --backend worktables_index|indexset|congee|arctic\n\
                      --rows N            initial sequential rows (default 100000)\n\
                      --operations N      point reads per phase (default 1000000)\n\
+                     --range-operations N range queries per width (default 200)\n\
                      --mutations N       inserts/deletes per phase (default 50000)\n\
                      --sample-every N    latency sample interval (default 128)\n\
                      --repetition N      result label (default 1)"
@@ -205,6 +208,7 @@ impl Config {
                 "--backend" => config.backend = value.parse()?,
                 "--rows" => config.rows = parse(&flag, &value)?,
                 "--operations" => config.operations = parse(&flag, &value)?,
+                "--range-operations" => config.range_operations = parse(&flag, &value)?,
                 "--mutations" => config.mutations = parse(&flag, &value)?,
                 "--sample-every" => config.sample_every = parse(&flag, &value)?,
                 "--repetition" => config.repetition = parse(&flag, &value)?,
@@ -213,6 +217,7 @@ impl Config {
         }
         if config.rows == 0
             || config.operations == 0
+            || config.range_operations == 0
             || config.mutations == 0
             || config.sample_every == 0
             || config.repetition == 0
@@ -336,6 +341,7 @@ fn emit(
     config: &Config,
     operation: &'static str,
     operations: u64,
+    sample_every: u64,
     elapsed_ns: u128,
     samples: Vec<u64>,
     allocation: AllocationSnapshot,
@@ -356,7 +362,7 @@ fn emit(
         payload_bytes: std::mem::size_of::<Payload>(),
         elapsed_ns,
         ops_per_second: operations as f64 / (elapsed_ns as f64 / 1_000_000_000.0),
-        sample_every: config.sample_every,
+        sample_every,
         latency: LatencySummary::from_samples(samples),
         alloc_calls: allocation.alloc_calls,
         realloc_calls: allocation.realloc_calls,
@@ -440,6 +446,7 @@ macro_rules! run_backend {
             config,
             "insert_initial",
             config.rows,
+            config.sample_every,
             elapsed_ns,
             samples,
             allocation,
@@ -471,6 +478,7 @@ macro_rules! run_backend {
             config,
             "primary_point_hit",
             config.operations,
+            config.sample_every,
             elapsed_ns,
             samples,
             allocation,
@@ -503,6 +511,7 @@ macro_rules! run_backend {
             config,
             "unique_point_hit",
             config.operations,
+            config.sample_every,
             elapsed_ns,
             samples,
             allocation,
@@ -510,6 +519,56 @@ macro_rules! run_backend {
             rss_before,
             rss_after,
         );
+
+        macro_rules! run_unique_range {
+            ($width:expr, $operation:literal) => {{
+                let width = $width;
+                if width <= config.rows {
+                    let mut samples = Vec::with_capacity(config.range_operations as usize);
+                    let rss_before = rss_bytes();
+                    let live_before = allocations().live_bytes;
+                    reset_allocation_events();
+                    let started = Instant::now();
+                    let mut checksum = 0_u64;
+                    let start_domain = config.rows - width + 1;
+                    for sequence in 0..config.range_operations {
+                        let operation_started = Instant::now();
+                        let range_start = sequence.wrapping_mul(9_973) % start_domain;
+                        let rows = black_box(
+                            table
+                                .select_by_lookup_range(range_start..range_start + width)
+                                .execute()
+                                .expect("loaded unique range must execute"),
+                        );
+                        assert_eq!(rows.len() as u64, width);
+                        checksum = checksum.wrapping_add(rows.len() as u64);
+                        sample(&mut samples, Some(operation_started));
+                    }
+                    black_box(checksum);
+                    let elapsed_ns = started.elapsed().as_nanos();
+                    let allocation = allocations();
+                    let rss_after = rss_bytes();
+                    emit(
+                        config,
+                        $operation,
+                        config.range_operations,
+                        1,
+                        elapsed_ns,
+                        samples,
+                        allocation,
+                        live_before,
+                        rss_before,
+                        rss_after,
+                    );
+                }
+            }};
+        }
+
+        run_unique_range!(1, "unique_range_1");
+        run_unique_range!(8, "unique_range_8");
+        run_unique_range!(64, "unique_range_64");
+        run_unique_range!(1_024, "unique_range_1024");
+        run_unique_range!(config.rows, "unique_range_full");
 
         let mut samples =
             Vec::with_capacity((config.operations / config.sample_every + 1) as usize);
@@ -536,6 +595,76 @@ macro_rules! run_backend {
             config,
             "primary_point_miss",
             config.operations,
+            config.sample_every,
+            elapsed_ns,
+            samples,
+            allocation,
+            live_before,
+            rss_before,
+            rss_after,
+        );
+
+        let mut samples =
+            Vec::with_capacity((config.operations / config.sample_every + 1) as usize);
+        let rss_before = rss_bytes();
+        let live_before = allocations().live_bytes;
+        reset_allocation_events();
+        let started = Instant::now();
+        let mut misses = 0_u64;
+        for sequence in 0..config.operations {
+            let operation_started = sequence
+                .is_multiple_of(config.sample_every)
+                .then(Instant::now);
+            misses += u64::from(
+                black_box(table.select_by_lookup(u64::MAX - sequence % config.rows)).is_none(),
+            );
+            sample(&mut samples, operation_started);
+        }
+        assert_eq!(misses, config.operations);
+        let elapsed_ns = started.elapsed().as_nanos();
+        let allocation = allocations();
+        let rss_after = rss_bytes();
+        emit(
+            config,
+            "unique_point_miss",
+            config.operations,
+            config.sample_every,
+            elapsed_ns,
+            samples,
+            allocation,
+            live_before,
+            rss_before,
+            rss_after,
+        );
+
+        let mut samples = Vec::with_capacity((config.mutations / config.sample_every + 1) as usize);
+        let rss_before = rss_bytes();
+        let live_before = allocations().live_bytes;
+        reset_allocation_events();
+        let started = Instant::now();
+        for sequence in 0..config.mutations {
+            let operation_started = sequence
+                .is_multiple_of(config.sample_every)
+                .then(Instant::now);
+            let id = sequence % config.rows;
+            table
+                .update($row {
+                    id,
+                    lookup: config.rows + config.mutations + sequence,
+                    payload: [sequence as u8; 32],
+                })
+                .await
+                .expect("existing backend row must update");
+            sample(&mut samples, operation_started);
+        }
+        let elapsed_ns = started.elapsed().as_nanos();
+        let allocation = allocations();
+        let rss_after = rss_bytes();
+        emit(
+            config,
+            "update_unique",
+            config.mutations,
+            config.sample_every,
             elapsed_ns,
             samples,
             allocation,
@@ -572,6 +701,7 @@ macro_rules! run_backend {
             config,
             "insert_steady",
             config.mutations,
+            config.sample_every,
             elapsed_ns,
             samples,
             allocation,
@@ -602,6 +732,7 @@ macro_rules! run_backend {
             config,
             "delete_steady",
             config.mutations,
+            config.sample_every,
             elapsed_ns,
             samples,
             allocation,

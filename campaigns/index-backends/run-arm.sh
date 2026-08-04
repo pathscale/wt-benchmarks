@@ -6,8 +6,10 @@ campaign_repo="$(cd "$campaign_dir/../.." && pwd)"
 campaign_manifest="$campaign_dir/Cargo.toml"
 campaign_binary="$campaign_dir/target/release/wt-index-backend-campaign"
 campaign_results="${CAMPAIGN_RESULTS:-$campaign_repo/results/index-backends-arm64.jsonl}"
+campaign_environment="${CAMPAIGN_ENVIRONMENT:-${campaign_results%.jsonl}.environment.txt}"
 campaign_rows="${CAMPAIGN_ROWS:-250000}"
 campaign_operations="${CAMPAIGN_OPERATIONS:-2000000}"
+campaign_range_operations="${CAMPAIGN_RANGE_OPERATIONS:-200}"
 campaign_mutations="${CAMPAIGN_MUTATIONS:-100000}"
 campaign_sample_every="${CAMPAIGN_SAMPLE_EVERY:-64}"
 campaign_repetitions="${CAMPAIGN_REPETITIONS:-7}"
@@ -21,6 +23,22 @@ if [[ -e "$campaign_results" ]]; then
     echo "error: refusing to overwrite existing results: $campaign_results" >&2
     exit 2
 fi
+if [[ -e "$campaign_environment" ]]; then
+    echo "error: refusing to overwrite existing environment capture: $campaign_environment" >&2
+    exit 2
+fi
+
+WORKTABLE_DIR="${WORKTABLE_DIR:-$campaign_repo/../WorkTable}" \
+BENCHMARK_LOCKFILE="$campaign_dir/Cargo.lock" \
+    "$campaign_repo/scripts/capture-environment.sh" >"$campaign_environment"
+{
+    echo "campaign_rows=$campaign_rows"
+    echo "campaign_operations=$campaign_operations"
+    echo "campaign_range_operations=$campaign_range_operations"
+    echo "campaign_mutations=$campaign_mutations"
+    echo "campaign_sample_every=$campaign_sample_every"
+    echo "campaign_repetitions=$campaign_repetitions"
+} >>"$campaign_environment"
 
 cargo build --release --locked --manifest-path "$campaign_manifest"
 
@@ -29,6 +47,7 @@ for campaign_backend in worktables_index indexset congee arctic; do
         --backend "$campaign_backend" \
         --rows 10000 \
         --operations 100000 \
+        --range-operations 20 \
         --mutations 5000 \
         --sample-every 64 \
         --repetition 1 >/dev/null
@@ -48,6 +67,7 @@ while ((campaign_repetition <= campaign_repetitions)); do
             --backend "$campaign_backend" \
             --rows "$campaign_rows" \
             --operations "$campaign_operations" \
+            --range-operations "$campaign_range_operations" \
             --mutations "$campaign_mutations" \
             --sample-every "$campaign_sample_every" \
             --repetition "$campaign_repetition" >>"$campaign_results"
@@ -56,3 +76,4 @@ while ((campaign_repetition <= campaign_repetitions)); do
 done
 
 echo "wrote $campaign_results"
+echo "wrote $campaign_environment"

@@ -4,15 +4,16 @@ version = 4
 
 [[package]]
 name = "WorkTablesIndex"
-version = "0.0.1"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e21d8723f8419261fedc4088fbe6707a16957fa18aae3cb2197b2b0f724bf75b"
+checksum = "c106608766355c751d55ca0f31ee636a35f58f1152ab2b0ce08424beea2bdc9a"
 dependencies = [
  "crossbeam-skiplist",
  "crossbeam-utils",
  "fastrand",
  "ftree",
  "parking_lot",
+ "wt-slice",
 ]
 
 [[package]]
@@ -24,15 +25,6 @@ dependencies = [
  "getrandom 0.2.17",
  "once_cell",
  "version_check",
-]
-
-[[package]]
-name = "aho-corasick"
-version = "1.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301"
-dependencies = [
- "memchr",
 ]
 
 [[package]]
@@ -260,9 +252,9 @@ dependencies = [
 
 [[package]]
 name = "data_bucket"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "603b9f2db8a87208bf23e7c77a14c46846b22c02845074e8160a74d2425b2126"
+checksum = "040d912748a75081733f357e480726deb4875f9660c56afa20df10dabd0ba27f"
 dependencies = [
  "WorkTablesIndex",
  "data_bucket_derive",
@@ -277,15 +269,12 @@ dependencies = [
 
 [[package]]
 name = "data_bucket_derive"
-version = "0.3.16"
+version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b1150d0750949ff18a8cbcec7ec5423120769ab8ceac994fcba4073c9736e5c"
+checksum = "a0d3c7588405cb34492204f7d06f3e1caaabddc5a6e74f1c6bac5980bc06934e"
 dependencies = [
- "convert_case 0.6.0",
  "proc-macro2",
  "quote",
- "regex",
- "rkyv 0.7.46",
  "syn 2.0.119",
 ]
 
@@ -909,35 +898,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "regex"
-version = "1.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d"
-dependencies = [
- "aho-corasick",
- "memchr",
- "regex-automata",
- "regex-syntax",
-]
-
-[[package]]
-name = "regex-automata"
-version = "0.4.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fcfdb36bda0c880c5931cdc7a2bcdc8ba4556847b9d912bca70bc94708711ad"
-dependencies = [
- "aho-corasick",
- "memchr",
- "regex-syntax",
-]
-
-[[package]]
-name = "regex-syntax"
-version = "0.8.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
-
-[[package]]
 name = "rend"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1460,8 +1420,7 @@ dependencies = [
 
 [[package]]
 name = "worktable"
-version = "0.9.4"
-source = "git+https://github.com/pathscale/WorkTable?branch=feat%2Findex-backend-using#114574f0f005560712a738655857d39818c2c262"
+version = "1.0.0-beta.1"
 dependencies = [
  "WorkTablesIndex",
  "arctic-map",
@@ -1489,8 +1448,7 @@ dependencies = [
 
 [[package]]
 name = "worktable_codegen"
-version = "0.9.4"
-source = "git+https://github.com/pathscale/WorkTable?branch=feat%2Findex-backend-using#114574f0f005560712a738655857d39818c2c262"
+version = "1.0.0-beta.1"
 dependencies = [
  "convert_case 0.6.0",
  "indexmap",
@@ -1514,6 +1472,12 @@ dependencies = [
  "uuid",
  "worktable",
 ]
+
+[[package]]
+name = "wt-slice"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90c024e3ded2e63d657c13e093b88470463c22899487022b3212f516e80e2d29"
 
 [[package]]
 name = "wyz"

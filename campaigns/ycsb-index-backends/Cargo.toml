@@ -4,10 +4,7 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 publish = false
-
-[features]
-default = []
-stable-index-read-retry = ["worktable/stable-index-read-retry"]
+default-run = "wt-ycsb-index-backends"
 
 [dependencies]
 derive_more = { version = "2.0.1", features = ["from", "error", "display", "debug", "into"] }
@@ -17,5 +14,13 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 uuid = "1"
-worktable = { path = "../../../WorkTable-index-backends-versioned", features = ["versioned-row-publication"] }
+worktable = { path = "../../../WorkTable", features = ["versioned-row-publication"] }
 wt-benchmarks = { path = "../..", default-features = false }
+eyre = "0.6"
+
+# The live WorkTable now requires the WorkTablesIndex rev that adds
+# NodeLike::delete_at. This crate resolves independently of the WorkTable
+# workspace, so it must mirror that git-rev pin or the worktable lib fails to
+# compile against the published 0.0.4.
+[patch.crates-io]
+WorkTablesIndex = { git = "https://github.com/pathscale/WorkTablesIndex.git", rev = "6f408010553600ed5eeb8913608b1d779dbff258" }

@@ -1,0 +1,86 @@
+[package]
+name = "wt-contention-campaign"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+# Opt out of the parent wt-benchmarks workspace: this campaign carries its own
+# lockfile and (optionally) a different WorkTable feature set than the root.
+[workspace]
+
+[dependencies]
+worktable = { path = "../../../WorkTable" }
+# Crates the worktable! macro expansion references as extern paths in the
+# consumer crate (eyre in query signatures, rkyv for archiving, uuid/futures
+# in the generated engine). Versions mirror the root wt-benchmarks crate.
+derive_more = { version = "2.0.1", features = ["from", "error", "display", "debug", "into"] }
+eyre = "0.6"
+futures = "0.3"
+rkyv = { version = "0.8.9", features = ["uuid-1"] }
+uuid = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }
+parking_lot = "0.12"
+dashmap = "6"
+slotmap = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+# Mirror the root wt-benchmarks toggle so the paper matrix can sweep the
+# publication axis: `--features versioned-row-publication`.
+versioned-row-publication = ["worktable/versioned-row-publication"]
+
+# The casual regression runner. CSV to stdout, a few thread counts, seconds.
+[[bin]]
+name = "contention-quick"
+path = "src/bin/contention-quick.rs"
+
+# The paper-grade runner. Full lock-mode matrix, versioned JSONL, correctness
+# counters, environment-tagged. Driven per-cell by scripts/run-contention-matrix.sh.
+[[bin]]
+name = "contention-paper"
+path = "src/bin/contention-paper.rs"
+
+# Specialization ablation (C3): WorkTable vs the dynamic twin. Rescued from the
+# retired WorkTable/paper-bench; shares the Bench table + dynamic.rs twin.
+[[bin]]
+name = "ablation"
+path = "src/bin/ablation.rs"
+
+# Hand-rolled Rust baselines (Vec / RwLock<HashMap> / DashMap). Rescued from
+# the retired WorkTable/paper-bench.
+[[bin]]
+name = "baselines"
+path = "src/bin/baselines.rs"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
+# The HONEST Vec baseline: Vec + hand-maintained secondary index + lock + owned
+# reads — WorkTable's functionality written by hand. The apples-to-apples floor.
+[[bin]]
+name = "vec_realistic"
+path = "src/bin/vec_realistic.rs"
+
+# The JANKY Vec baseline modeled on real production code: linear-scan lookups
+# (Vec::iter().find) + embedded-JSON (de)serialization per typed access. What
+# apps actually do before adopting an engine.
+[[bin]]
+name = "vec_janky"
+path = "src/bin/vec_janky.rs"
+
+# OSS baseline: slotmap (90M downloads) is the arena crate the ecosystem
+# actually uses — O(1) by handle, NO secondary index. Its users must hand-roll
+# a scan to find by a non-handle field: exactly what WorkTable's generated index
+# replaces. Un-cherry-pickable (massively used, not a toy).
+[[bin]]
+name = "slotmap_baseline"
+path = "src/bin/slotmap_baseline.rs"
+
+# Mirror the worktable crate's WorkTablesIndex pin. This campaign opts out of the
+# workspace, so without it cargo resolves the published 0.0.4 (lacking
+# NodeLike::delete_at) and the worktable lib fails to compile.
+[patch.crates-io]
+WorkTablesIndex = { git = "https://github.com/pathscale/WorkTablesIndex.git", rev = "6f408010553600ed5eeb8913608b1d779dbff258" }
