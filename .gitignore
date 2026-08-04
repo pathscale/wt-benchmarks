@@ -3,7 +3,11 @@
 /results/*.jsonl
 /results/*.csv
 /results/*.json
+/results/*.environment.txt
 .DS_Store
 
 # Captured result files are ignored until a run has been reviewed. Curated
 # manifests and summaries can be force-added deliberately.
+
+# Captured campaign result data (add curated results deliberately)
+campaigns/**/results-*.csv

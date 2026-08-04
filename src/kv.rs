@@ -243,8 +243,10 @@ pub fn value(key: u64, payload_bytes: usize) -> Vec<u8> {
 }
 
 pub fn value_checksum(value: &[u8]) -> u64 {
-    let prefix: [u8; 8] = value[..8].try_into().expect("encoded value prefix");
-    u64::from_le_bytes(prefix).wrapping_add(value.len() as u64)
+    // Hash the full encoded value, not just the key prefix and length: a guard
+    // that ignores the payload cannot detect an adapter returning the right key
+    // and length but corrupted bytes. FNV-1a over every byte.
+    fnv1a(value)
 }
 
 pub fn text_value(key: u64, payload_bytes: usize) -> String {
@@ -256,7 +258,22 @@ pub fn text_value(key: u64, payload_bytes: usize) -> String {
 }
 
 pub fn text_checksum(key: u64, value: &str) -> u64 {
-    key.wrapping_add(value.len() as u64)
+    // Fold the key into a content hash of the payload. The previous
+    // `key + value.len()` ignored the payload entirely, so an overwrite that
+    // changed the stored bytes (same length) or an adapter returning the wrong
+    // row was invisible to the guard.
+    fnv1a(value.as_bytes()).wrapping_add(key)
+}
+
+/// FNV-1a 64-bit. Deterministic and identical across adapters so cross-engine
+/// checksums stay comparable.
+fn fnv1a(bytes: &[u8]) -> u64 {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for &byte in bytes {
+        hash ^= byte as u64;
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    hash
 }
 
 fn keys(count: u64, upper: u64, seed: u64) -> Vec<u64> {
@@ -272,7 +289,8 @@ mod tests {
     fn value_shape_and_checksum() {
         let encoded = value(42, 64);
         assert_eq!(encoded.len(), 72);
-        assert_eq!(value_checksum(&encoded), 114);
+        // Regression pin for the FNV-1a content hash.
+        assert_eq!(value_checksum(&encoded), 8023576303247386353);
     }
 
     #[test]
@@ -280,6 +298,22 @@ mod tests {
         let encoded = text_value(42, 64);
         assert_eq!(encoded.len(), 64);
         assert!(encoded.is_ascii());
-        assert_eq!(text_checksum(42, &encoded), 106);
+        assert_eq!(text_checksum(42, &encoded), 12358665130484402906);
+    }
+
+    /// The guard must detect a payload change, not just a length change. This
+    /// is the property the old `key + len` / prefix-only checksums missed.
+    #[test]
+    fn checksum_is_payload_sensitive() {
+        // Two equal-length byte payloads differing in content must not collide.
+        let a = value(42, 64);
+        let mut b = a.clone();
+        *b.last_mut().unwrap() ^= 0xff;
+        assert_ne!(value_checksum(&a), value_checksum(&b));
+
+        // Same for text payloads under the same key/length.
+        let ta = text_value(42, 64);
+        let tb = text_value(43, 64); // different content, same length
+        assert_ne!(text_checksum(42, &ta), text_checksum(42, &tb));
     }
 }
