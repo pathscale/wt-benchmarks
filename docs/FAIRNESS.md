@@ -99,6 +99,77 @@ ladder.
 
 ---
 
+## 3b. Comparison categories, from unfair-to-us to unfair-to-them
+
+The full ladder, ordered by which direction the "unfairness" runs. Each entry
+gives the fair comparison, the caveat that must accompany it, and the one-line
+reading.
+
+### Vec family (unfair to us: they have no engine capabilities)
+- **Raw `Vec`/`HashMap`** (floor). We are orders of magnitude slower on raw
+  ops. Read: the price of being a real indexed/owned/concurrent engine.
+- **Hand-tuned `Vec` + index + lock** (`vec_realistic`), and an ecosystem arena
+  (`slotmap`). Fair on owned reads; we win on secondary/range where the
+  hand-roll has no ordered index.
+- **Real-world janky `Vec`** (`vec_janky`) and **OSS-extracted-from-the-wild**
+  (a real scan-by-field snippet pulled from a public repo, cited). We win by
+  1-2 orders of magnitude on find-by-field and typed access. Strongest honest
+  comparison; the OSS extraction removes any "you strawmanned it" objection.
+
+### KV stores (redb, RocksDB, sled, LMDB): their home turf on point ops
+- **Fair:** point get/put by primary key, durability-matched (WT persist ON
+  background vs. KV non-sync for L3; synced for L4). Expect them competitive or
+  ahead on raw point ops; say so.
+- **Caveat / where we win honestly:** a KV store has no secondary index and no
+  typing. To find-by-field the app hand-builds a second keyspace and pays
+  (de)serialization per access. Compare WT's native secondary index against
+  "KV + hand-rolled index", show both, and label the hand-rolled cost as the
+  KV user's, not ours.
+- **Read:** "On raw durable point ops, KV matches or beats us, that is what it
+  is built for. The moment you need a secondary index or typed access, the KV
+  user must hand-build what WorkTable generates."
+
+### In-memory database (SQLite `:memory:`): general engine, no disk
+- **Fair:** in-memory point/range/secondary ops, WT persist OFF; owned rows
+  both sides. The cleanest "generated typed access vs. interpreted general
+  engine" comparison.
+- **Caveat:** SQLite pays SQL parse/plan/bind and value-interface type erasure
+  per operation that WT does at compile time; that gap is the specialization
+  advantage, label it as such. SQLite offers ad-hoc queries and joins WT does
+  not; note the capability WT gives up.
+- **Read:** "We trade ad-hoc query flexibility for compile-time specialization;
+  on the declared paths both support, we are faster because we do not interpret
+  a catalog per operation."
+
+### Embedded with persistence (SQLite WAL, redb/LMDB durable): the durability line
+- **Fair:** persisted WT (background) vs. their non-sync/relaxed mode (L3).
+- **Hard caveat:** WorkTable has NO fsync / crash-consistency tier. Their
+  default durable mode (WAL + fsync) provides crash safety WT does not. Never
+  compare WT against a fsync mode and call it apples-to-apples: WT would look
+  fast because it does less durability work. If shown at all, it carries a bold
+  "WorkTable does not provide crash consistency here" plus the capability
+  matrix.
+- **Read:** "Where both run relaxed durability, here is the comparison. Where
+  they run full crash-safe durability, that is a capability we do not have, not
+  a performance win."
+
+### Client-server RDBMS (MySQL, Postgres): the deliberately unfair comparison
+- **Not the same category.** WT is an in-process library; these are
+  network client-server systems with MVCC, ACID transactions, crash recovery,
+  replication, concurrent multi-client, and a SQL optimizer.
+- **Fair:** almost nothing on raw latency, and that is the point. If shown, use
+  in-process WT vs. Postgres over loopback or embedded PG, never blame the
+  network on WT; and frame it as the *cost of the guarantees Postgres provides
+  and WT deliberately does not*, not as a WT victory.
+- **Never headline "WorkTable is 10,000x faster than Postgres."** It is true and
+  meaningless; a reader who knows databases will discount everything else.
+- **Read:** "The deliberately unfair comparison. WT is orders of magnitude
+  faster because it is not a database: no network, no transactions, no crash
+  recovery, no concurrent clients. We show it to quantify the tax of guarantees
+  many embedded workloads never use."
+
+---
+
 ## 4. How to read the headline comparisons
 
 - **"WorkTable is ~Nx slower than `Vec`"** means: a real typed/indexed/owned
