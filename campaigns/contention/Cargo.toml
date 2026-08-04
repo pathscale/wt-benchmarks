@@ -35,6 +35,12 @@ criterion = { version = "0.8", features = ["async_tokio"] }
 name = "ablation"
 harness = false
 
+# Contention throughput port: drives the contention-paper cell binary and reports
+# ops/sec + CIs via Criterion (plus a lost-updates correctness assertion).
+[[bench]]
+name = "contention"
+harness = false
+
 [features]
 # Mirror the root wt-benchmarks toggle so the paper matrix can sweep the
 # publication axis: `--features versioned-row-publication`.
