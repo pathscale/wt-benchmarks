@@ -12,7 +12,9 @@ worktable-adapter = ["dep:worktable"]
 versioned-row-publication = ["worktable-adapter", "worktable/versioned-row-publication"]
 redb-adapter = ["dep:redb", "dep:tempfile"]
 sqlite-adapter = ["dep:rusqlite"]
-external-adapters = ["redb-adapter", "sqlite-adapter"]
+lmdb-adapter = ["dep:heed", "dep:tempfile"]
+duckdb-adapter = ["dep:duckdb", "dep:tempfile"]
+external-adapters = ["redb-adapter", "sqlite-adapter", "lmdb-adapter", "duckdb-adapter"]
 
 [dependencies]
 dashmap = "6"
@@ -20,6 +22,10 @@ derive_more = { version = "2.0.1", features = ["from", "error", "display", "debu
 eyre = "0.6"
 futures = "0.3"
 parking_lot = "0.12"
+# bundled: compile DuckDB from source into the binary — no system lib, portable
+# to the Linux paper box.
+duckdb = { version = "1", features = ["bundled"], optional = true }
+heed = { version = "0.20", optional = true }
 redb = { version = "4.1.0", optional = true }
 rkyv = { version = "0.8.9", features = ["uuid-1"] }
 rusqlite = { version = "0.40.1", features = ["bundled"], optional = true }
@@ -55,6 +61,16 @@ path = "src/bin/kv-worktable.rs"
 name = "kv-sqlite"
 path = "src/bin/kv-sqlite.rs"
 required-features = ["sqlite-adapter"]
+
+[[bin]]
+name = "kv-lmdb"
+path = "src/bin/kv-lmdb.rs"
+required-features = ["lmdb-adapter"]
+
+[[bin]]
+name = "kv-duckdb"
+path = "src/bin/kv-duckdb.rs"
+required-features = ["duckdb-adapter"]
 
 [[bin]]
 name = "speedtest1-worktable"
