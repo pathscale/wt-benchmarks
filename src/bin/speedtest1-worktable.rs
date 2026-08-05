@@ -6,35 +6,163 @@ use serde::Serialize;
 use worktable::prelude::*;
 use worktable::worktable;
 use wt_benchmarks::kv::{text_checksum, text_value};
+use wt_benchmarks::kv_table::IndexBackend;
 use wt_benchmarks::rng::Rng;
 
-worktable!(
-    name: SpeedInt,
-    columns: {
-        id: u64 primary_key,
-        group_id: u64,
-        counter: u64,
-        payload: String,
-    },
-    indexes: {
-        group_idx: group_id,
-    },
-    queries: {
-        update: {
-            Counter(counter) by id,
-            Payload(payload) by id,
-        }
-    }
-);
+trait SpeedBackend: Default {
+    fn insert_integer(&self, id: u64, group_id: u64, payload: String);
+    fn integer_count(&self) -> u64;
+    fn integer_point_checksum(&self, key: u64) -> u64;
+    fn integer_range_checksum(&self, start: u64, length: u64) -> u64;
+    fn integer_group_count(&self, group: u64) -> u64;
+    async fn update_integer(&self, key: u64, counter: u64);
+    fn integer_full_scan_checksum(&self, rows: u64) -> u64;
+    async fn delete_integer(&self, key: u64) -> bool;
+}
 
-worktable!(
-    name: SpeedText,
-    columns: {
-        key: String primary_key,
-        value: u64,
-        payload: String,
+macro_rules! speed_backend {
+    ($module:ident, $using:ident) => {
+        mod $module {
+            use super::*;
+
+            worktable!(
+                name: SpeedInt,
+                persist: false,
+                columns: {
+                    id: u64 primary_key using $using,
+                    group_id: u64,
+                    counter: u64,
+                    payload: String,
+                },
+                indexes: {
+                    group_idx: group_id,
+                },
+                queries: {
+                    update: {
+                        Counter(counter) by id,
+                        Payload(payload) by id,
+                    }
+                }
+            );
+
+            pub(super) struct Driver(SpeedIntWorkTable);
+
+            impl Default for Driver {
+                fn default() -> Self {
+                    Self(SpeedIntWorkTable::default())
+                }
+            }
+
+            impl SpeedBackend for Driver {
+                fn insert_integer(&self, id: u64, group_id: u64, payload: String) {
+                    self.0
+                        .insert(SpeedIntRow { id, group_id, counter: id, payload })
+                        .expect("sequential integer key must insert");
+                }
+
+                fn integer_count(&self) -> u64 { self.0.count() as u64 }
+
+                fn integer_point_checksum(&self, key: u64) -> u64 {
+                    let row = black_box(self.0.select(key)).expect("loaded key");
+                    row.counter.wrapping_add(text_checksum(row.id, &row.payload))
+                }
+
+                fn integer_range_checksum(&self, start: u64, length: u64) -> u64 {
+                    self.0
+                        .select_by_pk_range(start..start + length)
+                        .execute()
+                        .expect("primary range")
+                        .into_iter()
+                        .fold(0, |sum, row| sum.wrapping_add(row.counter))
+                }
+
+                fn integer_group_count(&self, group: u64) -> u64 {
+                    self.0
+                        .select_by_group_id(group)
+                        .execute()
+                        .expect("secondary lookup")
+                        .len() as u64
+                }
+
+                async fn update_integer(&self, key: u64, counter: u64) {
+                    self.0
+                        .update_counter(CounterQuery { counter }, key)
+                        .await
+                        .expect("loaded key must update");
+                }
+
+                fn integer_full_scan_checksum(&self, rows: u64) -> u64 {
+                    self.0
+                        .select_by_pk_range(0..rows)
+                        .execute()
+                        .expect("ordered full scan")
+                        .into_iter()
+                        .fold(0, |sum, row| sum.wrapping_add(row.counter))
+                }
+
+                async fn delete_integer(&self, key: u64) -> bool {
+                    self.0.delete(key).await.is_ok()
+                }
+            }
+        }
+    };
+}
+
+speed_backend!(wti_backend, worktables_index);
+speed_backend!(congee_backend, congee);
+speed_backend!(arctic_backend, arctic);
+
+mod wti_text {
+    use super::*;
+
+    worktable!(
+        name: SpeedText,
+        persist: false,
+        columns: {
+            key: String primary_key using worktables_index,
+            value: u64,
+            payload: String,
+        }
+    );
+
+    pub(super) fn run(config: &Config, repetition: usize, keys: &[u64]) {
+        let text = SpeedTextWorkTable::default();
+        let started = Instant::now();
+        for id in 0..config.rows {
+            text.insert(SpeedTextRow {
+                key: text_key(id),
+                value: id,
+                payload: text_value(id, config.payload_bytes),
+            })
+            .expect("sequential text key must insert");
+        }
+        emit(
+            config,
+            "worktable",
+            "text_insert_sequential",
+            repetition,
+            config.rows,
+            started,
+            text.count() as u64,
+        );
+
+        let started = Instant::now();
+        let checksum = keys.iter().fold(0_u64, |sum, key| {
+            let row = black_box(text.select(text_key(*key))).expect("loaded text key");
+            sum.wrapping_add(row.value)
+                .wrapping_add(row.payload.len() as u64)
+        });
+        emit(
+            config,
+            "worktable",
+            "text_point_read_random",
+            repetition,
+            config.operations,
+            started,
+            checksum,
+        );
     }
-);
+}
 
 #[derive(Clone, Debug)]
 struct Config {
@@ -45,6 +173,7 @@ struct Config {
     payload_bytes: usize,
     groups: u64,
     seed: u64,
+    index_backend: String,
 }
 
 impl Default for Config {
@@ -57,6 +186,7 @@ impl Default for Config {
             payload_bytes: 64,
             groups: 1_000,
             seed: 42,
+            index_backend: "worktables_index".to_owned(),
         }
     }
 }
@@ -75,7 +205,8 @@ impl Config {
                      --scan-length N      rows requested per PK range (default 100)\n\
                      --payload-bytes N    string bytes per row (default 64)\n\
                      --groups N           secondary-index cardinality (default 1000)\n\
-                     --seed N             deterministic seed (default 42)"
+                     --seed N             deterministic seed (default 42)\n\
+                     --index-backend B    worktables_index, congee, or arctic"
                 );
                 std::process::exit(0);
             }
@@ -90,6 +221,7 @@ impl Config {
                 "--payload-bytes" => config.payload_bytes = parse(&flag, &value)?,
                 "--groups" => config.groups = parse(&flag, &value)?,
                 "--seed" => config.seed = parse(&flag, &value)?,
+                "--index-backend" => config.index_backend = value,
                 _ => return Err(format!("unknown option: {flag}")),
             }
         }
@@ -142,6 +274,7 @@ struct ResultRow<'a> {
 
 fn emit(
     config: &Config,
+    engine: &'static str,
     phase: &str,
     repetition: usize,
     operations: u64,
@@ -152,7 +285,7 @@ fn emit(
     let result = ResultRow {
         schema_version: 1,
         suite: "sqlite-speedtest1-core-shape",
-        engine: "worktable",
+        engine,
         phase,
         repetition,
         rows: config.rows,
@@ -180,6 +313,10 @@ async fn main() {
         eprintln!("error: {error}\nrun with --help for usage");
         std::process::exit(2);
     });
+    let backend = IndexBackend::parse(&config.index_backend).unwrap_or_else(|| {
+        eprintln!("error: unknown index backend: {}", config.index_backend);
+        std::process::exit(2);
+    });
     let keys = random_keys(config.operations, config.rows, config.seed);
     let scan_starts = random_keys(
         config.operations,
@@ -188,40 +325,71 @@ async fn main() {
     );
 
     for repetition in 1..=config.repetitions {
-        run_repetition(&config, repetition, &keys, &scan_starts).await;
+        match backend {
+            IndexBackend::WorktablesIndex => {
+                run_repetition::<wti_backend::Driver>(
+                    &config,
+                    backend.benchmark_label(),
+                    repetition,
+                    &keys,
+                    &scan_starts,
+                )
+                .await;
+                wti_text::run(&config, repetition, &keys);
+            }
+            IndexBackend::Congee => {
+                run_repetition::<congee_backend::Driver>(
+                    &config,
+                    backend.benchmark_label(),
+                    repetition,
+                    &keys,
+                    &scan_starts,
+                )
+                .await
+            }
+            IndexBackend::Arctic => {
+                run_repetition::<arctic_backend::Driver>(
+                    &config,
+                    backend.benchmark_label(),
+                    repetition,
+                    &keys,
+                    &scan_starts,
+                )
+                .await
+            }
+        }
     }
 }
 
-async fn run_repetition(config: &Config, repetition: usize, keys: &[u64], scan_starts: &[u64]) {
-    let integers = SpeedIntWorkTable::default();
+async fn run_repetition<T: SpeedBackend>(
+    config: &Config,
+    engine: &'static str,
+    repetition: usize,
+    keys: &[u64],
+    scan_starts: &[u64],
+) {
+    let tables = T::default();
     let started = Instant::now();
     for id in 0..config.rows {
-        integers
-            .insert(SpeedIntRow {
-                id,
-                group_id: id % config.groups,
-                counter: id,
-                payload: text_value(id, config.payload_bytes),
-            })
-            .expect("sequential integer key must insert");
+        tables.insert_integer(id, id % config.groups, text_value(id, config.payload_bytes));
     }
     emit(
         config,
+        engine,
         "integer_insert_sequential",
         repetition,
         config.rows,
         started,
-        integers.count() as u64,
+        tables.integer_count(),
     );
 
     let started = Instant::now();
     let checksum = keys.iter().fold(0_u64, |sum, key| {
-        let row = black_box(integers.select(*key)).expect("loaded key");
-        sum.wrapping_add(row.counter)
-            .wrapping_add(text_checksum(row.id, &row.payload))
+        sum.wrapping_add(tables.integer_point_checksum(*key))
     });
     emit(
         config,
+        engine,
         "integer_point_read_random",
         repetition,
         config.operations,
@@ -232,16 +400,11 @@ async fn run_repetition(config: &Config, repetition: usize, keys: &[u64], scan_s
     let started = Instant::now();
     let mut checksum = 0_u64;
     for start in scan_starts {
-        let rows = integers
-            .select_by_pk_range(*start..*start + config.scan_length)
-            .execute()
-            .expect("primary range");
-        checksum = rows
-            .into_iter()
-            .fold(checksum, |sum, row| sum.wrapping_add(row.counter));
+        checksum = checksum.wrapping_add(tables.integer_range_checksum(*start, config.scan_length));
     }
     emit(
         config,
+        engine,
         "integer_range_read",
         repetition,
         config.operations,
@@ -252,14 +415,11 @@ async fn run_repetition(config: &Config, repetition: usize, keys: &[u64], scan_s
     let started = Instant::now();
     let mut checksum = 0_u64;
     for group in keys.iter().map(|key| key % config.groups) {
-        let rows = integers
-            .select_by_group_id(group)
-            .execute()
-            .expect("secondary lookup");
-        checksum = checksum.wrapping_add(rows.len() as u64);
+        checksum = checksum.wrapping_add(tables.integer_group_count(group));
     }
     emit(
         config,
+        engine,
         "integer_secondary_fanout",
         repetition,
         config.operations,
@@ -269,35 +429,23 @@ async fn run_repetition(config: &Config, repetition: usize, keys: &[u64], scan_s
 
     let started = Instant::now();
     for key in keys {
-        integers
-            .update_counter(
-                CounterQuery {
-                    counter: key.wrapping_mul(17),
-                },
-                *key,
-            )
-            .await
-            .expect("loaded key must update");
+        tables.update_integer(*key, key.wrapping_mul(17)).await;
     }
     emit(
         config,
+        engine,
         "integer_update_random",
         repetition,
         config.operations,
         started,
-        integers.count() as u64,
+        tables.integer_count(),
     );
 
     let started = Instant::now();
-    let rows = integers
-        .select_by_pk_range(0..config.rows)
-        .execute()
-        .expect("ordered full scan");
-    let checksum = rows
-        .into_iter()
-        .fold(0_u64, |sum, row| sum.wrapping_add(row.counter));
+    let checksum = tables.integer_full_scan_checksum(config.rows);
     emit(
         config,
+        engine,
         "integer_ordered_full_scan",
         repetition,
         config.rows,
@@ -305,49 +453,16 @@ async fn run_repetition(config: &Config, repetition: usize, keys: &[u64], scan_s
         checksum,
     );
 
-    let text = SpeedTextWorkTable::default();
-    let started = Instant::now();
-    for id in 0..config.rows {
-        text.insert(SpeedTextRow {
-            key: text_key(id),
-            value: id,
-            payload: text_value(id, config.payload_bytes),
-        })
-        .expect("sequential text key must insert");
-    }
-    emit(
-        config,
-        "text_insert_sequential",
-        repetition,
-        config.rows,
-        started,
-        text.count() as u64,
-    );
-
-    let started = Instant::now();
-    let checksum = keys.iter().fold(0_u64, |sum, key| {
-        let row = black_box(text.select(text_key(*key))).expect("loaded text key");
-        sum.wrapping_add(row.value)
-            .wrapping_add(row.payload.len() as u64)
-    });
-    emit(
-        config,
-        "text_point_read_random",
-        repetition,
-        config.operations,
-        started,
-        checksum,
-    );
-
     let started = Instant::now();
     let mut deleted = 0_u64;
     for key in keys {
-        if integers.delete(*key).await.is_ok() {
+        if tables.delete_integer(*key).await {
             deleted += 1;
         }
     }
     emit(
         config,
+        engine,
         "integer_delete_random",
         repetition,
         config.operations,
