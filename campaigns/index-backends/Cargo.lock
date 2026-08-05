@@ -4,16 +4,15 @@ version = 4
 
 [[package]]
 name = "WorkTablesIndex"
-version = "0.0.3"
+version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c106608766355c751d55ca0f31ee636a35f58f1152ab2b0ce08424beea2bdc9a"
+checksum = "66f3e28bdea83d1c8bde508f7593113e0e6bc246b434527b82e277a7cabbf4d6"
 dependencies = [
  "crossbeam-skiplist",
  "crossbeam-utils",
  "fastrand",
  "ftree",
  "parking_lot",
- "wt-slice",
 ]
 
 [[package]]
@@ -34,10 +33,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "993a810118f8f37e9c4411c86f1c4c940a09a7ab34b7bf2d88d06f50c553fab7"
 
 [[package]]
-name = "arctic-map"
+name = "arctic-wt"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a01ee8986104413a1b36e57bf95ca33457280e41c1d0fa112d4ff74f67c405b"
+checksum = "525ddffcc39496cf25429bfa2e5b1476e2e71b792c686cbe2080ac5a6d751a3d"
 dependencies = [
  "fearless_simd",
  "ribbit",
@@ -144,10 +143,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
-name = "congee"
+name = "congee-wt"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72819224a9c43e0a5d64bdad35a71fde68bf479992fb8989635c72bc547909be"
+checksum = "341f16608dbae8a05601aaaac7ff990e8ef89006e8762ffe3516915e9e3c9598"
 dependencies = [
  "crossbeam-epoch",
 ]
@@ -168,6 +167,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "633458d4ef8c78b72454de2d54fd6ab2e60f9e02be22f3c6104cdc8a4e0fceb9"
 dependencies = [
  "unicode-segmentation",
+]
+
+[[package]]
+name = "crc32fast"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -252,9 +260,9 @@ dependencies = [
 
 [[package]]
 name = "data_bucket"
-version = "0.5.0"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "040d912748a75081733f357e480726deb4875f9660c56afa20df10dabd0ba27f"
+checksum = "2fd71b907f49692213e4490fd7ded71252dcf2201f5fa16ed422f885cf723d46"
 dependencies = [
  "WorkTablesIndex",
  "data_bucket_derive",
@@ -999,6 +1007,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustc-hash"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d"
+
+[[package]]
 name = "rustc_version"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1420,13 +1434,14 @@ dependencies = [
 
 [[package]]
 name = "worktable"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.5"
 dependencies = [
  "WorkTablesIndex",
- "arctic-map",
+ "arctic-wt",
  "async-trait",
- "congee",
+ "congee-wt",
  "convert_case 0.6.0",
+ "crc32fast",
  "data_bucket",
  "derive_more 2.1.1",
  "eyre",
@@ -1439,6 +1454,7 @@ dependencies = [
  "prettytable-rs",
  "psc-nanoid",
  "rkyv 0.8.17",
+ "rustc-hash",
  "smart-default",
  "tokio",
  "tracing",
@@ -1448,7 +1464,7 @@ dependencies = [
 
 [[package]]
 name = "worktable_codegen"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.5"
 dependencies = [
  "convert_case 0.6.0",
  "indexmap",
@@ -1463,6 +1479,7 @@ name = "wt-index-backend-campaign"
 version = "0.1.0"
 dependencies = [
  "derive_more 2.1.1",
+ "eyre",
  "futures",
  "libc",
  "rkyv 0.8.17",
@@ -1472,12 +1489,6 @@ dependencies = [
  "uuid",
  "worktable",
 ]
-
-[[package]]
-name = "wt-slice"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90c024e3ded2e63d657c13e093b88470463c22899487022b3212f516e80e2d29"
 
 [[package]]
 name = "wyz"

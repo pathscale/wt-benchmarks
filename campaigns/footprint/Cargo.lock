@@ -4,9 +4,9 @@ version = 4
 
 [[package]]
 name = "WorkTablesIndex"
-version = "0.0.4"
+version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98feebdb055f47663b9fffc3802f63cf6dfdf2c7cf4d072e1164794aa68d85ee"
+checksum = "66f3e28bdea83d1c8bde508f7593113e0e6bc246b434527b82e277a7cabbf4d6"
 dependencies = [
  "crossbeam-skiplist",
  "crossbeam-utils",
@@ -270,9 +270,9 @@ dependencies = [
 
 [[package]]
 name = "data_bucket"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96a5e9c4f3e515a01f695d405da6162cb0b3a9c33ee0bb8e7c61bae3e1a5cb49"
+checksum = "2fd71b907f49692213e4490fd7ded71252dcf2201f5fa16ed422f885cf723d46"
 dependencies = [
  "WorkTablesIndex",
  "data_bucket_derive",
@@ -1113,6 +1113,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustc-hash"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d"
+
+[[package]]
 name = "rustc_version"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1565,7 +1571,7 @@ dependencies = [
 
 [[package]]
 name = "worktable"
-version = "1.0.0-beta.2"
+version = "1.0.0-beta.5"
 dependencies = [
  "WorkTablesIndex",
  "arctic-wt",
@@ -1585,6 +1591,7 @@ dependencies = [
  "prettytable-rs",
  "psc-nanoid",
  "rkyv 0.8.17",
+ "rustc-hash",
  "smart-default",
  "tokio",
  "tracing",
@@ -1594,7 +1601,7 @@ dependencies = [
 
 [[package]]
 name = "worktable_codegen"
-version = "1.0.0-beta.2"
+version = "1.0.0-beta.5"
 dependencies = [
  "convert_case 0.6.0",
  "indexmap",

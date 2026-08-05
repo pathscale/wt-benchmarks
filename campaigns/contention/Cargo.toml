@@ -93,9 +93,3 @@ path = "src/bin/vec_janky.rs"
 [[bin]]
 name = "slotmap_baseline"
 path = "src/bin/slotmap_baseline.rs"
-
-# Mirror the worktable crate's WorkTablesIndex pin. This campaign opts out of the
-# workspace, so without it cargo resolves the published 0.0.4 (lacking
-# NodeLike::delete_at) and the worktable lib fails to compile.
-[patch.crates-io]
-WorkTablesIndex = { git = "https://github.com/pathscale/WorkTablesIndex.git", rev = "6f408010553600ed5eeb8913608b1d779dbff258" }

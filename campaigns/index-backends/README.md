@@ -1,21 +1,16 @@
-> **Status (2026-08-04): archived research campaign — does not currently build.**
-> It targets the retired `feat/index-backend-using` WorkTable branch (PR #187), which
-> no longer exists on the remote. Kept for provenance of the index-backend experiment;
-> not part of the v1 release or paper benchmark suite. To revive, repoint the
-> `worktable` dependency at a live branch/rev.
+> **Status (2026-08-05): research campaign ported to WorkTable 1.0.0-beta.5.**
+> It remains outside the v1 release and paper benchmark suite, but now builds against
+> the same local WorkTable checkout as the other campaigns.
 
 # WorkTable index-backend campaign
 
-This standalone crate benchmarks PR #187 through its downstream Git dependency:
+This standalone crate benchmarks the index backends available in the local WorkTable checkout:
 
 ```toml
-worktable = {
-    git = "https://github.com/pathscale/WorkTable",
-    branch = "feat/index-backend-using",
-}
+worktable = { path = "../../../WorkTable" }
 ```
 
-`Cargo.lock` pins the exact WorkTable revision used by a captured run. The
+The local WorkTable checkout determines the exact revision used by a run. The
 campaign runs each provider in a separate process so allocator and resident-set
 measurements do not leak across providers. The tested schema has an
 autoincrement sequential `u64` primary key, a sequential unique `u64` secondary
