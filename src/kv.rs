@@ -73,6 +73,11 @@ pub struct KvConfig {
     pub seed: u64,
     pub durability: DurabilityMode,
     pub transaction_scope: TransactionScope,
+    /// Primary-index backend for the `using` keyword, honored only by the
+    /// WorkTable adapter (`worktables_index` | `congee` | `arctic`). Other KV
+    /// adapters ignore it. Stored as a string so this shared config carries no
+    /// dependency on the feature-gated `IndexBackend` type.
+    pub index_backend: String,
 }
 
 impl Default for KvConfig {
@@ -87,6 +92,7 @@ impl Default for KvConfig {
             seed: 42,
             durability: DurabilityMode::Relaxed,
             transaction_scope: TransactionScope::PerOperation,
+            index_backend: "worktables_index".to_string(),
         }
     }
 }
@@ -110,7 +116,8 @@ impl KvConfig {
                      --payload-bytes N              bytes per value (default 64)\n\
                      --seed N                       deterministic seed (default 42)\n\
                      --durability memory|relaxed|durable\n\
-                     --transaction-scope per-operation|batch"
+                     --transaction-scope per-operation|batch\n\
+                     --index-backend worktables_index|congee|arctic  (WorkTable adapter only)"
                 );
                 std::process::exit(0);
             }
@@ -127,6 +134,14 @@ impl KvConfig {
                 "--seed" => config.seed = parse(&flag, &value)?,
                 "--durability" => config.durability = value.parse()?,
                 "--transaction-scope" => config.transaction_scope = value.parse()?,
+                "--index-backend" => match value.as_str() {
+                    "worktables_index" | "wti" | "default" => {
+                        config.index_backend = "worktables_index".into()
+                    }
+                    "congee" => config.index_backend = "congee".into(),
+                    "arctic" => config.index_backend = "arctic".into(),
+                    _ => return Err(format!("unknown index backend: {value}")),
+                },
                 _ => return Err(format!("unknown option: {flag}")),
             }
         }

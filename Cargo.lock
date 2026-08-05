@@ -4,8 +4,9 @@ version = 4
 
 [[package]]
 name = "WorkTablesIndex"
-version = "0.0.4"
-source = "git+https://github.com/pathscale/WorkTablesIndex.git?rev=6f408010553600ed5eeb8913608b1d779dbff258#6f408010553600ed5eeb8913608b1d779dbff258"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66f3e28bdea83d1c8bde508f7593113e0e6bc246b434527b82e277a7cabbf4d6"
 dependencies = [
  "crossbeam-skiplist",
  "crossbeam-utils",
@@ -738,9 +739,9 @@ dependencies = [
 
 [[package]]
 name = "data_bucket"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96a5e9c4f3e515a01f695d405da6162cb0b3a9c33ee0bb8e7c61bae3e1a5cb49"
+checksum = "2fd71b907f49692213e4490fd7ded71252dcf2201f5fa16ed422f885cf723d46"
 dependencies = [
  "WorkTablesIndex",
  "data_bucket_derive",
@@ -3142,7 +3143,7 @@ checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
 name = "worktable"
-version = "1.0.0-beta.2"
+version = "1.0.0-beta.4"
 dependencies = [
  "WorkTablesIndex",
  "arctic-wt",
@@ -3171,7 +3172,7 @@ dependencies = [
 
 [[package]]
 name = "worktable_codegen"
-version = "1.0.0-beta.2"
+version = "1.0.0-beta.4"
 dependencies = [
  "convert_case 0.6.0",
  "indexmap",
@@ -3369,3 +3370,8 @@ dependencies = [
  "log",
  "simd-adler32",
 ]
+
+[[patch.unused]]
+name = "WorkTablesIndex"
+version = "0.0.4"
+source = "git+https://github.com/pathscale/WorkTablesIndex.git?rev=6f408010553600ed5eeb8913608b1d779dbff258#6f408010553600ed5eeb8913608b1d779dbff258"
