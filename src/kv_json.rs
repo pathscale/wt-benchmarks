@@ -161,11 +161,21 @@ wt_doc_backend!(worktable_arctic_engine, WtDocArctic, arctic);
 // ---------------------------------------------------- KV + JSON (redb / lmdb)
 // The durable-jank tier. Value = one serde_json blob per key. A single-field
 // update must get -> from_slice -> mutate -> to_vec -> put the whole document.
+//
+// TRANSACTION GRANULARITY (load-bearing for a fair comparison):
+// Every CRUD operation commits its OWN transaction — one begin_write/commit per
+// insert, per update_field, per delete. This mirrors WorkTable, which publishes
+// one mutation per `update`/`insert`/`delete` call, and mirrors how these stores
+// are used in the wild (omicron / pict-rs commit per logical write, not
+// thousands-at-once). Batching all N ops into a single transaction would let the
+// KV amortize its commit/durability cost across the batch and misrepresent
+// per-operation CRUD latency — do NOT wrap the op loops in one transaction.
+// (`load()` is bulk setup, not a measured op, so it may batch.)
 
 #[cfg(feature = "redb-adapter")]
 pub mod redb_engine {
     use super::Account;
-    use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
+    use redb::{Database, Durability, ReadableDatabase, ReadableTable, TableDefinition};
 
     const T: TableDefinition<u64, &[u8]> = TableDefinition::new("accounts");
 
@@ -179,7 +189,8 @@ pub mod redb_engine {
             let dir = tempfile::tempdir().unwrap();
             let db = Database::create(dir.path().join("accounts.redb")).unwrap();
             {
-                let w = db.begin_write().unwrap();
+                let mut w = db.begin_write().unwrap();
+                w.set_durability(Durability::None);
                 {
                     let _ = w.open_table(T).unwrap();
                 }
@@ -189,7 +200,8 @@ pub mod redb_engine {
         }
         pub fn load(rows: u64) -> Self {
             let e = Self::new();
-            let w = e.db.begin_write().unwrap();
+            let mut w = e.db.begin_write().unwrap();
+            w.set_durability(Durability::None);
             {
                 let mut t = w.open_table(T).unwrap();
                 for k in 0..rows {
@@ -202,7 +214,8 @@ pub mod redb_engine {
         }
         pub fn insert(&self, k: u64) {
             let bytes = serde_json::to_vec(&Account::make(k)).unwrap();
-            let w = self.db.begin_write().unwrap();
+            let mut w = self.db.begin_write().unwrap();
+            w.set_durability(Durability::None);
             {
                 let mut t = w.open_table(T).unwrap();
                 t.insert(k, bytes.as_slice()).unwrap();
@@ -218,12 +231,15 @@ pub mod redb_engine {
                 acc.wrapping_add(a.checksum())
             })
         }
-        /// The money op: parse the whole doc, mutate one field, reserialize.
+        /// The money op: for EACH key, in its own transaction, parse the whole
+        /// doc, mutate one field, reserialize, and commit. One begin_write/commit
+        /// per update — matches WorkTable's per-op publish (see module note).
         pub fn update_balance(&self, keys: &[u64]) {
-            let w = self.db.begin_write().unwrap();
-            {
-                let mut t = w.open_table(T).unwrap();
-                for k in keys {
+            for k in keys {
+                let mut w = self.db.begin_write().unwrap();
+                w.set_durability(Durability::None);
+                {
+                    let mut t = w.open_table(T).unwrap();
                     let mut a: Account = {
                         let v = t.get(*k).unwrap().expect("row");
                         serde_json::from_slice(v.value()).unwrap()
@@ -232,8 +248,8 @@ pub mod redb_engine {
                     let bytes = serde_json::to_vec(&a).unwrap();
                     t.insert(*k, bytes.as_slice()).unwrap();
                 }
+                w.commit().unwrap();
             }
-            w.commit().unwrap();
         }
         pub fn query_active_over_age_checksum(&self, min_age: u32) -> u64 {
             let r = self.db.begin_read().unwrap();
@@ -269,10 +285,10 @@ pub mod lmdb_engine {
         pub fn new() -> Self {
             let dir = tempfile::tempdir().unwrap();
             let env = unsafe {
-                EnvOpenOptions::new()
-                    .map_size(1024 * 1024 * 1024)
-                    .open(dir.path())
-                    .unwrap()
+                let mut opts = EnvOpenOptions::new();
+                opts.map_size(1024 * 1024 * 1024)
+                    .flags(heed::EnvFlags::NO_SYNC | heed::EnvFlags::NO_META_SYNC);
+                opts.open(dir.path()).unwrap()
             };
             let mut wtxn = env.write_txn().unwrap();
             let db: AccountDb = env.create_database(&mut wtxn, None).unwrap();
@@ -303,9 +319,11 @@ pub mod lmdb_engine {
                 acc.wrapping_add(a.checksum())
             })
         }
+        /// One write txn per update — matches WorkTable's per-op publish and the
+        /// redb engine (see module note); do NOT batch the loop in one txn.
         pub fn update_balance(&self, keys: &[u64]) {
-            let mut w = self.env.write_txn().unwrap();
             for k in keys {
+                let mut w = self.env.write_txn().unwrap();
                 let mut a: Account = {
                     let v = self.db.get(&w, k).unwrap().expect("row");
                     serde_json::from_slice(v).unwrap()
@@ -313,8 +331,8 @@ pub mod lmdb_engine {
                 a.balance = (*k as f64) * 2.25;
                 let bytes = serde_json::to_vec(&a).unwrap();
                 self.db.put(&mut w, k, &bytes).unwrap();
+                w.commit().unwrap();
             }
-            w.commit().unwrap();
         }
         pub fn query_active_over_age_checksum(&self, min_age: u32) -> u64 {
             let r = self.env.read_txn().unwrap();

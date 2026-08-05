@@ -4,6 +4,11 @@
 //! pattern). The story op is `update_field`: WorkTable writes ONE column; the KV
 //! engines parse -> mutate -> reserialize the WHOLE document.
 //!
+//! FAIRNESS: every measured CRUD op commits ONE transaction per operation on
+//! every engine (WorkTable publishes per `update`; redb/lmdb do one
+//! begin_write/commit per key). No engine batches N ops into a single
+//! transaction — that would amortize commit cost and misrepresent per-op CRUD.
+//!
 //!   cargo bench --bench kv_json --features external-adapters
 
 use std::time::Duration;
