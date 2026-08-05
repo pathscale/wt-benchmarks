@@ -10,7 +10,7 @@ pub use generator::{
     generate_streams, make_fields,
 };
 #[cfg(feature = "worktable-adapter")]
-pub use worktable_adapter::run_repetition;
+pub use worktable_adapter::{IndexBackend, run_repetition, run_repetition_with_backend};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Workload {

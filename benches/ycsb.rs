@@ -15,10 +15,10 @@
 
 use std::time::Duration;
 
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 
 use wt_benchmarks::config::Config;
-use wt_benchmarks::ycsb::{run_repetition, Workload};
+use wt_benchmarks::ycsb::{IndexBackend, Workload, run_repetition_with_backend};
 
 const RECORDS: u64 = 50_000;
 const OPERATIONS: u64 = 200_000;
@@ -59,18 +59,28 @@ fn throughput(c: &mut Criterion) {
     group.sample_size(10);
 
     for (name, workload) in WORKLOADS {
-        group.bench_function(*name, |b| {
-            b.iter_custom(|iters| {
-                let mut total = Duration::ZERO;
-                for _ in 0..iters {
-                    let result = runtime.block_on(run_repetition(&cfg(*workload), 1));
-                    // Use the harness's own measured window, not wall time around
-                    // thread spawn/join.
-                    total += Duration::from_nanos(result.elapsed_ns as u64);
-                }
-                total
-            })
-        });
+        for backend in IndexBackend::ALL {
+            group.bench_with_input(
+                BenchmarkId::new(*name, backend.benchmark_label()),
+                &backend,
+                |b, backend| {
+                    b.iter_custom(|iters| {
+                        let mut total = Duration::ZERO;
+                        for _ in 0..iters {
+                            let result = runtime.block_on(run_repetition_with_backend(
+                                &cfg(*workload),
+                                1,
+                                *backend,
+                            ));
+                            // Use the harness's own measured window, not wall time around
+                            // thread spawn/join.
+                            total += Duration::from_nanos(result.elapsed_ns as u64);
+                        }
+                        total
+                    })
+                },
+            );
+        }
     }
     group.finish();
 }
@@ -84,21 +94,31 @@ fn latency(c: &mut Criterion) {
     for (name, workload) in WORKLOADS {
         // Report per-op p99 (read op is present in every workload). iter_custom
         // returns the p99 as the "duration" so Criterion's estimate IS the p99.
-        group.bench_function(*name, |b| {
-            b.iter_custom(|iters| {
-                let mut total = Duration::ZERO;
-                for _ in 0..iters {
-                    let result = runtime.block_on(run_repetition(&cfg(*workload), 1));
-                    let p99 = result
-                        .latency
-                        .get("read")
-                        .and_then(|s| s.p99_ns)
-                        .unwrap_or(0);
-                    total += Duration::from_nanos(p99);
-                }
-                total
-            })
-        });
+        for backend in IndexBackend::ALL {
+            group.bench_with_input(
+                BenchmarkId::new(*name, backend.benchmark_label()),
+                &backend,
+                |b, backend| {
+                    b.iter_custom(|iters| {
+                        let mut total = Duration::ZERO;
+                        for _ in 0..iters {
+                            let result = runtime.block_on(run_repetition_with_backend(
+                                &cfg(*workload),
+                                1,
+                                *backend,
+                            ));
+                            let p99 = result
+                                .latency
+                                .get("read")
+                                .and_then(|s| s.p99_ns)
+                                .unwrap_or(0);
+                            total += Duration::from_nanos(p99);
+                        }
+                        total
+                    })
+                },
+            );
+        }
     }
     group.finish();
 }

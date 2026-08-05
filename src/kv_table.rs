@@ -32,6 +32,14 @@ impl IndexBackend {
         }
     }
 
+    pub fn benchmark_label(self) -> &'static str {
+        match self {
+            IndexBackend::WorktablesIndex => "worktable",
+            IndexBackend::Congee => "worktable-congee",
+            IndexBackend::Arctic => "worktable-arctic",
+        }
+    }
+
     /// Parse the `--index-backend` value / a bench parameter.
     pub fn parse(value: &str) -> Option<IndexBackend> {
         match value {
