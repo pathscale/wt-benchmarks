@@ -12,6 +12,17 @@ use std::time::Duration;
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, Criterion, Throughput, criterion_group, criterion_main};
 
+// The WorkTable engines checksum/serialize inside their drivers; the external
+// KV engines (sqlite/redb/lmdb/duckdb) still call these directly, so the import
+// is gated to those adapters to avoid an unused-import warning otherwise.
+#[cfg(any(
+    feature = "sqlite-adapter",
+    feature = "redb-adapter",
+    feature = "lmdb-adapter",
+    feature = "duckdb-adapter"
+))]
+use wt_benchmarks::kv::{text_checksum, text_value};
+
 const ROWS: u64 = 10_000;
 const OPS: u64 = 10_000;
 const SCAN_OPS: u64 = 200;
