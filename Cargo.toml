@@ -36,13 +36,6 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 uuid = "1"
 worktable = { path = "../WorkTable", optional = true }
 
-# The local worktable crate pins WorkTablesIndex to a git rev that adds the
-# positional node-deletion primitive (NodeLike::delete_at). This standalone
-# crate must mirror that pin, or it resolves the published 0.0.4 from crates.io
-# and fails to compile the worktable lib.
-[patch.crates-io]
-WorkTablesIndex = { git = "https://github.com/pathscale/WorkTablesIndex.git", rev = "6f408010553600ed5eeb8913608b1d779dbff258" }
-
 [dev-dependencies]
 criterion = { version = "0.8", features = ["async_tokio"] }
 
@@ -50,6 +43,12 @@ criterion = { version = "0.8", features = ["async_tokio"] }
 # their adapter features; run e.g. `cargo bench --bench kv --features external-adapters`.
 [[bench]]
 name = "kv"
+harness = false
+
+# KV + embedded-JSON bench: typed columns (WorkTable) vs serde_json blob per key
+# (redb, lmdb) — the durable-jank tier modeled on omicron / pict-rs.
+[[bench]]
+name = "kv_json"
 harness = false
 
 # YCSB two-port bench: throughput (Throughput::Elements) + latency (p99).
