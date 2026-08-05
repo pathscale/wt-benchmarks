@@ -10,19 +10,80 @@ use worktable::prelude::*;
 use worktable::worktable;
 use wt_benchmarks::rng::Rng;
 
-worktable!(
-    name: Micro,
-    columns: {
-        id: u64 primary_key,
-        value: u64,
-        payload: String,
-    },
-    queries: {
-        update: {
-            Value(value) by id,
+trait MicroBackend: Default {
+    fn insert(&self, row: Row);
+    fn point_read(&self, key: u64) -> u64;
+    async fn update(&self, key: u64, value: u64);
+    fn range_checksum(&self, start: u64, end: u64) -> u64;
+}
+
+macro_rules! micro_backend {
+    ($module:ident, $using:ident) => {
+        mod $module {
+            use super::*;
+
+            worktable!(
+                name: Micro,
+                persist: false,
+                columns: {
+                    id: u64 primary_key using $using,
+                    value: u64,
+                    payload: String,
+                },
+                queries: {
+                    update: {
+                        Value(value) by id,
+                    }
+                }
+            );
+
+            pub(super) struct Driver(MicroWorkTable);
+
+            impl Default for Driver {
+                fn default() -> Self {
+                    Self(MicroWorkTable::default())
+                }
+            }
+
+            impl MicroBackend for Driver {
+                fn insert(&self, row: Row) {
+                    self.0
+                        .insert(MicroRow {
+                            id: row.id,
+                            value: row.value,
+                            payload: row.payload,
+                        })
+                        .expect("unique key");
+                }
+
+                fn point_read(&self, key: u64) -> u64 {
+                    let row = black_box(self.0.select(key).expect("loaded key"));
+                    row.value.wrapping_add(row.payload.len() as u64)
+                }
+
+                async fn update(&self, key: u64, value: u64) {
+                    self.0
+                        .update_value(ValueQuery { value }, key)
+                        .await
+                        .expect("loaded key");
+                }
+
+                fn range_checksum(&self, start: u64, end: u64) -> u64 {
+                    self.0
+                        .select_by_pk_range(start..=end)
+                        .execute()
+                        .expect("range query")
+                        .into_iter()
+                        .fold(0, |sum, row| sum.wrapping_add(row.value))
+                }
+            }
         }
-    }
-);
+    };
+}
+
+micro_backend!(wti_backend, worktables_index);
+micro_backend!(congee_backend, congee);
+micro_backend!(arctic_backend, arctic);
 
 #[derive(Clone, Debug)]
 struct Row {
@@ -190,7 +251,30 @@ async fn main() {
         bench_btree_map(&config, repetition, &point_keys, &scan_starts);
         bench_rwlock_hash_map(&config, repetition, &point_keys);
         bench_dash_map(&config, repetition, &point_keys);
-        bench_worktable(&config, repetition, &point_keys, &scan_starts).await;
+        bench_worktable::<wti_backend::Driver>(
+            &config,
+            "worktable",
+            repetition,
+            &point_keys,
+            &scan_starts,
+        )
+        .await;
+        bench_worktable::<congee_backend::Driver>(
+            &config,
+            "worktable-congee",
+            repetition,
+            &point_keys,
+            &scan_starts,
+        )
+        .await;
+        bench_worktable::<arctic_backend::Driver>(
+            &config,
+            "worktable-arctic",
+            repetition,
+            &point_keys,
+            &scan_starts,
+        )
+        .await;
     }
 }
 
@@ -528,26 +612,21 @@ fn bench_dash_map(config: &Config, repetition: usize, point_keys: &[u64]) {
     );
 }
 
-async fn bench_worktable(
+async fn bench_worktable<T: MicroBackend>(
     config: &Config,
+    engine: &str,
     repetition: usize,
     point_keys: &[u64],
     scan_starts: &[u64],
 ) {
-    let table = MicroWorkTable::default();
+    let table = T::default();
     let started = Instant::now();
     for row in rows(config) {
-        table
-            .insert(MicroRow {
-                id: row.id,
-                value: row.value,
-                payload: row.payload,
-            })
-            .expect("unique key");
+        table.insert(row);
     }
     emit(
         config,
-        "worktable",
+        engine,
         "L2",
         "insert",
         repetition,
@@ -557,14 +636,12 @@ async fn bench_worktable(
     );
 
     let started = Instant::now();
-    let checksum = point_keys.iter().fold(0_u64, |sum, key| {
-        let row = black_box(table.select(*key).expect("loaded key"));
-        sum.wrapping_add(row.value)
-            .wrapping_add(row.payload.len() as u64)
-    });
+    let checksum = point_keys
+        .iter()
+        .fold(0_u64, |sum, key| sum.wrapping_add(table.point_read(*key)));
     emit(
         config,
-        "worktable",
+        engine,
         "L2",
         "point_read_materialized",
         repetition,
@@ -575,42 +652,28 @@ async fn bench_worktable(
 
     let started = Instant::now();
     for key in point_keys {
-        table
-            .update_value(
-                ValueQuery {
-                    value: key.wrapping_mul(17),
-                },
-                *key,
-            )
-            .await
-            .expect("loaded key");
+        table.update(*key, key.wrapping_mul(17)).await;
     }
     emit(
         config,
-        "worktable",
+        engine,
         "L2",
         "update_field",
         repetition,
         config.operations,
         started,
-        table.select(0).expect("loaded key").value,
+        table.point_read(0),
     );
 
     let started = Instant::now();
     let mut checksum = 0_u64;
     for start in scan_starts {
         let end = start + config.scan_length - 1;
-        for row in table
-            .select_by_pk_range(*start..=end)
-            .execute()
-            .expect("range query")
-        {
-            checksum = checksum.wrapping_add(row.value);
-        }
+        checksum = checksum.wrapping_add(table.range_checksum(*start, end));
     }
     emit(
         config,
-        "worktable",
+        engine,
         "L2",
         "range_scan",
         repetition,
