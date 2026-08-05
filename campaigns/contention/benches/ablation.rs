@@ -17,13 +17,13 @@
 
 use std::time::Duration;
 
-use criterion::{
-    criterion_group, criterion_main, BatchSize, BenchmarkGroup, Criterion, Throughput,
-};
 use criterion::measurement::WallTime;
+use criterion::{
+    BatchSize, BenchmarkGroup, Criterion, Throughput, criterion_group, criterion_main,
+};
 
-use wt_contention_campaign::dynamic::{mk_dyn_row, DynTable, Value};
-use wt_contention_campaign::{mk_row, BenchWorkTable, UpdAQuery};
+use wt_contention_campaign::dynamic::{DynTable, Value, mk_dyn_row};
+use wt_contention_campaign::{AblationTable, ArcticBench, CongeeBench, WtiBench};
 
 /// Rows preloaded before each measured read/update op, and the element count
 /// used for throughput.
@@ -49,12 +49,30 @@ fn seeded_keys(n: u64) -> Vec<u64> {
         .collect()
 }
 
-fn populated_specialized() -> BenchWorkTable {
-    let table = BenchWorkTable::default();
+fn populated_specialized<T: AblationTable>() -> T {
+    let table = T::default();
     for v in 0..ROWS {
-        table.insert(mk_row(&table, v)).unwrap();
+        table.insert_value(v);
     }
     table
+}
+
+fn bench_specialized_insert<T: AblationTable>(
+    group: &mut BenchmarkGroup<'_, WallTime>,
+    label: &str,
+) {
+    group.bench_function(label, |b| {
+        b.iter_batched(
+            T::default,
+            |table| {
+                for v in 0..ROWS {
+                    table.insert_value(v);
+                }
+                table
+            },
+            BatchSize::SmallInput,
+        )
+    });
 }
 
 fn populated_dynamic() -> DynTable {
@@ -76,18 +94,9 @@ fn bench_insert(c: &mut Criterion) {
     let mut group = c.benchmark_group("insert");
     common(&mut group);
 
-    group.bench_function("specialized", |b| {
-        b.iter_batched(
-            BenchWorkTable::default,
-            |table| {
-                for v in 0..ROWS {
-                    table.insert(mk_row(&table, v)).unwrap();
-                }
-                table
-            },
-            BatchSize::SmallInput,
-        )
-    });
+    bench_specialized_insert::<WtiBench>(&mut group, "specialized");
+    bench_specialized_insert::<CongeeBench>(&mut group, "specialized-congee");
+    bench_specialized_insert::<ArcticBench>(&mut group, "specialized-arctic");
 
     group.bench_function("dynamic", |b| {
         b.iter_batched(
@@ -111,18 +120,25 @@ fn bench_point_read(c: &mut Criterion) {
     let mut group = c.benchmark_group("point_read");
     common(&mut group);
 
-    let spec = populated_specialized();
-    group.bench_function("specialized", |b| {
-        b.iter(|| {
-            let mut sum = 0u64;
-            for k in &keys {
-                if let Some(row) = spec.select(*k) {
-                    sum = sum.wrapping_add(row.a);
-                }
-            }
-            sum
-        })
-    });
+    macro_rules! specialized_read {
+        ($driver:ty, $label:literal) => {{
+            let spec = populated_specialized::<$driver>();
+            group.bench_function($label, |b| {
+                b.iter(|| {
+                    let mut sum = 0u64;
+                    for k in &keys {
+                        if let Some(value) = spec.point_read(*k) {
+                            sum = sum.wrapping_add(value);
+                        }
+                    }
+                    sum
+                })
+            });
+        }};
+    }
+    specialized_read!(WtiBench, "specialized");
+    specialized_read!(CongeeBench, "specialized-congee");
+    specialized_read!(ArcticBench, "specialized-arctic");
 
     let dynamic = populated_dynamic();
     group.bench_function("dynamic", |b| {
@@ -147,17 +163,24 @@ fn bench_update_field(c: &mut Criterion) {
     let mut group = c.benchmark_group("update_field");
     common(&mut group);
 
-    let rt = tokio_rt();
-    let spec = populated_specialized();
-    group.bench_function("specialized", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                for k in &keys {
-                    let _ = spec.update_upd_a(UpdAQuery { a: *k }, *k).await;
-                }
-            })
-        })
-    });
+    macro_rules! specialized_update {
+        ($driver:ty, $label:literal) => {{
+            let rt = tokio_rt();
+            let spec = populated_specialized::<$driver>();
+            group.bench_function($label, |b| {
+                b.iter(|| {
+                    rt.block_on(async {
+                        for k in &keys {
+                            spec.update_a(*k, *k).await;
+                        }
+                    })
+                })
+            });
+        }};
+    }
+    specialized_update!(WtiBench, "specialized");
+    specialized_update!(CongeeBench, "specialized-congee");
+    specialized_update!(ArcticBench, "specialized-arctic");
 
     let dynamic = populated_dynamic();
     group.bench_function("dynamic", |b| {
