@@ -286,7 +286,11 @@ pub mod lmdb_engine {
             let dir = tempfile::tempdir().unwrap();
             let env = unsafe {
                 let mut opts = EnvOpenOptions::new();
-                opts.map_size(1024 * 1024 * 1024)
+                // 64 MiB is ample for the benchmark's row count. A 1 GiB map
+                // reserves that much address space per env; the insert bench
+                // opens a fresh env each iteration, so a large map exhausts
+                // mmap/address space and `open` fails with EAGAIN (code 35).
+                opts.map_size(64 * 1024 * 1024)
                     .flags(heed::EnvFlags::NO_SYNC | heed::EnvFlags::NO_META_SYNC);
                 opts.open(dir.path()).unwrap()
             };
