@@ -52,103 +52,111 @@ impl Account {
 
 // ------------------------------------------------------------- WorkTable
 // Typed columns. A single-field update touches ONE column via the generated
-// query; no JSON parse/reserialize.
+// query; no JSON parse/reserialize. Generated once per primary-index backend
+// selectable via the `using` keyword (WorkTablesIndex / Congee / Arctic), each
+// in its own module so the generated idents don't collide.
 #[cfg(feature = "worktable-adapter")]
-pub mod worktable_engine {
-    use super::Account;
-    use worktable::prelude::*;
-    use worktable::worktable;
+macro_rules! wt_doc_backend {
+    ($module:ident, $driver:ident, $using:ident) => {
+        pub mod $module {
+            use crate::kv_json::Account;
+            use worktable::prelude::*;
+            use worktable::worktable;
 
-    worktable!(
-        name: AccountDoc,
-        persist: false,
-        columns: {
-            id: u64 primary_key,
-            name: String,
-            email: String,
-            age: u32,
-            balance: f64,
-            active: bool,
-        },
-        queries: {
-            update: {
-                Balance(balance) by id,
-            }
-        }
-    );
-
-    pub struct WtDoc {
-        table: AccountDocWorkTable,
-    }
-
-    impl WtDoc {
-        pub fn new() -> Self {
-            Self {
-                table: AccountDocWorkTable::default(),
-            }
-        }
-        pub fn load(rows: u64) -> Self {
-            let e = Self::new();
-            for k in 0..rows {
-                e.insert(k);
-            }
-            e
-        }
-        pub fn insert(&self, k: u64) {
-            let a = Account::make(k);
-            self.table
-                .insert(AccountDocRow {
-                    id: a.id,
-                    name: a.name,
-                    email: a.email,
-                    age: a.age,
-                    balance: a.balance,
-                    active: a.active,
-                })
-                .expect("insert");
-        }
-        pub fn point_get_checksum(&self, keys: &[u64]) -> u64 {
-            keys.iter().fold(0u64, |acc, k| {
-                let r = self.table.select(*k).expect("row");
-                acc.wrapping_add(
-                    Account {
-                        id: r.id,
-                        name: r.name,
-                        email: r.email,
-                        age: r.age,
-                        balance: r.balance,
-                        active: r.active,
+            worktable!(
+                name: AccountDoc,
+                // congee/arctic require an explicit persist choice; WTI accepts
+                // it too, so all three share one declaration.
+                persist: false,
+                columns: {
+                    id: u64 primary_key using $using,
+                    name: String,
+                    email: String,
+                    age: u32,
+                    balance: f64,
+                    active: bool,
+                },
+                queries: {
+                    update: {
+                        Balance(balance) by id,
                     }
-                    .checksum(),
-                )
-            })
-        }
-        /// The money op: update ONE typed column in place.
-        pub async fn update_balance(&self, keys: &[u64]) {
-            for k in keys {
-                self.table
-                    .update_balance(
-                        BalanceQuery {
-                            balance: (*k as f64) * 2.25,
-                        },
-                        *k,
-                    )
-                    .await
-                    .expect("update");
+                }
+            );
+
+            pub struct $driver {
+                table: AccountDocWorkTable,
+            }
+
+            impl $driver {
+                pub fn new() -> Self {
+                    Self { table: AccountDocWorkTable::default() }
+                }
+                pub fn load(rows: u64) -> Self {
+                    let e = Self::new();
+                    for k in 0..rows {
+                        e.insert(k);
+                    }
+                    e
+                }
+                pub fn insert(&self, k: u64) {
+                    let a = Account::make(k);
+                    self.table
+                        .insert(AccountDocRow {
+                            id: a.id,
+                            name: a.name,
+                            email: a.email,
+                            age: a.age,
+                            balance: a.balance,
+                            active: a.active,
+                        })
+                        .expect("insert");
+                }
+                pub fn point_get_checksum(&self, keys: &[u64]) -> u64 {
+                    keys.iter().fold(0u64, |acc, k| {
+                        let r = self.table.select(*k).expect("row");
+                        acc.wrapping_add(
+                            Account {
+                                id: r.id,
+                                name: r.name,
+                                email: r.email,
+                                age: r.age,
+                                balance: r.balance,
+                                active: r.active,
+                            }
+                            .checksum(),
+                        )
+                    })
+                }
+                /// The money op: update ONE typed column in place.
+                pub async fn update_balance(&self, keys: &[u64]) {
+                    for k in keys {
+                        self.table
+                            .update_balance(BalanceQuery { balance: (*k as f64) * 2.25 }, *k)
+                            .await
+                            .expect("update");
+                    }
+                }
+                /// Query by a non-key field: scan, materialize, filter.
+                pub fn query_active_over_age_checksum(&self, min_age: u32) -> u64 {
+                    self.table
+                        .select_all()
+                        .execute()
+                        .expect("scan")
+                        .into_iter()
+                        .filter(|r| r.active && r.age >= min_age)
+                        .fold(0u64, |acc, r| acc.wrapping_add(r.id))
+                }
             }
         }
-        /// Query by a non-key field: scan, materialize, filter.
-        pub fn query_active_over_age_checksum(&self, min_age: u32) -> u64 {
-            self.table
-                .select_all()
-                .execute()
-                .expect("scan")
-                .into_iter()
-                .filter(|r| r.active && r.age >= min_age)
-                .fold(0u64, |acc, r| acc.wrapping_add(r.id))
-        }
-    }
+    };
 }
+
+#[cfg(feature = "worktable-adapter")]
+wt_doc_backend!(worktable_engine, WtDoc, worktables_index);
+#[cfg(feature = "worktable-adapter")]
+wt_doc_backend!(worktable_congee_engine, WtDocCongee, congee);
+#[cfg(feature = "worktable-adapter")]
+wt_doc_backend!(worktable_arctic_engine, WtDocArctic, arctic);
 
 // ---------------------------------------------------- KV + JSON (redb / lmdb)
 // The durable-jank tier. Value = one serde_json blob per key. A single-field
