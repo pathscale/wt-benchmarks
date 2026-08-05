@@ -7,34 +7,154 @@ use serde::Serialize;
 use worktable::prelude::*;
 use worktable::worktable;
 use wt_benchmarks::kv::text_value;
+use wt_benchmarks::kv_table::IndexBackend;
 use wt_benchmarks::result::LatencySummary;
 use wt_benchmarks::rng::Rng;
 
-worktable!(
-    name: LinkBenchLink,
-    columns: {
-        id1: u64 primary_key,
-        link_type: u64 primary_key,
-        id2: u64 primary_key,
-        source_type: u128,
+trait LinkBackend: Default {
+    fn insert_node(&self, id: u64, time: u64, data: String);
+    fn insert_link(
+        &self,
+        config: &Config,
+        id1: u64,
+        link_type: u64,
+        id2: u64,
         time: u64,
         version: u64,
         data: String,
-    },
-    indexes: {
-        source_type_idx: source_type,
-    }
-);
+    );
+    async fn upsert_link(
+        &self,
+        config: &Config,
+        id1: u64,
+        link_type: u64,
+        id2: u64,
+        time: u64,
+        version: u64,
+        data: String,
+    ) -> Result<u64, ()>;
+    async fn delete_link(
+        &self,
+        config: &Config,
+        id1: u64,
+        link_type: u64,
+        id2: u64,
+    ) -> Result<u64, ()>;
+    fn count_links(&self, id1: u64, link_type: u64) -> Result<u64, ()>;
+    fn get_link(&self, config: &Config, id1: u64, link_type: u64, id2: u64) -> u64;
+    fn get_link_list(
+        &self,
+        id1: u64,
+        link_type: u64,
+        minimum_time: u64,
+        limit: usize,
+    ) -> Result<u64, ()>;
+    async fn add_node(&self, id: u64, time: u64, data: String) -> Result<u64, ()>;
+    async fn update_node(&self, id: u64, time: u64, data: String) -> Result<u64, ()>;
+    async fn delete_node(&self, id: u64) -> Result<u64, ()>;
+    fn get_node(&self, id: u64) -> u64;
+}
 
-worktable!(
-    name: LinkBenchNode,
-    columns: {
-        id: u64 primary_key,
-        version: u64,
-        time: u64,
-        data: String,
-    }
-);
+macro_rules! link_backend {
+    ($module:ident, $using:ident) => {
+        mod $module {
+            use super::*;
+
+            worktable!(
+                name: LinkBenchLink,
+                persist: false,
+                columns: {
+                    id: u64 primary_key using $using,
+                    id1: u64,
+                    link_type: u64,
+                    id2: u64,
+                    source_type: u128,
+                    time: u64,
+                    version: u64,
+                    data: String,
+                },
+                indexes: {
+                    source_type_idx: source_type,
+                }
+            );
+
+            worktable!(
+                name: LinkBenchNode,
+                persist: false,
+                columns: {
+                    id: u64 primary_key using $using,
+                    version: u64,
+                    time: u64,
+                    data: String,
+                }
+            );
+
+            pub(super) struct Driver {
+                links: LinkBenchLinkWorkTable,
+                nodes: LinkBenchNodeWorkTable,
+            }
+
+            impl Default for Driver {
+                fn default() -> Self {
+                    Self { links: LinkBenchLinkWorkTable::default(), nodes: LinkBenchNodeWorkTable::default() }
+                }
+            }
+
+            impl LinkBackend for Driver {
+                fn insert_node(&self, id: u64, time: u64, data: String) {
+                    self.nodes.insert(LinkBenchNodeRow { id, version: 0, time, data }).expect("fresh node key");
+                }
+
+                fn insert_link(&self, config: &Config, id1: u64, link_type: u64, id2: u64, time: u64, version: u64, data: String) {
+                    self.links.insert(LinkBenchLinkRow { id: link_key(config, id1, link_type, id2), id1, link_type, id2, source_type: source_type(id1, link_type), time, version, data }).expect("fresh link key");
+                }
+
+                async fn upsert_link(&self, config: &Config, id1: u64, link_type: u64, id2: u64, time: u64, version: u64, data: String) -> Result<u64, ()> {
+                    self.links.upsert(LinkBenchLinkRow { id: link_key(config, id1, link_type, id2), id1, link_type, id2, source_type: source_type(id1, link_type), time, version, data }).await.map(|()| 1).map_err(|_| ())
+                }
+
+                async fn delete_link(&self, config: &Config, id1: u64, link_type: u64, id2: u64) -> Result<u64, ()> {
+                    match self.links.delete(link_key(config, id1, link_type, id2)).await { Ok(()) => Ok(1), Err(WorkTableError::NotFound) => Ok(0), Err(_) => Err(()) }
+                }
+
+                fn count_links(&self, id1: u64, link_type: u64) -> Result<u64, ()> {
+                    self.links.select_by_source_type(source_type(id1, link_type)).execute().map(|rows| rows.len() as u64).map_err(|_| ())
+                }
+
+                fn get_link(&self, config: &Config, id1: u64, link_type: u64, id2: u64) -> u64 {
+                    u64::from(black_box(self.links.select(link_key(config, id1, link_type, id2))).is_some())
+                }
+
+                fn get_link_list(&self, id1: u64, link_type: u64, minimum_time: u64, limit: usize) -> Result<u64, ()> {
+                    let mut rows = self.links.select_by_source_type(source_type(id1, link_type)).execute().map_err(|_| ())?;
+                    rows.retain(|row| row.time >= minimum_time);
+                    rows.sort_unstable_by_key(|row| std::cmp::Reverse(row.time));
+                    Ok(rows.len().min(limit) as u64)
+                }
+
+                async fn add_node(&self, id: u64, time: u64, data: String) -> Result<u64, ()> {
+                    self.nodes.upsert(LinkBenchNodeRow { id, version: 0, time, data }).await.map(|()| 1).map_err(|_| ())
+                }
+
+                async fn update_node(&self, id: u64, time: u64, data: String) -> Result<u64, ()> {
+                    match self.nodes.update(LinkBenchNodeRow { id, version: time, time, data }).await { Ok(_) => Ok(1), Err(WorkTableError::NotFound) => Ok(0), Err(_) => Err(()) }
+                }
+
+                async fn delete_node(&self, id: u64) -> Result<u64, ()> {
+                    match self.nodes.delete(id).await { Ok(()) => Ok(1), Err(WorkTableError::NotFound) => Ok(0), Err(_) => Err(()) }
+                }
+
+                fn get_node(&self, id: u64) -> u64 {
+                    u64::from(black_box(self.nodes.select(id)).is_some())
+                }
+            }
+        }
+    };
+}
+
+link_backend!(wti_backend, worktables_index);
+link_backend!(congee_backend, congee);
+link_backend!(arctic_backend, arctic);
 
 #[derive(Clone, Debug)]
 struct Config {
@@ -47,6 +167,7 @@ struct Config {
     list_limit: usize,
     sample_every: u64,
     seed: u64,
+    index_backend: String,
 }
 
 impl Default for Config {
@@ -61,6 +182,7 @@ impl Default for Config {
             list_limit: 100,
             sample_every: 1_000,
             seed: 42,
+            index_backend: "worktables_index".to_owned(),
         }
     }
 }
@@ -81,7 +203,8 @@ impl Config {
                      --payload-bytes N      node/link payload bytes (default 64)\n\
                      --list-limit N         maximum links returned (default 100)\n\
                      --sample-every N       latency sampling interval (default 1000)\n\
-                     --seed N               deterministic seed (default 42)"
+                     --seed N               deterministic seed (default 42)\n\
+                     --index-backend B      worktables_index, congee, or arctic"
                 );
                 std::process::exit(0);
             }
@@ -98,6 +221,7 @@ impl Config {
                 "--list-limit" => config.list_limit = parse(&flag, &value)?,
                 "--sample-every" => config.sample_every = parse(&flag, &value)?,
                 "--seed" => config.seed = parse(&flag, &value)?,
+                "--index-backend" => config.index_backend = value,
                 _ => return Err(format!("unknown option: {flag}")),
             }
         }
@@ -265,9 +389,41 @@ async fn main() {
         eprintln!("error: {error}\nrun with --help for usage");
         std::process::exit(2);
     });
+    let backend = IndexBackend::parse(&config.index_backend).unwrap_or_else(|| {
+        eprintln!("error: unknown index backend: {}", config.index_backend);
+        std::process::exit(2);
+    });
     let operations = generate_operations(&config);
     for repetition in 1..=config.repetitions {
-        let result = run_repetition(&config, repetition, &operations).await;
+        let result = match backend {
+            IndexBackend::WorktablesIndex => {
+                run_repetition::<wti_backend::Driver>(
+                    &config,
+                    backend.benchmark_label(),
+                    repetition,
+                    &operations,
+                )
+                .await
+            }
+            IndexBackend::Congee => {
+                run_repetition::<congee_backend::Driver>(
+                    &config,
+                    backend.benchmark_label(),
+                    repetition,
+                    &operations,
+                )
+                .await
+            }
+            IndexBackend::Arctic => {
+                run_repetition::<arctic_backend::Driver>(
+                    &config,
+                    backend.benchmark_label(),
+                    repetition,
+                    &operations,
+                )
+                .await
+            }
+        };
         println!(
             "{}",
             serde_json::to_string(&result).expect("result must serialize")
@@ -275,10 +431,14 @@ async fn main() {
     }
 }
 
-async fn run_repetition(config: &Config, repetition: usize, operations: &[Operation]) -> ResultRow {
-    let links = LinkBenchLinkWorkTable::default();
-    let nodes = LinkBenchNodeWorkTable::default();
-    load(config, &links, &nodes);
+async fn run_repetition<T: LinkBackend>(
+    config: &Config,
+    engine: &'static str,
+    repetition: usize,
+    operations: &[Operation],
+) -> ResultRow {
+    let tables = T::default();
+    load(config, &tables);
 
     let mut counts = BTreeMap::new();
     let mut samples: BTreeMap<Kind, Vec<u64>> = Kind::ALL
@@ -292,7 +452,7 @@ async fn run_repetition(config: &Config, repetition: usize, operations: &[Operat
         let kind = operation.kind();
         let sampled = (index as u64).is_multiple_of(config.sample_every);
         let operation_started = sampled.then(Instant::now);
-        match execute(config, &links, &nodes, operation).await {
+        match execute(config, &tables, operation).await {
             Ok(value) => checksum = checksum.wrapping_add(value),
             Err(()) => errors += 1,
         }
@@ -315,7 +475,7 @@ async fn run_repetition(config: &Config, repetition: usize, operations: &[Operat
         suite: "linkbench",
         profile: "fb-operation-mix-synthetic-zipf",
         port_status: "operation-compatible; empirical degree distribution not yet imported",
-        engine: "worktable",
+        engine,
         repetition,
         nodes_initial: config.nodes,
         links_initial: config.nodes * config.links_per_node,
@@ -333,38 +493,29 @@ async fn run_repetition(config: &Config, repetition: usize, operations: &[Operat
     }
 }
 
-fn load(config: &Config, links: &LinkBenchLinkWorkTable, nodes: &LinkBenchNodeWorkTable) {
+fn load<T: LinkBackend>(config: &Config, tables: &T) {
     for id in 0..config.nodes {
-        nodes
-            .insert(LinkBenchNodeRow {
-                id,
-                version: 0,
-                time: 0,
-                data: text_value(id, config.payload_bytes),
-            })
-            .expect("fresh node key");
+        tables.insert_node(id, 0, text_value(id, config.payload_bytes));
         for slot in 0..config.links_per_node {
             let link_type = slot % config.link_types;
             let type_slot = slot / config.link_types;
             let id2 = existing_target(config.nodes, id, link_type, type_slot);
-            links
-                .insert(link_row(
-                    id,
-                    link_type,
-                    id2,
-                    0,
-                    0,
-                    text_value(id ^ id2, config.payload_bytes),
-                ))
-                .expect("fresh link key");
+            tables.insert_link(
+                config,
+                id,
+                link_type,
+                id2,
+                0,
+                0,
+                text_value(id ^ id2, config.payload_bytes),
+            );
         }
     }
 }
 
-async fn execute(
+async fn execute<T: LinkBackend>(
     config: &Config,
-    links: &LinkBenchLinkWorkTable,
-    nodes: &LinkBenchNodeWorkTable,
+    tables: &T,
     operation: &Operation,
 ) -> Result<u64, ()> {
     match operation {
@@ -376,81 +527,41 @@ async fn execute(
             version,
             data,
             ..
-        } => links
-            .upsert(link_row(
-                *id1,
-                *link_type,
-                *id2,
-                *time,
-                *version,
-                data.clone(),
-            ))
-            .await
-            .map(|()| 1)
-            .map_err(|_| ()),
+        } => {
+            tables
+                .upsert_link(
+                    config,
+                    *id1,
+                    *link_type,
+                    *id2,
+                    *time,
+                    *version,
+                    data.clone(),
+                )
+                .await
+        }
         Operation::DeleteLink {
             id1,
             link_type,
             id2,
-        } => match links.delete((*id1, *link_type, *id2)).await {
-            Ok(()) => Ok(1),
-            Err(WorkTableError::NotFound) => Ok(0),
-            Err(_) => Err(()),
-        },
-        Operation::CountLinks { id1, link_type } => links
-            .select_by_source_type(source_type(*id1, *link_type))
-            .execute()
-            .map(|rows| rows.len() as u64)
-            .map_err(|_| ()),
+        } => tables.delete_link(config, *id1, *link_type, *id2).await,
+        Operation::CountLinks { id1, link_type } => tables.count_links(*id1, *link_type),
         Operation::GetLink {
             id1,
             link_type,
             id2,
-        } => Ok(u64::from(
-            black_box(links.select((*id1, *link_type, *id2))).is_some(),
-        )),
+        } => Ok(tables.get_link(config, *id1, *link_type, *id2)),
         Operation::GetLinkList {
             id1,
             link_type,
             minimum_time,
-        } => {
-            let mut rows = links
-                .select_by_source_type(source_type(*id1, *link_type))
-                .execute()
-                .map_err(|_| ())?;
-            rows.retain(|row| row.time >= *minimum_time);
-            rows.sort_unstable_by_key(|row| std::cmp::Reverse(row.time));
-            Ok(rows.len().min(config.list_limit) as u64)
+        } => tables.get_link_list(*id1, *link_type, *minimum_time, config.list_limit),
+        Operation::AddNode { id, time, data } => tables.add_node(*id, *time, data.clone()).await,
+        Operation::UpdateNode { id, time, data } => {
+            tables.update_node(*id, *time, data.clone()).await
         }
-        Operation::AddNode { id, time, data } => nodes
-            .upsert(LinkBenchNodeRow {
-                id: *id,
-                version: 0,
-                time: *time,
-                data: data.clone(),
-            })
-            .await
-            .map(|()| 1)
-            .map_err(|_| ()),
-        Operation::UpdateNode { id, time, data } => match nodes
-            .update(LinkBenchNodeRow {
-                id: *id,
-                version: *time,
-                time: *time,
-                data: data.clone(),
-            })
-            .await
-        {
-            Ok(_) => Ok(1),
-            Err(WorkTableError::NotFound) => Ok(0),
-            Err(_) => Err(()),
-        },
-        Operation::DeleteNode { id } => match nodes.delete(*id).await {
-            Ok(()) => Ok(1),
-            Err(WorkTableError::NotFound) => Ok(0),
-            Err(_) => Err(()),
-        },
-        Operation::GetNode { id } => Ok(u64::from(black_box(nodes.select(*id)).is_some())),
+        Operation::DeleteNode { id } => tables.delete_node(*id).await,
+        Operation::GetNode { id } => Ok(tables.get_node(*id)),
     }
 }
 
@@ -531,23 +642,16 @@ fn generate_operations(config: &Config) -> Vec<Operation> {
     operations
 }
 
-fn link_row(
-    id1: u64,
-    link_type: u64,
-    id2: u64,
-    time: u64,
-    version: u64,
-    data: String,
-) -> LinkBenchLinkRow {
-    LinkBenchLinkRow {
-        id1,
-        link_type,
-        id2,
-        source_type: source_type(id1, link_type),
-        time,
-        version,
-        data,
-    }
+fn link_key(config: &Config, id1: u64, link_type: u64, id2: u64) -> u64 {
+    let target_span = config
+        .nodes
+        .checked_add(config.operations)
+        .expect("LinkBench key domain exceeds u64");
+    id1.checked_mul(config.link_types)
+        .and_then(|value| value.checked_add(link_type))
+        .and_then(|value| value.checked_mul(target_span))
+        .and_then(|value| value.checked_add(id2))
+        .expect("LinkBench packed primary key exceeds u64")
 }
 
 fn source_type(id1: u64, link_type: u64) -> u128 {
