@@ -22,7 +22,10 @@ and `src/kv_json.rs::Account` field-for-field, so the `datatable` rows drop into
 the same `kv_json/insert` and `kv_json/query_field` comparison.
 
 ```
-pip install datatable
-python3 python/kv_json_datatable.py --rows 10000 --repetitions 5 \
+# datatable (1.1.0) does NOT build on Python 3.11+ (it uses _PySys_GetSizeOf,
+# removed in modern CPython). Pin the venv to 3.10.
+uv venv --python 3.10
+uv pip install datatable
+.venv/bin/python python/kv_json_datatable.py --rows 10000 --repetitions 5 \
     > results/kv_json-datatable.jsonl
 ```
