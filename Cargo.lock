@@ -3149,7 +3149,7 @@ checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
 name = "worktable"
-version = "1.0.0-beta.5"
+version = "1.0.0-beta.9"
 dependencies = [
  "WorkTablesIndex",
  "arctic-wt",
@@ -3179,7 +3179,7 @@ dependencies = [
 
 [[package]]
 name = "worktable_codegen"
-version = "1.0.0-beta.5"
+version = "1.0.0-beta.9"
 dependencies = [
  "convert_case 0.6.0",
  "indexmap",
