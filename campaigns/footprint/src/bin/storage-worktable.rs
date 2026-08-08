@@ -131,6 +131,6 @@ async fn main() -> BenchResult<()> {
 async fn drain(table: &StorageFootprintWorkTable) -> BenchResult<()> {
     timeout(Duration::from_secs(120), table.wait_for_ops())
         .await
-        .map_err(|_| "WorkTable persistence drain timed out")?;
+        .map_err(|_| "WorkTable persistence drain timed out")??;
     Ok(())
 }
