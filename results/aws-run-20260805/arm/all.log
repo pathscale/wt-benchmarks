@@ -1,0 +1,865 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling libc v0.2.189
+   Compiling cfg-if v1.0.4
+   Compiling serde_core v1.0.229
+   Compiling crossbeam-utils v0.8.22
+   Compiling serde v1.0.229
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.9
+   Compiling zerocopy v0.8.55
+   Compiling memchr v2.8.3
+   Compiling crossbeam-epoch v0.9.20
+   Compiling getrandom v0.4.3
+   Compiling smallvec v1.15.2
+   Compiling parking_lot_core v0.9.12
+   Compiling siphasher v1.0.3
+   Compiling rand_core v0.6.4
+   Compiling scopeguard v1.2.0
+   Compiling syn v1.0.109
+   Compiling pin-project-lite v0.2.17
+   Compiling once_cell v1.21.4
+   Compiling autocfg v1.5.1
+   Compiling itoa v1.0.18
+   Compiling version_check v0.9.5
+   Compiling strsim v0.11.1
+   Compiling ident_case v1.0.1
+   Compiling zmij v1.0.23
+   Compiling foldhash v0.2.0
+   Compiling unicode-segmentation v1.13.3
+   Compiling unicode-xid v0.2.6
+   Compiling simdutf8 v0.1.5
+   Compiling serde_json v1.0.151
+   Compiling fastrand v2.5.0
+   Compiling futures-sink v0.3.33
+   Compiling portable-atomic v1.14.0
+   Compiling thiserror v1.0.69
+   Compiling futures-core v0.3.33
+   Compiling futures-io v0.3.33
+   Compiling pkg-config v0.3.33
+   Compiling eyre v0.6.12
+   Compiling vcpkg v0.2.15
+   Compiling slab v0.4.12
+   Compiling heck v0.5.0
+   Compiling rkyv v0.7.46
+   Compiling futures-task v0.3.33
+   Compiling bytes v1.12.1
+   Compiling crc32fast v1.5.0
+   Compiling seahash v4.1.0
+   Compiling indenter v0.3.4
+   Compiling rustix v1.1.4
+   Compiling arbitrary-int v2.1.1
+   Compiling equivalent v1.0.2
+   Compiling hashbrown v0.17.1
+   Compiling ryu v1.0.23
+   Compiling lazy_static v1.5.0
+   Compiling fearless_simd v0.6.0
+   Compiling byteorder v1.5.0
+   Compiling redb v4.1.0
+   Compiling heed-traits v0.20.0
+   Compiling encode_unicode v1.0.0
+   Compiling linux-raw-sys v0.12.1
+   Compiling unicode-width v0.1.14
+   Compiling lock_api v0.4.14
+   Compiling rand v0.8.7
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling log v0.4.33
+   Compiling cc v1.4.0
+   Compiling fallible-iterator v0.3.0
+   Compiling rustc-hash v2.1.3
+   Compiling hashbrown v0.14.5
+   Compiling phf_shared v0.11.3
+   Compiling crossbeam-deque v0.8.7
+   Compiling rayon-core v1.13.0
+   Compiling either v1.17.0
+   Compiling futures-channel v0.3.33
+   Compiling ciborium-io v0.2.2
+   Compiling regex-syntax v0.8.11
+   Compiling tracing-core v0.1.36
+   Compiling anstyle v1.0.14
+   Compiling clap_lex v1.1.0
+   Compiling plotters-backend v0.3.7
+   Compiling cast v0.3.0
+   Compiling same-file v1.0.6
+   Compiling anes v0.1.6
+   Compiling oorandom v11.1.5
+   Compiling ahash v0.7.8
+   Compiling walkdir v2.5.0
+   Compiling num-traits v0.2.19
+   Compiling itertools v0.13.0
+   Compiling clap_builder v4.6.5
+   Compiling convert_case v0.10.0
+   Compiling convert_case v0.6.0
+   Compiling csv-core v0.1.13
+   Compiling plotters-svg v0.3.7
+   Compiling phf_generator v0.11.3
+   Compiling indexmap v2.14.0
+   Compiling crossbeam-queue v0.3.13
+   Compiling synchronoise v1.0.1
+   Compiling hashlink v0.12.1
+   Compiling syn v2.0.119
+   Compiling syn v3.0.3
+   Compiling crossbeam-skiplist v0.1.3
+   Compiling congee-wt v0.4.1
+   Compiling libsqlite3-sys v0.38.1
+   Compiling alloca v0.4.0
+   Compiling ordered-float v5.3.0
+   Compiling plotters v0.3.7
+   Compiling getrandom v0.2.17
+   Compiling errno v0.3.14
+   Compiling socket2 v0.6.5
+   Compiling mio v1.2.2
+   Compiling dirs-sys-next v0.1.2
+   Compiling page_size v0.6.0
+   Compiling seize v0.5.1
+   Compiling is-terminal v0.4.17
+   Compiling signal-hook-registry v1.4.8
+   Compiling uuid v1.24.0
+   Compiling dirs-next v2.0.0
+   Compiling term v0.7.0
+   Compiling parking_lot v0.12.5
+   Compiling dashmap v6.2.1
+   Compiling hashbrown v0.12.3
+   Compiling regex-automata v0.4.18
+   Compiling rayon v1.12.0
+   Compiling criterion-plot v0.8.2
+   Compiling clap v4.6.5
+   Compiling bitflags v2.13.1
+   Compiling csv v1.4.0
+   Compiling prettytable-rs v0.10.0
+   Compiling ptr_meta_derive v0.1.4
+   Compiling rkyv_derive v0.7.46
+   Compiling regex v1.13.1
+   Compiling serde_derive v1.0.229
+   Compiling tokio-macros v2.7.2
+   Compiling async-trait v0.1.91
+   Compiling ptr_meta v0.1.4
+   Compiling darling_core v0.23.0
+   Compiling tokio v1.53.1
+   Compiling zerocopy-derive v0.8.55
+   Compiling ptr_meta_derive v0.3.1
+   Compiling bytecheck_derive v0.8.2
+   Compiling phf_macros v0.11.3
+   Compiling munge_macro v0.4.7
+   Compiling thiserror-impl v1.0.69
+   Compiling rkyv_derive v0.8.17
+   Compiling futures-macro v0.3.33
+   Compiling derive_more-impl v1.0.0
+   Compiling data_bucket_derive v0.3.17
+   Compiling derive_more-impl v2.1.1
+   Compiling tracing-attributes v0.1.31
+   Compiling smart-default v0.7.1
+   Compiling tempfile v3.27.0
+   Compiling ptr_meta v0.3.1
+   Compiling rancor v0.1.2
+   Compiling munge v0.4.7
+   Compiling phf v0.11.3
+   Compiling bytecheck v0.8.2
+   Compiling doxygen-rs v0.4.2
+   Compiling futures-util v0.3.33
+   Compiling rend v0.5.4
+   Compiling lmdb-master-sys v0.2.6
+   Compiling tracing v0.1.44
+   Compiling darling_macro v0.23.0
+   Compiling darling v0.23.0
+   Compiling ribbit-derive v0.1.0
+   Compiling worktable_codegen v1.0.0-beta.5 (/home/ubuntu/bench/WorkTable/codegen)
+   Compiling derive_more v1.0.0
+   Compiling ftree v1.3.0
+   Compiling bincode v1.3.3
+   Compiling tinytemplate v1.2.1
+   Compiling WorkTablesIndex v0.0.5
+   Compiling indexset v0.15.0
+   Compiling derive_more v2.1.1
+   Compiling heed-types v0.20.1
+   Compiling ribbit v0.2.1
+   Compiling futures-executor v0.3.33
+   Compiling arctic-wt v0.1.4
+   Compiling futures v0.3.33
+   Compiling rkyv v0.8.17
+   Compiling heed v0.20.5
+   Compiling ppv-lite86 v0.2.21
+   Compiling half v2.7.1
+   Compiling rand_chacha v0.3.1
+   Compiling ciborium-ll v0.2.2
+   Compiling ciborium v0.2.2
+   Compiling criterion v0.8.2
+   Compiling psc-nanoid v3.1.1
+   Compiling data_bucket v0.5.2
+   Compiling worktable v1.0.0-beta.5 (/home/ubuntu/bench/WorkTable)
+   Compiling rusqlite v0.40.1
+   Compiling wt-benchmarks v0.1.0 (/home/ubuntu/bench/wt-benchmarks)
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:193:17
+    |
+193 |                 w.set_durability(Durability::None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+193 |                 let _ = w.set_durability(Durability::None);
+    |                 +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:204:13
+    |
+204 |             w.set_durability(Durability::None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+204 |             let _ = w.set_durability(Durability::None);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:218:13
+    |
+218 |             w.set_durability(Durability::None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+218 |             let _ = w.set_durability(Durability::None);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:240:17
+    |
+240 |                 w.set_durability(Durability::None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+240 |                 let _ = w.set_durability(Durability::None);
+    |                 +++++++
+
+warning: `wt-benchmarks` (lib) generated 4 warnings
+    Finished `bench` profile [optimized + debuginfo] target(s) in 1m 56s
+     Running benches/kv.rs (target/release/deps/kv-6d512582ac7bcbb2)
+Gnuplot not found, using plotters backend
+Benchmarking kv/insert/worktable
+Benchmarking kv/insert/worktable: Warming up for 300.00 ms
+Benchmarking kv/insert/worktable: Collecting 10 samples in estimated 5.8667 s (330 iterations)
+Benchmarking kv/insert/worktable: Analyzing
+kv/insert/worktable     time:   [16.569 ms 16.585 ms 16.592 ms]
+                        thrpt:  [602.71 Kelem/s 602.97 Kelem/s 603.52 Kelem/s]
+Benchmarking kv/insert/worktable-congee
+Benchmarking kv/insert/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv/insert/worktable-congee: Collecting 10 samples in estimated 5.3821 s (330 iterations)
+Benchmarking kv/insert/worktable-congee: Analyzing
+kv/insert/worktable-congee
+                        time:   [13.598 ms 13.621 ms 13.633 ms]
+                        thrpt:  [733.50 Kelem/s 734.14 Kelem/s 735.40 Kelem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking kv/insert/worktable-arctic
+Benchmarking kv/insert/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv/insert/worktable-arctic: Collecting 10 samples in estimated 5.1979 s (330 iterations)
+Benchmarking kv/insert/worktable-arctic: Analyzing
+kv/insert/worktable-arctic
+                        time:   [13.386 ms 13.398 ms 13.405 ms]
+                        thrpt:  [746.01 Kelem/s 746.37 Kelem/s 747.07 Kelem/s]
+Benchmarking kv/insert/sqlite
+Benchmarking kv/insert/sqlite: Warming up for 300.00 ms
+Benchmarking kv/insert/sqlite: Collecting 10 samples in estimated 5.4434 s (550 iterations)
+Benchmarking kv/insert/sqlite: Analyzing
+kv/insert/sqlite        time:   [9.8966 ms 9.9072 ms 9.9133 ms]
+                        thrpt:  [1.0087 Melem/s 1.0094 Melem/s 1.0104 Melem/s]
+Benchmarking kv/insert/redb
+Benchmarking kv/insert/redb: Warming up for 300.00 ms
+Benchmarking kv/insert/redb: Collecting 10 samples in estimated 7.3805 s (165 iterations)
+Benchmarking kv/insert/redb: Analyzing
+kv/insert/redb          time:   [6.9604 ms 7.0324 ms 7.2173 ms]
+                        thrpt:  [1.3856 Melem/s 1.4220 Melem/s 1.4367 Melem/s]
+Benchmarking kv/insert/lmdb
+Benchmarking kv/insert/lmdb: Warming up for 300.00 ms
+Benchmarking kv/insert/lmdb: Collecting 10 samples in estimated 5.0166 s (2035 iterations)
+Benchmarking kv/insert/lmdb: Analyzing
+kv/insert/lmdb          time:   [2.4604 ms 2.4613 ms 2.4621 ms]
+                        thrpt:  [4.0616 Melem/s 4.0629 Melem/s 4.0645 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+
+Benchmarking kv/point_read/worktable
+Benchmarking kv/point_read/worktable: Warming up for 300.00 ms
+Benchmarking kv/point_read/worktable: Collecting 10 samples in estimated 5.0604 s (1980 iterations)
+Benchmarking kv/point_read/worktable: Analyzing
+kv/point_read/worktable time:   [2.5365 ms 2.5370 ms 2.5379 ms]
+                        thrpt:  [3.9403 Melem/s 3.9417 Melem/s 3.9425 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv/point_read/worktable-congee
+Benchmarking kv/point_read/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv/point_read/worktable-congee: Collecting 10 samples in estimated 5.0896 s (2750 iterations)
+Benchmarking kv/point_read/worktable-congee: Analyzing
+kv/point_read/worktable-congee
+                        time:   [1.8472 ms 1.8482 ms 1.8501 ms]
+                        thrpt:  [5.4052 Melem/s 5.4106 Melem/s 5.4136 Melem/s]
+Benchmarking kv/point_read/worktable-arctic
+Benchmarking kv/point_read/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv/point_read/worktable-arctic: Collecting 10 samples in estimated 5.0974 s (2750 iterations)
+Benchmarking kv/point_read/worktable-arctic: Analyzing
+kv/point_read/worktable-arctic
+                        time:   [1.8493 ms 1.8494 ms 1.8495 ms]
+                        thrpt:  [5.4068 Melem/s 5.4072 Melem/s 5.4076 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+Benchmarking kv/point_read/sqlite
+Benchmarking kv/point_read/sqlite: Warming up for 300.00 ms
+Benchmarking kv/point_read/sqlite: Collecting 10 samples in estimated 5.1856 s (1210 iterations)
+Benchmarking kv/point_read/sqlite: Analyzing
+kv/point_read/sqlite    time:   [4.2823 ms 4.2855 ms 4.2921 ms]
+                        thrpt:  [2.3298 Melem/s 2.3335 Melem/s 2.3352 Melem/s]
+Benchmarking kv/point_read/redb
+Benchmarking kv/point_read/redb: Warming up for 300.00 ms
+Benchmarking kv/point_read/redb: Collecting 10 samples in estimated 5.1252 s (2035 iterations)
+Benchmarking kv/point_read/redb: Analyzing
+kv/point_read/redb      time:   [2.5168 ms 2.5171 ms 2.5176 ms]
+                        thrpt:  [3.9720 Melem/s 3.9728 Melem/s 3.9734 Melem/s]
+Benchmarking kv/point_read/lmdb
+Benchmarking kv/point_read/lmdb: Warming up for 300.00 ms
+Benchmarking kv/point_read/lmdb: Collecting 10 samples in estimated 5.0559 s (2145 iterations)
+Benchmarking kv/point_read/lmdb: Analyzing
+kv/point_read/lmdb      time:   [2.3498 ms 2.3510 ms 2.3521 ms]
+                        thrpt:  [4.2515 Melem/s 4.2536 Melem/s 4.2557 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high mild
+
+Benchmarking kv/overwrite/worktable
+Benchmarking kv/overwrite/worktable: Warming up for 300.00 ms
+Benchmarking kv/overwrite/worktable: Collecting 10 samples in estimated 5.1514 s (220 iterations)
+Benchmarking kv/overwrite/worktable: Analyzing
+kv/overwrite/worktable  time:   [23.221 ms 23.376 ms 23.572 ms]
+                        thrpt:  [424.24 Kelem/s 427.78 Kelem/s 430.64 Kelem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv/overwrite/worktable-congee
+Benchmarking kv/overwrite/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv/overwrite/worktable-congee: Collecting 10 samples in estimated 6.0796 s (275 iterations)
+Benchmarking kv/overwrite/worktable-congee: Analyzing
+kv/overwrite/worktable-congee
+                        time:   [21.160 ms 21.257 ms 21.374 ms]
+                        thrpt:  [467.85 Kelem/s 470.43 Kelem/s 472.59 Kelem/s]
+Benchmarking kv/overwrite/worktable-arctic
+Benchmarking kv/overwrite/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv/overwrite/worktable-arctic: Collecting 10 samples in estimated 5.6824 s (275 iterations)
+Benchmarking kv/overwrite/worktable-arctic: Analyzing
+kv/overwrite/worktable-arctic
+                        time:   [20.478 ms 20.513 ms 20.551 ms]
+                        thrpt:  [486.60 Kelem/s 487.48 Kelem/s 488.32 Kelem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+Benchmarking kv/overwrite/sqlite
+Benchmarking kv/overwrite/sqlite: Warming up for 300.00 ms
+Benchmarking kv/overwrite/sqlite: Collecting 10 samples in estimated 5.1810 s (990 iterations)
+Benchmarking kv/overwrite/sqlite: Analyzing
+kv/overwrite/sqlite     time:   [5.1577 ms 5.1605 ms 5.1651 ms]
+                        thrpt:  [1.9361 Melem/s 1.9378 Melem/s 1.9389 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking kv/overwrite/redb
+Benchmarking kv/overwrite/redb: Warming up for 300.00 ms
+Benchmarking kv/overwrite/redb: Collecting 10 samples in estimated 5.3563 s (770 iterations)
+Benchmarking kv/overwrite/redb: Analyzing
+kv/overwrite/redb       time:   [6.7647 ms 6.7724 ms 6.7837 ms]
+                        thrpt:  [1.4741 Melem/s 1.4766 Melem/s 1.4783 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv/overwrite/lmdb
+Benchmarking kv/overwrite/lmdb: Warming up for 300.00 ms
+Benchmarking kv/overwrite/lmdb: Collecting 10 samples in estimated 5.0462 s (1650 iterations)
+Benchmarking kv/overwrite/lmdb: Analyzing
+kv/overwrite/lmdb       time:   [3.0337 ms 3.0351 ms 3.0368 ms]
+                        thrpt:  [3.2929 Melem/s 3.2948 Melem/s 3.2963 Melem/s]
+
+Benchmarking kv/range_scan/worktable
+Benchmarking kv/range_scan/worktable: Warming up for 300.00 ms
+Benchmarking kv/range_scan/worktable: Collecting 10 samples in estimated 5.0135 s (1485 iterations)
+Benchmarking kv/range_scan/worktable: Analyzing
+kv/range_scan/worktable time:   [3.3601 ms 3.3604 ms 3.3607 ms]
+                        thrpt:  [5.9511 Melem/s 5.9517 Melem/s 5.9523 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv/range_scan/worktable-congee
+Benchmarking kv/range_scan/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv/range_scan/worktable-congee: Collecting 10 samples in estimated 5.0104 s (1320 iterations)
+Benchmarking kv/range_scan/worktable-congee: Analyzing
+kv/range_scan/worktable-congee
+                        time:   [3.7983 ms 3.7987 ms 3.7992 ms]
+                        thrpt:  [5.2642 Melem/s 5.2649 Melem/s 5.2656 Melem/s]
+Benchmarking kv/range_scan/worktable-arctic
+Benchmarking kv/range_scan/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv/range_scan/worktable-arctic: Collecting 10 samples in estimated 5.0389 s (1320 iterations)
+Benchmarking kv/range_scan/worktable-arctic: Analyzing
+kv/range_scan/worktable-arctic
+                        time:   [3.8227 ms 3.8353 ms 3.8414 ms]
+                        thrpt:  [5.2064 Melem/s 5.2147 Melem/s 5.2319 Melem/s]
+Benchmarking kv/range_scan/redb
+Benchmarking kv/range_scan/redb: Warming up for 300.00 ms
+Benchmarking kv/range_scan/redb: Collecting 10 samples in estimated 5.0941 s (1980 iterations)
+Benchmarking kv/range_scan/redb: Analyzing
+kv/range_scan/redb      time:   [2.5929 ms 2.5936 ms 2.5944 ms]
+                        thrpt:  [7.7089 Melem/s 7.7113 Melem/s 7.7134 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) high mild
+Benchmarking kv/range_scan/lmdb
+Benchmarking kv/range_scan/lmdb: Warming up for 300.00 ms
+Benchmarking kv/range_scan/lmdb: Collecting 10 samples in estimated 5.0530 s (4070 iterations)
+Benchmarking kv/range_scan/lmdb: Analyzing
+kv/range_scan/lmdb      time:   [1.2324 ms 1.2326 ms 1.2330 ms]
+                        thrpt:  [16.221 Melem/s 16.226 Melem/s 16.228 Melem/s]
+Benchmarking kv/range_scan/sqlite
+Benchmarking kv/range_scan/sqlite: Warming up for 300.00 ms
+Benchmarking kv/range_scan/sqlite: Collecting 10 samples in estimated 5.1505 s (1595 iterations)
+Benchmarking kv/range_scan/sqlite: Analyzing
+kv/range_scan/sqlite    time:   [3.2239 ms 3.2242 ms 3.2247 ms]
+                        thrpt:  [6.2021 Melem/s 6.2031 Melem/s 6.2036 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) high mild
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:193:17
+    |
+193 |                 w.set_durability(Durability::None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+193 |                 let _ = w.set_durability(Durability::None);
+    |                 +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:204:13
+    |
+204 |             w.set_durability(Durability::None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+204 |             let _ = w.set_durability(Durability::None);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:218:13
+    |
+218 |             w.set_durability(Durability::None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+218 |             let _ = w.set_durability(Durability::None);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:240:17
+    |
+240 |                 w.set_durability(Durability::None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+240 |                 let _ = w.set_durability(Durability::None);
+    |                 +++++++
+
+warning: `wt-benchmarks` (lib) generated 4 warnings
+   Compiling wt-benchmarks v0.1.0 (/home/ubuntu/bench/wt-benchmarks)
+    Finished `bench` profile [optimized + debuginfo] target(s) in 35.72s
+     Running benches/kv_json.rs (target/release/deps/kv_json-8b3c7ea43458f84f)
+Gnuplot not found, using plotters backend
+Benchmarking kv_json/insert/worktable
+Benchmarking kv_json/insert/worktable: Warming up for 300.00 ms
+Benchmarking kv_json/insert/worktable: Collecting 10 samples in estimated 5.2887 s (275 iterations)
+Benchmarking kv_json/insert/worktable: Analyzing
+kv_json/insert/worktable
+                        time:   [17.865 ms 17.884 ms 17.893 ms]
+                        thrpt:  [558.87 Kelem/s 559.17 Kelem/s 559.74 Kelem/s]
+Benchmarking kv_json/insert/worktable-congee
+Benchmarking kv_json/insert/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv_json/insert/worktable-congee: Collecting 10 samples in estimated 5.0468 s (275 iterations)
+Benchmarking kv_json/insert/worktable-congee: Analyzing
+kv_json/insert/worktable-congee
+                        time:   [15.154 ms 15.195 ms 15.272 ms]
+                        thrpt:  [654.77 Kelem/s 658.10 Kelem/s 659.90 Kelem/s]
+Found 3 outliers among 10 measurements (30.00%)
+  2 (20.00%) low severe
+  1 (10.00%) high severe
+Benchmarking kv_json/insert/worktable-arctic
+Benchmarking kv_json/insert/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv_json/insert/worktable-arctic: Collecting 10 samples in estimated 5.8458 s (330 iterations)
+Benchmarking kv_json/insert/worktable-arctic: Analyzing
+kv_json/insert/worktable-arctic
+                        time:   [14.915 ms 14.939 ms 14.949 ms]
+                        thrpt:  [668.94 Kelem/s 669.39 Kelem/s 670.46 Kelem/s]
+Benchmarking kv_json/insert/redb-json
+Benchmarking kv_json/insert/redb-json: Warming up for 300.00 ms
+Benchmarking kv_json/insert/redb-json: Collecting 10 samples in estimated 7.0654 s (30 iterations)
+Benchmarking kv_json/insert/redb-json: Analyzing
+kv_json/insert/redb-json
+                        time:   [236.98 ms 237.68 ms 238.34 ms]
+                        thrpt:  [41.958 Kelem/s 42.073 Kelem/s 42.198 Kelem/s]
+Benchmarking kv_json/insert/lmdb-json
+Benchmarking kv_json/insert/lmdb-json: Warming up for 300.00 ms
+Benchmarking kv_json/insert/lmdb-json: Collecting 10 samples in estimated 5.2149 s (165 iterations)
+Benchmarking kv_json/insert/lmdb-json: Analyzing
+kv_json/insert/lmdb-json
+                        time:   [31.440 ms 31.491 ms 31.551 ms]
+                        thrpt:  [316.95 Kelem/s 317.55 Kelem/s 318.07 Kelem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+
+Benchmarking kv_json/point_get/worktable
+Benchmarking kv_json/point_get/worktable: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/worktable: Collecting 10 samples in estimated 5.0318 s (2310 iterations)
+Benchmarking kv_json/point_get/worktable: Analyzing
+kv_json/point_get/worktable
+                        time:   [2.1598 ms 2.1605 ms 2.1621 ms]
+                        thrpt:  [4.6252 Melem/s 4.6285 Melem/s 4.6301 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv_json/point_get/worktable-congee
+Benchmarking kv_json/point_get/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/worktable-congee: Collecting 10 samples in estimated 5.0710 s (3520 iterations)
+Benchmarking kv_json/point_get/worktable-congee: Analyzing
+kv_json/point_get/worktable-congee
+                        time:   [1.4426 ms 1.4430 ms 1.4432 ms]
+                        thrpt:  [6.9289 Melem/s 6.9301 Melem/s 6.9317 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) high mild
+Benchmarking kv_json/point_get/worktable-arctic
+Benchmarking kv_json/point_get/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/worktable-arctic: Collecting 10 samples in estimated 5.0543 s (3520 iterations)
+Benchmarking kv_json/point_get/worktable-arctic: Analyzing
+kv_json/point_get/worktable-arctic
+                        time:   [1.4299 ms 1.4303 ms 1.4311 ms]
+                        thrpt:  [6.9875 Melem/s 6.9915 Melem/s 6.9934 Melem/s]
+Benchmarking kv_json/point_get/redb-json
+Benchmarking kv_json/point_get/redb-json: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/redb-json: Collecting 10 samples in estimated 5.0277 s (1265 iterations)
+Benchmarking kv_json/point_get/redb-json: Analyzing
+kv_json/point_get/redb-json
+                        time:   [3.9594 ms 3.9601 ms 3.9612 ms]
+                        thrpt:  [2.5245 Melem/s 2.5252 Melem/s 2.5256 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+Benchmarking kv_json/point_get/lmdb-json
+Benchmarking kv_json/point_get/lmdb-json: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/lmdb-json: Collecting 10 samples in estimated 5.1924 s (1265 iterations)
+Benchmarking kv_json/point_get/lmdb-json: Analyzing
+kv_json/point_get/lmdb-json
+                        time:   [3.9763 ms 3.9794 ms 3.9823 ms]
+                        thrpt:  [2.5111 Melem/s 2.5130 Melem/s 2.5149 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+
+Benchmarking kv_json/update_field/worktable
+Benchmarking kv_json/update_field/worktable: Warming up for 300.00 ms
+Benchmarking kv_json/update_field/worktable: Collecting 10 samples in estimated 7.5120 s (110 iterations)
+Benchmarking kv_json/update_field/worktable: Analyzing
+kv_json/update_field/worktable
+                        time:   [68.886 ms 69.008 ms 69.152 ms]
+                        thrpt:  [144.61 Kelem/s 144.91 Kelem/s 145.17 Kelem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high mild
+Benchmarking kv_json/update_field/worktable-congee
+Benchmarking kv_json/update_field/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv_json/update_field/worktable-congee: Collecting 10 samples in estimated 7.2326 s (110 iterations)
+Benchmarking kv_json/update_field/worktable-congee: Analyzing
+kv_json/update_field/worktable-congee
+                        time:   [66.115 ms 66.410 ms 66.613 ms]
+                        thrpt:  [150.12 Kelem/s 150.58 Kelem/s 151.25 Kelem/s]
+Benchmarking kv_json/update_field/worktable-arctic
+Benchmarking kv_json/update_field/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv_json/update_field/worktable-arctic: Collecting 10 samples in estimated 7.2395 s (110 iterations)
+Benchmarking kv_json/update_field/worktable-arctic: Analyzing
+kv_json/update_field/worktable-arctic
+                        time:   [66.842 ms 67.102 ms 67.379 ms]
+                        thrpt:  [148.41 Kelem/s 149.03 Kelem/s 149.61 Kelem/s]
+Benchmarking kv_json/update_field/redb-json
+Benchmarking kv_json/update_field/redb-json: Warming up for 300.00 ms
+Benchmarking kv_json/update_field/redb-json: Collecting 10 samples in estimated 7.3078 s (30 iterations)
+Benchmarking kv_json/update_field/redb-json: Analyzing
+kv_json/update_field/redb-json
+                        time:   [246.03 ms 246.81 ms 247.39 ms]
+                        thrpt:  [40.423 Kelem/s 40.517 Kelem/s 40.646 Kelem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+Benchmarking kv_json/update_field/lmdb-json
+Benchmarking kv_json/update_field/lmdb-json: Warming up for 300.00 ms
+Benchmarking kv_json/update_field/lmdb-json: Collecting 10 samples in estimated 5.9996 s (165 iterations)
+Benchmarking kv_json/update_field/lmdb-json: Analyzing
+kv_json/update_field/lmdb-json
+                        time:   [36.368 ms 36.392 ms 36.413 ms]
+                        thrpt:  [274.63 Kelem/s 274.79 Kelem/s 274.97 Kelem/s]
+
+Benchmarking kv_json/query_field/worktable
+Benchmarking kv_json/query_field/worktable: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/worktable: Collecting 10 samples in estimated 5.0974 s (2585 iterations)
+Benchmarking kv_json/query_field/worktable: Analyzing
+kv_json/query_field/worktable
+                        time:   [1.9869 ms 1.9914 ms 1.9962 ms]
+                        thrpt:  [5.0095 Melem/s 5.0216 Melem/s 5.0329 Melem/s]
+Benchmarking kv_json/query_field/worktable-congee
+Benchmarking kv_json/query_field/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/worktable-congee: Collecting 10 samples in estimated 5.1262 s (2200 iterations)
+Benchmarking kv_json/query_field/worktable-congee: Analyzing
+kv_json/query_field/worktable-congee
+                        time:   [2.2926 ms 2.2930 ms 2.2935 ms]
+                        thrpt:  [4.3602 Melem/s 4.3610 Melem/s 4.3618 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv_json/query_field/worktable-arctic
+Benchmarking kv_json/query_field/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/worktable-arctic: Collecting 10 samples in estimated 5.0112 s (2420 iterations)
+Benchmarking kv_json/query_field/worktable-arctic: Analyzing
+kv_json/query_field/worktable-arctic
+                        time:   [2.0599 ms 2.0630 ms 2.0643 ms]
+                        thrpt:  [4.8443 Melem/s 4.8474 Melem/s 4.8547 Melem/s]
+Benchmarking kv_json/query_field/redb-json
+Benchmarking kv_json/query_field/redb-json: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/redb-json: Collecting 10 samples in estimated 5.0851 s (1870 iterations)
+Benchmarking kv_json/query_field/redb-json: Analyzing
+kv_json/query_field/redb-json
+                        time:   [2.9001 ms 2.9020 ms 2.9027 ms]
+                        thrpt:  [3.4451 Melem/s 3.4459 Melem/s 3.4481 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+Benchmarking kv_json/query_field/lmdb-json
+Benchmarking kv_json/query_field/lmdb-json: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/lmdb-json: Collecting 10 samples in estimated 5.0759 s (2640 iterations)
+Benchmarking kv_json/query_field/lmdb-json: Analyzing
+kv_json/query_field/lmdb-json
+                        time:   [1.9219 ms 1.9224 ms 1.9226 ms]
+                        thrpt:  [5.2012 Melem/s 5.2018 Melem/s 5.2032 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+
+   Compiling hashbrown v0.17.1
+   Compiling rkyv v0.8.17
+   Compiling psc-nanoid v3.1.1
+   Compiling data_bucket v0.5.2
+   Compiling worktable v1.0.0-beta.5 (/home/ubuntu/bench/WorkTable)
+   Compiling wt-benchmarks v0.1.0 (/home/ubuntu/bench/wt-benchmarks)
+    Finished `bench` profile [optimized + debuginfo] target(s) in 1m 04s
+     Running benches/ycsb.rs (target/release/deps/ycsb-3489143bd087d730)
+Gnuplot not found, using plotters backend
+Benchmarking ycsb/throughput/A/worktable
+Benchmarking ycsb/throughput/A/worktable: Warming up for 300.00 ms
+Benchmarking ycsb/throughput/A/worktable: Collecting 10 samples in estimated 16.620 s (20 iterations)
+Benchmarking ycsb/throughput/A/worktable: Analyzing
+ycsb/throughput/A/worktable
+                        time:   [533.78 ms 536.10 ms 538.70 ms]
+                        thrpt:  [371.26 Kelem/s 373.07 Kelem/s 374.69 Kelem/s]
+Benchmarking ycsb/throughput/A/worktable-congee
+Benchmarking ycsb/throughput/A/worktable-congee: Warming up for 300.00 ms
+Benchmarking ycsb/throughput/A/worktable-congee: Collecting 10 samples in estimated 15.443 s (20 iterations)
+Benchmarking ycsb/throughput/A/worktable-congee: Analyzing
+ycsb/throughput/A/worktable-congee
+                        time:   [497.88 ms 499.50 ms 501.18 ms]
+                        thrpt:  [399.06 Kelem/s 400.40 Kelem/s 401.70 Kelem/s]
+Benchmarking ycsb/throughput/A/worktable-arctic
+Benchmarking ycsb/throughput/A/worktable-arctic: Warming up for 300.00 ms
+Benchmarking ycsb/throughput/A/worktable-arctic: Collecting 10 samples in estimated 15.436 s (20 iterations)
+Benchmarking ycsb/throughput/A/worktable-arctic: Analyzing
+ycsb/throughput/A/worktable-arctic
+                        time:   [505.45 ms 508.76 ms 511.51 ms]
+                        thrpt:  [391.00 Kelem/s 393.11 Kelem/s 395.68 Kelem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking ycsb/throughput/B/worktable
+Benchmarking ycsb/throughput/B/worktable: Warming up for 300.00 ms
+Benchmarking ycsb/throughput/B/worktable: Collecting 10 samples in estimated 11.829 s (30 iterations)
+Benchmarking ycsb/throughput/B/worktable: Analyzing
+ycsb/throughput/B/worktable
+                        time:   [119.09 ms 121.15 ms 123.18 ms]
+                        thrpt:  [1.6237 Melem/s 1.6508 Melem/s 1.6795 Melem/s]
+Benchmarking ycsb/throughput/B/worktable-congee
+Benchmarking ycsb/throughput/B/worktable-congee: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 19.4s or enable flat sampling.
+Benchmarking ycsb/throughput/B/worktable-congee: Collecting 10 samples in estimated 19.403 s (55 iterations)
+Benchmarking ycsb/throughput/B/worktable-congee: Analyzing
+ycsb/throughput/B/worktable-congee
+                        time:   [101.30 ms 102.60 ms 104.12 ms]
+                        thrpt:  [1.9209 Melem/s 1.9494 Melem/s 1.9743 Melem/s]
+Benchmarking ycsb/throughput/B/worktable-arctic
+Benchmarking ycsb/throughput/B/worktable-arctic: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 18.8s or enable flat sampling.
+Benchmarking ycsb/throughput/B/worktable-arctic: Collecting 10 samples in estimated 18.784 s (55 iterations)
+Benchmarking ycsb/throughput/B/worktable-arctic: Analyzing
+ycsb/throughput/B/worktable-arctic
+                        time:   [97.658 ms 99.849 ms 102.31 ms]
+                        thrpt:  [1.9549 Melem/s 2.0030 Melem/s 2.0480 Melem/s]
+Benchmarking ycsb/throughput/C/worktable
+Benchmarking ycsb/throughput/C/worktable: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 16.8s or enable flat sampling.
+Benchmarking ycsb/throughput/C/worktable: Collecting 10 samples in estimated 16.762 s (55 iterations)
+Benchmarking ycsb/throughput/C/worktable: Analyzing
+ycsb/throughput/C/worktable
+                        time:   [34.958 ms 37.009 ms 39.400 ms]
+                        thrpt:  [5.0762 Melem/s 5.4042 Melem/s 5.7211 Melem/s]
+Benchmarking ycsb/throughput/C/worktable-congee
+Benchmarking ycsb/throughput/C/worktable-congee: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 14.8s or enable flat sampling.
+Benchmarking ycsb/throughput/C/worktable-congee: Collecting 10 samples in estimated 14.811 s (55 iterations)
+Benchmarking ycsb/throughput/C/worktable-congee: Analyzing
+ycsb/throughput/C/worktable-congee
+                        time:   [27.944 ms 29.389 ms 31.023 ms]
+                        thrpt:  [6.4469 Melem/s 6.8052 Melem/s 7.1571 Melem/s]
+Benchmarking ycsb/throughput/C/worktable-arctic
+Benchmarking ycsb/throughput/C/worktable-arctic: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 14.7s or enable flat sampling.
+Benchmarking ycsb/throughput/C/worktable-arctic: Collecting 10 samples in estimated 14.715 s (55 iterations)
+Benchmarking ycsb/throughput/C/worktable-arctic: Analyzing
+ycsb/throughput/C/worktable-arctic
+                        time:   [27.645 ms 28.253 ms 28.994 ms]
+                        thrpt:  [6.8981 Melem/s 7.0790 Melem/s 7.2347 Melem/s]
+Benchmarking ycsb/throughput/F/worktable
+Benchmarking ycsb/throughput/F/worktable: Warming up for 300.00 ms
+Benchmarking ycsb/throughput/F/worktable: Collecting 10 samples in estimated 17.671 s (20 iterations)
+Benchmarking ycsb/throughput/F/worktable: Analyzing
+ycsb/throughput/F/worktable
+                        time:   [568.34 ms 571.86 ms 575.23 ms]
+                        thrpt:  [347.69 Kelem/s 349.74 Kelem/s 351.90 Kelem/s]
+Benchmarking ycsb/throughput/F/worktable-congee
+Benchmarking ycsb/throughput/F/worktable-congee: Warming up for 300.00 ms
+Benchmarking ycsb/throughput/F/worktable-congee: Collecting 10 samples in estimated 16.000 s (20 iterations)
+Benchmarking ycsb/throughput/F/worktable-congee: Analyzing
+ycsb/throughput/F/worktable-congee
+                        time:   [519.04 ms 522.01 ms 524.54 ms]
+                        thrpt:  [381.29 Kelem/s 383.13 Kelem/s 385.33 Kelem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) low mild
+Benchmarking ycsb/throughput/F/worktable-arctic
+Benchmarking ycsb/throughput/F/worktable-arctic: Warming up for 300.00 ms
+Benchmarking ycsb/throughput/F/worktable-arctic: Collecting 10 samples in estimated 15.928 s (20 iterations)
+Benchmarking ycsb/throughput/F/worktable-arctic: Analyzing
+ycsb/throughput/F/worktable-arctic
+                        time:   [518.19 ms 520.31 ms 522.51 ms]
+                        thrpt:  [382.77 Kelem/s 384.38 Kelem/s 385.96 Kelem/s]
+
+Benchmarking ycsb/latency_p99/A/worktable
+Benchmarking ycsb/latency_p99/A/worktable: Warming up for 300.00 ms
+Benchmarking ycsb/latency_p99/A/worktable: Collecting 10 samples in estimated 17.172 s (20 iterations)
+Benchmarking ycsb/latency_p99/A/worktable: Analyzing
+ycsb/latency_p99/A/worktable
+                        time:   [3.0629 µs 3.8994 µs 4.9704 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking ycsb/latency_p99/A/worktable-congee
+Benchmarking ycsb/latency_p99/A/worktable-congee: Warming up for 300.00 ms
+Benchmarking ycsb/latency_p99/A/worktable-congee: Collecting 10 samples in estimated 15.693 s (20 iterations)
+Benchmarking ycsb/latency_p99/A/worktable-congee: Analyzing
+ycsb/latency_p99/A/worktable-congee
+                        time:   [1.9416 µs 2.2551 µs 2.6512 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking ycsb/latency_p99/A/worktable-arctic
+Benchmarking ycsb/latency_p99/A/worktable-arctic: Warming up for 300.00 ms
+Benchmarking ycsb/latency_p99/A/worktable-arctic: Collecting 10 samples in estimated 15.484 s (20 iterations)
+Benchmarking ycsb/latency_p99/A/worktable-arctic: Analyzing
+ycsb/latency_p99/A/worktable-arctic
+                        time:   [1.7530 µs 2.2149 µs 2.7887 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking ycsb/latency_p99/B/worktable
+Benchmarking ycsb/latency_p99/B/worktable: Warming up for 300.00 ms
+Benchmarking ycsb/latency_p99/B/worktable: Collecting 10 samples in estimated 11.898 s (30 iterations)
+Benchmarking ycsb/latency_p99/B/worktable: Analyzing
+ycsb/latency_p99/B/worktable
+                        time:   [2.2749 µs 2.6088 µs 3.0779 µs]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+Benchmarking ycsb/latency_p99/B/worktable-congee
+Benchmarking ycsb/latency_p99/B/worktable-congee: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 19.2s or enable flat sampling.
+Benchmarking ycsb/latency_p99/B/worktable-congee: Collecting 10 samples in estimated 19.244 s (55 iterations)
+Benchmarking ycsb/latency_p99/B/worktable-congee: Analyzing
+ycsb/latency_p99/B/worktable-congee
+                        time:   [1.6138 µs 1.6988 µs 1.7786 µs]
+Benchmarking ycsb/latency_p99/B/worktable-arctic
+Benchmarking ycsb/latency_p99/B/worktable-arctic: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 19.1s or enable flat sampling.
+Benchmarking ycsb/latency_p99/B/worktable-arctic: Collecting 10 samples in estimated 19.127 s (55 iterations)
+Benchmarking ycsb/latency_p99/B/worktable-arctic: Analyzing
+ycsb/latency_p99/B/worktable-arctic
+                        time:   [1.4874 µs 1.5959 µs 1.6822 µs]
+Benchmarking ycsb/latency_p99/C/worktable
+Benchmarking ycsb/latency_p99/C/worktable: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 17.0s or enable flat sampling.
+Benchmarking ycsb/latency_p99/C/worktable: Collecting 10 samples in estimated 17.012 s (55 iterations)
+Benchmarking ycsb/latency_p99/C/worktable: Analyzing
+ycsb/latency_p99/C/worktable
+                        time:   [2.3472 µs 2.5003 µs 2.6121 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking ycsb/latency_p99/C/worktable-congee
+Benchmarking ycsb/latency_p99/C/worktable-congee: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 15.5s or enable flat sampling.
+Benchmarking ycsb/latency_p99/C/worktable-congee: Collecting 10 samples in estimated 15.521 s (55 iterations)
+Benchmarking ycsb/latency_p99/C/worktable-congee: Analyzing
+ycsb/latency_p99/C/worktable-congee
+                        time:   [1.5542 µs 1.6496 µs 1.7602 µs]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+Benchmarking ycsb/latency_p99/C/worktable-arctic
+Benchmarking ycsb/latency_p99/C/worktable-arctic: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 10.0s. You may wish to increase target time to 15.1s or enable flat sampling.
+Benchmarking ycsb/latency_p99/C/worktable-arctic: Collecting 10 samples in estimated 15.119 s (55 iterations)
+Benchmarking ycsb/latency_p99/C/worktable-arctic: Analyzing
+ycsb/latency_p99/C/worktable-arctic
+                        time:   [1.2630 µs 1.4074 µs 1.5306 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking ycsb/latency_p99/F/worktable
+Benchmarking ycsb/latency_p99/F/worktable: Warming up for 300.00 ms
+Benchmarking ycsb/latency_p99/F/worktable: Collecting 10 samples in estimated 17.602 s (20 iterations)
+Benchmarking ycsb/latency_p99/F/worktable: Analyzing
+ycsb/latency_p99/F/worktable
+                        time:   [3.0434 µs 3.7071 µs 4.4120 µs]
+Benchmarking ycsb/latency_p99/F/worktable-congee
+Benchmarking ycsb/latency_p99/F/worktable-congee: Warming up for 300.00 ms
+Benchmarking ycsb/latency_p99/F/worktable-congee: Collecting 10 samples in estimated 16.022 s (20 iterations)
+Benchmarking ycsb/latency_p99/F/worktable-congee: Analyzing
+ycsb/latency_p99/F/worktable-congee
+                        time:   [1.9584 µs 2.1669 µs 2.4824 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking ycsb/latency_p99/F/worktable-arctic
+Benchmarking ycsb/latency_p99/F/worktable-arctic: Warming up for 300.00 ms
+Benchmarking ycsb/latency_p99/F/worktable-arctic: Collecting 10 samples in estimated 16.069 s (20 iterations)
+Benchmarking ycsb/latency_p99/F/worktable-arctic: Analyzing
+ycsb/latency_p99/F/worktable-arctic
+                        time:   [1.6815 µs 1.9824 µs 2.3554 µs]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) high mild
+

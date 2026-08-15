@@ -21,8 +21,8 @@
 
 use parking_lot::{Mutex, RwLock};
 use std::collections::{BTreeMap, HashMap};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
@@ -138,7 +138,10 @@ impl DynTable {
     pub fn update_field(&self, pk: u64, col: &str, v: Value) -> Option<()> {
         let lock = {
             let mut locks = self.locks.write();
-            locks.entry(pk).or_insert_with(|| Arc::new(Mutex::new(()))).clone()
+            locks
+                .entry(pk)
+                .or_insert_with(|| Arc::new(Mutex::new(())))
+                .clone()
         };
         let _g = lock.lock();
         let idx = *self.pk_index.read().get(&pk)?;

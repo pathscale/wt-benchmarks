@@ -1571,7 +1571,7 @@ dependencies = [
 
 [[package]]
 name = "worktable"
-version = "1.0.0-beta.5"
+version = "1.0.0-beta.8"
 dependencies = [
  "WorkTablesIndex",
  "arctic-wt",
@@ -1601,7 +1601,7 @@ dependencies = [
 
 [[package]]
 name = "worktable_codegen"
-version = "1.0.0-beta.5"
+version = "1.0.0-beta.8"
 dependencies = [
  "convert_case 0.6.0",
  "indexmap",

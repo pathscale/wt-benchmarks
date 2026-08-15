@@ -1,0 +1,671 @@
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:193:17
+    |
+193 |                 w.set_durability(Durability::None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+193 |                 let _ = w.set_durability(Durability::None);
+    |                 +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:204:13
+    |
+204 |             w.set_durability(Durability::None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+204 |             let _ = w.set_durability(Durability::None);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:218:13
+    |
+218 |             w.set_durability(Durability::None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+218 |             let _ = w.set_durability(Durability::None);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:240:17
+    |
+240 |                 w.set_durability(Durability::None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+240 |                 let _ = w.set_durability(Durability::None);
+    |                 +++++++
+
+warning: `wt-benchmarks` (lib) generated 4 warnings
+    Finished `bench` profile [optimized + debuginfo] target(s) in 0.41s
+     Running benches/kv.rs (target/release/deps/kv-45cd8537979f5a5b)
+Gnuplot not found, using plotters backend
+Benchmarking kv/insert/worktable
+Benchmarking kv/insert/worktable: Warming up for 300.00 ms
+Benchmarking kv/insert/worktable: Collecting 10 samples in estimated 5.1308 s (880 iterations)
+Benchmarking kv/insert/worktable: Analyzing
+kv/insert/worktable     time:   [4.9088 ms 4.9179 ms 4.9279 ms]
+                        thrpt:  [2.0293 Melem/s 2.0334 Melem/s 2.0372 Melem/s]
+                 change:
+                        time:   [−1.7856% −1.6310% −1.4705%] (p = 0.00 < 0.05)
+                        thrpt:  [+1.4924% +1.6581% +1.8180%]
+                        Performance has improved.
+Benchmarking kv/insert/worktable-congee
+Benchmarking kv/insert/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv/insert/worktable-congee: Collecting 10 samples in estimated 5.0045 s (1100 iterations)
+Benchmarking kv/insert/worktable-congee: Analyzing
+kv/insert/worktable-congee
+                        time:   [4.0345 ms 4.0424 ms 4.0582 ms]
+                        thrpt:  [2.4642 Melem/s 2.4738 Melem/s 2.4786 Melem/s]
+                 change:
+                        time:   [+0.0845% +0.4222% +0.8011%] (p = 0.01 < 0.05)
+                        thrpt:  [−0.7948% −0.4204% −0.0845%]
+                        Change within noise threshold.
+Benchmarking kv/insert/worktable-arctic
+Benchmarking kv/insert/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv/insert/worktable-arctic: Collecting 10 samples in estimated 5.1527 s (1155 iterations)
+Benchmarking kv/insert/worktable-arctic: Analyzing
+kv/insert/worktable-arctic
+                        time:   [3.9932 ms 3.9998 ms 4.0064 ms]
+                        thrpt:  [2.4960 Melem/s 2.5001 Melem/s 2.5042 Melem/s]
+                 change:
+                        time:   [+0.5373% +1.7345% +3.8755%] (p = 0.02 < 0.05)
+                        thrpt:  [−3.7309% −1.7049% −0.5344%]
+                        Change within noise threshold.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv/insert/sqlite
+Benchmarking kv/insert/sqlite: Warming up for 300.00 ms
+Benchmarking kv/insert/sqlite: Collecting 10 samples in estimated 5.1008 s (825 iterations)
+Benchmarking kv/insert/sqlite: Analyzing
+kv/insert/sqlite        time:   [6.1111 ms 6.1200 ms 6.1296 ms]
+                        thrpt:  [1.6314 Melem/s 1.6340 Melem/s 1.6364 Melem/s]
+                 change:
+                        time:   [−2.4580% −2.2084% −1.9594%] (p = 0.00 < 0.05)
+                        thrpt:  [+1.9986% +2.2583% +2.5200%]
+                        Performance has improved.
+Benchmarking kv/insert/redb
+Benchmarking kv/insert/redb: Warming up for 300.00 ms
+Benchmarking kv/insert/redb: Collecting 10 samples in estimated 5.7023 s (110 iterations)
+Benchmarking kv/insert/redb: Analyzing
+kv/insert/redb          time:   [13.512 ms 19.276 ms 28.321 ms]
+                        thrpt:  [353.09 Kelem/s 518.79 Kelem/s 740.10 Kelem/s]
+                 change:
+                        time:   [+1.5426% +30.850% +75.739%] (p = 0.01 < 0.05)
+                        thrpt:  [−43.097% −23.577% −1.5192%]
+                        Performance has regressed.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv/insert/lmdb
+Benchmarking kv/insert/lmdb: Warming up for 300.00 ms
+Benchmarking kv/insert/lmdb: Collecting 10 samples in estimated 5.0820 s (275 iterations)
+Benchmarking kv/insert/lmdb: Analyzing
+kv/insert/lmdb          time:   [9.5729 ms 11.123 ms 12.303 ms]
+                        thrpt:  [812.78 Kelem/s 899.02 Kelem/s 1.0446 Melem/s]
+                 change:
+                        time:   [−38.457% −22.328% −6.9384%] (p = 0.03 < 0.05)
+                        thrpt:  [+7.4557% +28.746% +62.487%]
+                        Performance has improved.
+Benchmarking kv/insert/duckdb
+Benchmarking kv/insert/duckdb: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 6.9s.
+Benchmarking kv/insert/duckdb: Collecting 10 samples in estimated 6.9272 s (10 iterations)
+Benchmarking kv/insert/duckdb: Analyzing
+kv/insert/duckdb        time:   [698.54 ms 718.57 ms 737.88 ms]
+                        thrpt:  [13.552 Kelem/s 13.916 Kelem/s 14.316 Kelem/s]
+                 change:
+                        time:   [+0.6139% +3.4822% +6.3721%] (p = 0.02 < 0.05)
+                        thrpt:  [−5.9904% −3.3650% −0.6101%]
+                        Change within noise threshold.
+
+Benchmarking kv/point_read/worktable
+Benchmarking kv/point_read/worktable: Warming up for 300.00 ms
+Benchmarking kv/point_read/worktable: Collecting 10 samples in estimated 5.0166 s (3355 iterations)
+Benchmarking kv/point_read/worktable: Analyzing
+kv/point_read/worktable time:   [1.4879 ms 1.4935 ms 1.4982 ms]
+                        thrpt:  [6.6747 Melem/s 6.6955 Melem/s 6.7208 Melem/s]
+                 change:
+                        time:   [−0.5158% −0.1464% +0.2095%] (p = 0.42 > 0.05)
+                        thrpt:  [−0.2091% +0.1466% +0.5184%]
+                        No change in performance detected.
+Benchmarking kv/point_read/worktable-congee
+Benchmarking kv/point_read/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv/point_read/worktable-congee: Collecting 10 samples in estimated 5.0261 s (5170 iterations)
+Benchmarking kv/point_read/worktable-congee: Analyzing
+kv/point_read/worktable-congee
+                        time:   [942.23 µs 944.47 µs 945.77 µs]
+                        thrpt:  [10.573 Melem/s 10.588 Melem/s 10.613 Melem/s]
+                 change:
+                        time:   [−1.0756% −0.6446% −0.2369%] (p = 0.02 < 0.05)
+                        thrpt:  [+0.2375% +0.6488% +1.0873%]
+                        Change within noise threshold.
+Benchmarking kv/point_read/worktable-arctic
+Benchmarking kv/point_read/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv/point_read/worktable-arctic: Collecting 10 samples in estimated 5.0384 s (5170 iterations)
+Benchmarking kv/point_read/worktable-arctic: Analyzing
+kv/point_read/worktable-arctic
+                        time:   [951.12 µs 953.06 µs 955.88 µs]
+                        thrpt:  [10.462 Melem/s 10.492 Melem/s 10.514 Melem/s]
+                 change:
+                        time:   [−0.4552% +0.0225% +0.5125%] (p = 0.97 > 0.05)
+                        thrpt:  [−0.5099% −0.0225% +0.4572%]
+                        No change in performance detected.
+Benchmarking kv/point_read/sqlite
+Benchmarking kv/point_read/sqlite: Warming up for 300.00 ms
+Benchmarking kv/point_read/sqlite: Collecting 10 samples in estimated 5.1581 s (1760 iterations)
+Benchmarking kv/point_read/sqlite: Analyzing
+kv/point_read/sqlite    time:   [2.8987 ms 2.9045 ms 2.9099 ms]
+                        thrpt:  [3.4366 Melem/s 3.4429 Melem/s 3.4498 Melem/s]
+                 change:
+                        time:   [−0.0474% +0.3698% +0.7493%] (p = 0.05 > 0.05)
+                        thrpt:  [−0.7437% −0.3684% +0.0475%]
+                        No change in performance detected.
+Benchmarking kv/point_read/redb
+Benchmarking kv/point_read/redb: Warming up for 300.00 ms
+Benchmarking kv/point_read/redb: Collecting 10 samples in estimated 5.0338 s (3080 iterations)
+Benchmarking kv/point_read/redb: Analyzing
+kv/point_read/redb      time:   [1.6159 ms 1.6182 ms 1.6225 ms]
+                        thrpt:  [6.1632 Melem/s 6.1796 Melem/s 6.1887 Melem/s]
+                 change:
+                        time:   [−0.4843% −0.0657% +0.3362%] (p = 0.77 > 0.05)
+                        thrpt:  [−0.3351% +0.0658% +0.4867%]
+                        No change in performance detected.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking kv/point_read/lmdb
+Benchmarking kv/point_read/lmdb: Warming up for 300.00 ms
+Benchmarking kv/point_read/lmdb: Collecting 10 samples in estimated 5.0582 s (2695 iterations)
+Benchmarking kv/point_read/lmdb: Analyzing
+kv/point_read/lmdb      time:   [1.8390 ms 1.8441 ms 1.8485 ms]
+                        thrpt:  [5.4097 Melem/s 5.4227 Melem/s 5.4377 Melem/s]
+                 change:
+                        time:   [−0.5673% −0.1715% +0.2240%] (p = 0.35 > 0.05)
+                        thrpt:  [−0.2235% +0.1718% +0.5705%]
+                        No change in performance detected.
+Benchmarking kv/point_read/duckdb
+Benchmarking kv/point_read/duckdb: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 5.5s.
+Benchmarking kv/point_read/duckdb: Collecting 10 samples in estimated 5.5217 s (10 iterations)
+Benchmarking kv/point_read/duckdb: Analyzing
+kv/point_read/duckdb    time:   [538.42 ms 541.68 ms 544.98 ms]
+                        thrpt:  [18.349 Kelem/s 18.461 Kelem/s 18.573 Kelem/s]
+                 change:
+                        time:   [+4.2338% +5.6229% +7.0579%] (p = 0.00 < 0.05)
+                        thrpt:  [−6.5926% −5.3235% −4.0618%]
+                        Performance has regressed.
+
+Benchmarking kv/overwrite/worktable
+Benchmarking kv/overwrite/worktable: Warming up for 300.00 ms
+Benchmarking kv/overwrite/worktable: Collecting 10 samples in estimated 5.6256 s (275 iterations)
+Benchmarking kv/overwrite/worktable: Analyzing
+kv/overwrite/worktable  time:   [20.157 ms 20.566 ms 21.145 ms]
+                        thrpt:  [472.91 Kelem/s 486.24 Kelem/s 496.11 Kelem/s]
+                 change:
+                        time:   [+1.1875% +3.0623% +4.8828%] (p = 0.00 < 0.05)
+                        thrpt:  [−4.6555% −2.9713% −1.1736%]
+                        Performance has regressed.
+Benchmarking kv/overwrite/worktable-congee
+Benchmarking kv/overwrite/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv/overwrite/worktable-congee: Collecting 10 samples in estimated 5.3676 s (275 iterations)
+Benchmarking kv/overwrite/worktable-congee: Analyzing
+kv/overwrite/worktable-congee
+                        time:   [18.490 ms 18.571 ms 18.736 ms]
+                        thrpt:  [533.73 Kelem/s 538.48 Kelem/s 540.83 Kelem/s]
+                 change:
+                        time:   [−0.6997% −0.0029% +0.6797%] (p = 0.94 > 0.05)
+                        thrpt:  [−0.6751% +0.0029% +0.7046%]
+                        No change in performance detected.
+Benchmarking kv/overwrite/worktable-arctic
+Benchmarking kv/overwrite/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv/overwrite/worktable-arctic: Collecting 10 samples in estimated 5.0845 s (275 iterations)
+Benchmarking kv/overwrite/worktable-arctic: Analyzing
+kv/overwrite/worktable-arctic
+                        time:   [18.438 ms 18.516 ms 18.643 ms]
+                        thrpt:  [536.39 Kelem/s 540.06 Kelem/s 542.35 Kelem/s]
+                 change:
+                        time:   [−2.7218% −1.9526% −0.9910%] (p = 0.00 < 0.05)
+                        thrpt:  [+1.0010% +1.9915% +2.7980%]
+                        Change within noise threshold.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv/overwrite/sqlite
+Benchmarking kv/overwrite/sqlite: Warming up for 300.00 ms
+Benchmarking kv/overwrite/sqlite: Collecting 10 samples in estimated 5.0488 s (1320 iterations)
+Benchmarking kv/overwrite/sqlite: Analyzing
+kv/overwrite/sqlite     time:   [3.7480 ms 3.7594 ms 3.7717 ms]
+                        thrpt:  [2.6513 Melem/s 2.6600 Melem/s 2.6681 Melem/s]
+                 change:
+                        time:   [−1.2968% −0.7465% −0.2319%] (p = 0.02 < 0.05)
+                        thrpt:  [+0.2325% +0.7521% +1.3138%]
+                        Change within noise threshold.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking kv/overwrite/redb
+Benchmarking kv/overwrite/redb: Warming up for 300.00 ms
+Benchmarking kv/overwrite/redb: Collecting 10 samples in estimated 5.4497 s (330 iterations)
+Benchmarking kv/overwrite/redb: Analyzing
+kv/overwrite/redb       time:   [14.635 ms 14.979 ms 15.444 ms]
+                        thrpt:  [647.50 Kelem/s 667.62 Kelem/s 683.30 Kelem/s]
+                 change:
+                        time:   [−3.0100% −0.7858% +1.6462%] (p = 0.59 > 0.05)
+                        thrpt:  [−1.6196% +0.7921% +3.1034%]
+                        No change in performance detected.
+Benchmarking kv/overwrite/lmdb
+Benchmarking kv/overwrite/lmdb: Warming up for 300.00 ms
+Benchmarking kv/overwrite/lmdb: Collecting 10 samples in estimated 5.2539 s (605 iterations)
+Benchmarking kv/overwrite/lmdb: Analyzing
+kv/overwrite/lmdb       time:   [8.5750 ms 9.7040 ms 12.722 ms]
+                        thrpt:  [786.01 Kelem/s 1.0305 Melem/s 1.1662 Melem/s]
+                 change:
+                        time:   [+3.1948% +17.810% +46.117%] (p = 0.06 > 0.05)
+                        thrpt:  [−31.562% −15.118% −3.0959%]
+                        No change in performance detected.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking kv/overwrite/duckdb
+Benchmarking kv/overwrite/duckdb: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 7.6s.
+Benchmarking kv/overwrite/duckdb: Collecting 10 samples in estimated 7.5619 s (10 iterations)
+Benchmarking kv/overwrite/duckdb: Analyzing
+kv/overwrite/duckdb     time:   [789.53 ms 807.80 ms 827.18 ms]
+                        thrpt:  [12.089 Kelem/s 12.379 Kelem/s 12.666 Kelem/s]
+                 change:
+                        time:   [+1.5555% +4.1514% +6.8630%] (p = 0.02 < 0.05)
+                        thrpt:  [−6.4222% −3.9860% −1.5316%]
+                        Performance has regressed.
+
+Benchmarking kv/range_scan/worktable
+Benchmarking kv/range_scan/worktable: Warming up for 300.00 ms
+Benchmarking kv/range_scan/worktable: Collecting 10 samples in estimated 5.0597 s (3465 iterations)
+Benchmarking kv/range_scan/worktable: Analyzing
+kv/range_scan/worktable time:   [1.4359 ms 1.4397 ms 1.4433 ms]
+                        thrpt:  [13.857 Melem/s 13.892 Melem/s 13.928 Melem/s]
+                 change:
+                        time:   [−1.0364% −0.8022% −0.5662%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.5694% +0.8087% +1.0472%]
+                        Change within noise threshold.
+Benchmarking kv/range_scan/worktable-congee
+Benchmarking kv/range_scan/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv/range_scan/worktable-congee: Collecting 10 samples in estimated 5.0368 s (3355 iterations)
+Benchmarking kv/range_scan/worktable-congee: Analyzing
+kv/range_scan/worktable-congee
+                        time:   [1.5008 ms 1.5084 ms 1.5120 ms]
+                        thrpt:  [13.227 Melem/s 13.259 Melem/s 13.326 Melem/s]
+                 change:
+                        time:   [−0.8747% −0.3415% +0.1479%] (p = 0.33 > 0.05)
+                        thrpt:  [−0.1476% +0.3427% +0.8824%]
+                        No change in performance detected.
+Benchmarking kv/range_scan/worktable-arctic
+Benchmarking kv/range_scan/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv/range_scan/worktable-arctic: Collecting 10 samples in estimated 5.0584 s (3300 iterations)
+Benchmarking kv/range_scan/worktable-arctic: Analyzing
+kv/range_scan/worktable-arctic
+                        time:   [1.5268 ms 1.5292 ms 1.5312 ms]
+                        thrpt:  [13.062 Melem/s 13.079 Melem/s 13.100 Melem/s]
+                 change:
+                        time:   [−2.9489% −2.4823% −2.1038%] (p = 0.00 < 0.05)
+                        thrpt:  [+2.1490% +2.5455% +3.0385%]
+                        Performance has improved.
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) low mild
+Benchmarking kv/range_scan/redb
+Benchmarking kv/range_scan/redb: Warming up for 300.00 ms
+Benchmarking kv/range_scan/redb: Collecting 10 samples in estimated 5.0023 s (4070 iterations)
+Benchmarking kv/range_scan/redb: Analyzing
+kv/range_scan/redb      time:   [1.1932 ms 1.1963 ms 1.1985 ms]
+                        thrpt:  [16.688 Melem/s 16.718 Melem/s 16.761 Melem/s]
+                 change:
+                        time:   [−1.2058% −0.9092% −0.5995%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.6031% +0.9175% +1.2205%]
+                        Change within noise threshold.
+Benchmarking kv/range_scan/lmdb
+Benchmarking kv/range_scan/lmdb: Warming up for 300.00 ms
+Benchmarking kv/range_scan/lmdb: Collecting 10 samples in estimated 5.0064 s (5995 iterations)
+Benchmarking kv/range_scan/lmdb: Analyzing
+kv/range_scan/lmdb      time:   [814.83 µs 815.84 µs 817.30 µs]
+                        thrpt:  [24.471 Melem/s 24.514 Melem/s 24.545 Melem/s]
+                 change:
+                        time:   [−0.6835% −0.4024% −0.0935%] (p = 0.01 < 0.05)
+                        thrpt:  [+0.0936% +0.4040% +0.6882%]
+                        Change within noise threshold.
+Benchmarking kv/range_scan/sqlite
+Benchmarking kv/range_scan/sqlite: Warming up for 300.00 ms
+Benchmarking kv/range_scan/sqlite: Collecting 10 samples in estimated 5.0207 s (2255 iterations)
+Benchmarking kv/range_scan/sqlite: Analyzing
+kv/range_scan/sqlite    time:   [2.2037 ms 2.2064 ms 2.2088 ms]
+                        thrpt:  [9.0547 Melem/s 9.0646 Melem/s 9.0754 Melem/s]
+                 change:
+                        time:   [−0.0323% +0.1637% +0.3561%] (p = 0.12 > 0.05)
+                        thrpt:  [−0.3548% −0.1635% +0.0323%]
+                        No change in performance detected.
+Benchmarking kv/range_scan/duckdb
+Benchmarking kv/range_scan/duckdb: Warming up for 300.00 ms
+Benchmarking kv/range_scan/duckdb: Collecting 10 samples in estimated 5.7481 s (220 iterations)
+Benchmarking kv/range_scan/duckdb: Analyzing
+kv/range_scan/duckdb    time:   [25.676 ms 27.957 ms 28.909 ms]
+                        thrpt:  [691.83 Kelem/s 715.38 Kelem/s 778.93 Kelem/s]
+                 change:
+                        time:   [−10.798% −7.4470% −3.7137%] (p = 0.00 < 0.05)
+                        thrpt:  [+3.8570% +8.0462% +12.105%]
+                        Performance has improved.
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:193:17
+    |
+193 |                 w.set_durability(Durability::None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+193 |                 let _ = w.set_durability(Durability::None);
+    |                 +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:204:13
+    |
+204 |             w.set_durability(Durability::None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+204 |             let _ = w.set_durability(Durability::None);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:218:13
+    |
+218 |             w.set_durability(Durability::None);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+218 |             let _ = w.set_durability(Durability::None);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/kv_json.rs:240:17
+    |
+240 |                 w.set_durability(Durability::None);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+240 |                 let _ = w.set_durability(Durability::None);
+    |                 +++++++
+
+warning: `wt-benchmarks` (lib) generated 4 warnings
+    Finished `bench` profile [optimized + debuginfo] target(s) in 0.21s
+     Running benches/kv_json.rs (target/release/deps/kv_json-c8467b8bcd2cf97e)
+Gnuplot not found, using plotters backend
+Benchmarking kv_json/insert/worktable
+Benchmarking kv_json/insert/worktable: Warming up for 300.00 ms
+Benchmarking kv_json/insert/worktable: Collecting 10 samples in estimated 5.0689 s (715 iterations)
+Benchmarking kv_json/insert/worktable: Analyzing
+kv_json/insert/worktable
+                        time:   [6.2863 ms 6.3142 ms 6.3512 ms]
+                        thrpt:  [1.5745 Melem/s 1.5837 Melem/s 1.5907 Melem/s]
+                 change:
+                        time:   [−3.2702% −2.9109% −2.4843%] (p = 0.00 < 0.05)
+                        thrpt:  [+2.5476% +2.9982% +3.3808%]
+                        Performance has improved.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking kv_json/insert/worktable-congee
+Benchmarking kv_json/insert/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv_json/insert/worktable-congee: Collecting 10 samples in estimated 5.2718 s (935 iterations)
+Benchmarking kv_json/insert/worktable-congee: Analyzing
+kv_json/insert/worktable-congee
+                        time:   [5.0104 ms 5.0189 ms 5.0314 ms]
+                        thrpt:  [1.9875 Melem/s 1.9925 Melem/s 1.9958 Melem/s]
+                 change:
+                        time:   [−1.0870% +0.1855% +2.1308%] (p = 0.76 > 0.05)
+                        thrpt:  [−2.0863% −0.1851% +1.0989%]
+                        No change in performance detected.
+Found 3 outliers among 10 measurements (30.00%)
+  1 (10.00%) low mild
+  2 (20.00%) high severe
+Benchmarking kv_json/insert/worktable-arctic
+Benchmarking kv_json/insert/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv_json/insert/worktable-arctic: Collecting 10 samples in estimated 5.1812 s (935 iterations)
+Benchmarking kv_json/insert/worktable-arctic: Analyzing
+kv_json/insert/worktable-arctic
+                        time:   [5.0832 ms 5.1034 ms 5.1211 ms]
+                        thrpt:  [1.9527 Melem/s 1.9595 Melem/s 1.9672 Melem/s]
+                 change:
+                        time:   [−1.9904% −1.6249% −1.2757%] (p = 0.00 < 0.05)
+                        thrpt:  [+1.2922% +1.6517% +2.0309%]
+                        Performance has improved.
+Benchmarking kv_json/insert/redb-json
+Benchmarking kv_json/insert/redb-json: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 13.7s.
+Benchmarking kv_json/insert/redb-json: Collecting 10 samples in estimated 13.684 s (10 iterations)
+Benchmarking kv_json/insert/redb-json: Analyzing
+kv_json/insert/redb-json
+                        time:   [745.69 ms 787.74 ms 828.75 ms]
+                        thrpt:  [12.066 Kelem/s 12.694 Kelem/s 13.410 Kelem/s]
+                 change:
+                        time:   [+36.523% +50.845% +64.177%] (p = 0.00 < 0.05)
+                        thrpt:  [−39.090% −33.707% −26.752%]
+                        Performance has regressed.
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high mild
+Benchmarking kv_json/insert/lmdb-json
+Benchmarking kv_json/insert/lmdb-json: Warming up for 300.00 ms
+Benchmarking kv_json/insert/lmdb-json: Collecting 10 samples in estimated 6.4581 s (20 iterations)
+Benchmarking kv_json/insert/lmdb-json: Analyzing
+kv_json/insert/lmdb-json
+                        time:   [319.02 ms 493.97 ms 784.31 ms]
+                        thrpt:  [12.750 Kelem/s 20.244 Kelem/s 31.346 Kelem/s]
+                 change:
+                        time:   [+15.392% +80.020% +206.52%] (p = 0.02 < 0.05)
+                        thrpt:  [−67.375% −44.451% −13.339%]
+                        Performance has regressed.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+
+Benchmarking kv_json/point_get/worktable
+Benchmarking kv_json/point_get/worktable: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/worktable: Collecting 10 samples in estimated 5.0199 s (3850 iterations)
+Benchmarking kv_json/point_get/worktable: Analyzing
+kv_json/point_get/worktable
+                        time:   [1.2984 ms 1.3023 ms 1.3048 ms]
+                        thrpt:  [7.6640 Melem/s 7.6789 Melem/s 7.7016 Melem/s]
+                 change:
+                        time:   [+0.1645% +0.9563% +1.7402%] (p = 0.01 < 0.05)
+                        thrpt:  [−1.7105% −0.9473% −0.1643%]
+                        Change within noise threshold.
+Benchmarking kv_json/point_get/worktable-congee
+Benchmarking kv_json/point_get/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/worktable-congee: Collecting 10 samples in estimated 5.0201 s (5940 iterations)
+Benchmarking kv_json/point_get/worktable-congee: Analyzing
+kv_json/point_get/worktable-congee
+                        time:   [831.17 µs 833.63 µs 836.74 µs]
+                        thrpt:  [11.951 Melem/s 11.996 Melem/s 12.031 Melem/s]
+                 change:
+                        time:   [−0.9857% −0.4894% −0.0240%] (p = 0.18 > 0.05)
+                        thrpt:  [+0.0240% +0.4919% +0.9955%]
+                        No change in performance detected.
+Found 3 outliers among 10 measurements (30.00%)
+  2 (20.00%) low mild
+  1 (10.00%) high mild
+Benchmarking kv_json/point_get/worktable-arctic
+Benchmarking kv_json/point_get/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/worktable-arctic: Collecting 10 samples in estimated 5.0447 s (6160 iterations)
+Benchmarking kv_json/point_get/worktable-arctic: Analyzing
+kv_json/point_get/worktable-arctic
+                        time:   [809.27 µs 811.89 µs 813.52 µs]
+                        thrpt:  [12.292 Melem/s 12.317 Melem/s 12.357 Melem/s]
+                 change:
+                        time:   [−0.7252% −0.2749% +0.1342%] (p = 0.32 > 0.05)
+                        thrpt:  [−0.1341% +0.2756% +0.7305%]
+                        No change in performance detected.
+Benchmarking kv_json/point_get/redb-json
+Benchmarking kv_json/point_get/redb-json: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/redb-json: Collecting 10 samples in estimated 5.0054 s (1705 iterations)
+Benchmarking kv_json/point_get/redb-json: Analyzing
+kv_json/point_get/redb-json
+                        time:   [2.9469 ms 2.9528 ms 2.9577 ms]
+                        thrpt:  [3.3811 Melem/s 3.3866 Melem/s 3.3934 Melem/s]
+                 change:
+                        time:   [+1.2975% +1.9844% +2.5619%] (p = 0.00 < 0.05)
+                        thrpt:  [−2.4979% −1.9458% −1.2808%]
+                        Performance has regressed.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+Benchmarking kv_json/point_get/lmdb-json
+Benchmarking kv_json/point_get/lmdb-json: Warming up for 300.00 ms
+Benchmarking kv_json/point_get/lmdb-json: Collecting 10 samples in estimated 5.0313 s (1595 iterations)
+Benchmarking kv_json/point_get/lmdb-json: Analyzing
+kv_json/point_get/lmdb-json
+                        time:   [3.1132 ms 3.1188 ms 3.1284 ms]
+                        thrpt:  [3.1965 Melem/s 3.2063 Melem/s 3.2121 Melem/s]
+                 change:
+                        time:   [−1.6578% −1.0869% −0.5337%] (p = 0.03 < 0.05)
+                        thrpt:  [+0.5365% +1.0988% +1.6857%]
+                        Change within noise threshold.
+
+Benchmarking kv_json/update_field/worktable
+Benchmarking kv_json/update_field/worktable: Warming up for 300.00 ms
+Benchmarking kv_json/update_field/worktable: Collecting 10 samples in estimated 6.1714 s (165 iterations)
+Benchmarking kv_json/update_field/worktable: Analyzing
+kv_json/update_field/worktable
+                        time:   [36.852 ms 36.936 ms 37.015 ms]
+                        thrpt:  [270.16 Kelem/s 270.74 Kelem/s 271.36 Kelem/s]
+                 change:
+                        time:   [−1.0387% −0.4852% −0.0059%] (p = 0.24 > 0.05)
+                        thrpt:  [+0.0059% +0.4875% +1.0496%]
+                        No change in performance detected.
+Benchmarking kv_json/update_field/worktable-congee
+Benchmarking kv_json/update_field/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv_json/update_field/worktable-congee: Collecting 10 samples in estimated 5.7509 s (165 iterations)
+Benchmarking kv_json/update_field/worktable-congee: Analyzing
+kv_json/update_field/worktable-congee
+                        time:   [35.022 ms 35.262 ms 35.394 ms]
+                        thrpt:  [282.53 Kelem/s 283.59 Kelem/s 285.53 Kelem/s]
+                 change:
+                        time:   [−0.9465% −0.3900% +0.1679%] (p = 0.41 > 0.05)
+                        thrpt:  [−0.1677% +0.3916% +0.9556%]
+                        No change in performance detected.
+Benchmarking kv_json/update_field/worktable-arctic
+Benchmarking kv_json/update_field/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv_json/update_field/worktable-arctic: Collecting 10 samples in estimated 5.7778 s (165 iterations)
+Benchmarking kv_json/update_field/worktable-arctic: Analyzing
+kv_json/update_field/worktable-arctic
+                        time:   [34.853 ms 35.069 ms 35.220 ms]
+                        thrpt:  [283.93 Kelem/s 285.15 Kelem/s 286.92 Kelem/s]
+                 change:
+                        time:   [−0.7541% −0.0993% +0.5127%] (p = 0.87 > 0.05)
+                        thrpt:  [−0.5101% +0.0994% +0.7599%]
+                        No change in performance detected.
+Benchmarking kv_json/update_field/redb-json
+Benchmarking kv_json/update_field/redb-json: Warming up for 300.00 ms
+
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 8.6s or enable flat sampling.
+Benchmarking kv_json/update_field/redb-json: Collecting 10 samples in estimated 8.5597 s (55 iterations)
+Benchmarking kv_json/update_field/redb-json: Analyzing
+kv_json/update_field/redb-json
+                        time:   [151.08 ms 151.56 ms 151.83 ms]
+                        thrpt:  [65.861 Kelem/s 65.980 Kelem/s 66.188 Kelem/s]
+                 change:
+                        time:   [+847.48% +853.25% +858.76%] (p = 0.00 < 0.05)
+                        thrpt:  [−89.570% −89.510% −89.446%]
+                        Performance has regressed.
+Benchmarking kv_json/update_field/lmdb-json
+Benchmarking kv_json/update_field/lmdb-json: Warming up for 300.00 ms
+Benchmarking kv_json/update_field/lmdb-json: Collecting 10 samples in estimated 5.1611 s (110 iterations)
+Benchmarking kv_json/update_field/lmdb-json: Analyzing
+kv_json/update_field/lmdb-json
+                        time:   [46.341 ms 59.331 ms 64.718 ms]
+                        thrpt:  [154.52 Kelem/s 168.55 Kelem/s 215.79 Kelem/s]
+                 change:
+                        time:   [+268.68% +315.86% +366.84%] (p = 0.00 < 0.05)
+                        thrpt:  [−78.580% −75.953% −72.877%]
+                        Performance has regressed.
+
+Benchmarking kv_json/query_field/worktable
+Benchmarking kv_json/query_field/worktable: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/worktable: Collecting 10 samples in estimated 5.0061 s (8030 iterations)
+Benchmarking kv_json/query_field/worktable: Analyzing
+kv_json/query_field/worktable
+                        time:   [619.08 µs 619.95 µs 620.95 µs]
+                        thrpt:  [16.104 Melem/s 16.130 Melem/s 16.153 Melem/s]
+                 change:
+                        time:   [+3.5915% +3.8243% +4.0884%] (p = 0.00 < 0.05)
+                        thrpt:  [−3.9278% −3.6834% −3.4670%]
+                        Performance has regressed.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking kv_json/query_field/worktable-congee
+Benchmarking kv_json/query_field/worktable-congee: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/worktable-congee: Collecting 10 samples in estimated 5.0109 s (7370 iterations)
+Benchmarking kv_json/query_field/worktable-congee: Analyzing
+kv_json/query_field/worktable-congee
+                        time:   [670.19 µs 673.14 µs 677.69 µs]
+                        thrpt:  [14.756 Melem/s 14.856 Melem/s 14.921 Melem/s]
+                 change:
+                        time:   [+3.4885% +3.9346% +4.3820%] (p = 0.00 < 0.05)
+                        thrpt:  [−4.1980% −3.7856% −3.3709%]
+                        Performance has regressed.
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) low mild
+Benchmarking kv_json/query_field/worktable-arctic
+Benchmarking kv_json/query_field/worktable-arctic: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/worktable-arctic: Collecting 10 samples in estimated 5.0162 s (8415 iterations)
+Benchmarking kv_json/query_field/worktable-arctic: Analyzing
+kv_json/query_field/worktable-arctic
+                        time:   [601.58 µs 605.97 µs 608.09 µs]
+                        thrpt:  [16.445 Melem/s 16.503 Melem/s 16.623 Melem/s]
+                 change:
+                        time:   [+2.4840% +2.9244% +3.4422%] (p = 0.00 < 0.05)
+                        thrpt:  [−3.3276% −2.8413% −2.4238%]
+                        Performance has regressed.
+Benchmarking kv_json/query_field/redb-json
+Benchmarking kv_json/query_field/redb-json: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/redb-json: Collecting 10 samples in estimated 5.0213 s (3025 iterations)
+Benchmarking kv_json/query_field/redb-json: Analyzing
+kv_json/query_field/redb-json
+                        time:   [1.5477 ms 1.5561 ms 1.5667 ms]
+                        thrpt:  [6.3828 Melem/s 6.4263 Melem/s 6.4610 Melem/s]
+                 change:
+                        time:   [−1.2260% −0.3769% +0.3878%] (p = 0.42 > 0.05)
+                        thrpt:  [−0.3863% +0.3783% +1.2412%]
+                        No change in performance detected.
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking kv_json/query_field/lmdb-json
+Benchmarking kv_json/query_field/lmdb-json: Warming up for 300.00 ms
+Benchmarking kv_json/query_field/lmdb-json: Collecting 10 samples in estimated 5.0030 s (3465 iterations)
+Benchmarking kv_json/query_field/lmdb-json: Analyzing
+kv_json/query_field/lmdb-json
+                        time:   [1.4476 ms 1.4504 ms 1.4526 ms]
+                        thrpt:  [6.8844 Melem/s 6.8948 Melem/s 6.9082 Melem/s]
+                 change:
+                        time:   [+0.6273% +0.9821% +1.3278%] (p = 0.00 < 0.05)
+                        thrpt:  [−1.3104% −0.9725% −0.6234%]
+                        Change within noise threshold.
+
+   Compiling worktable_codegen v1.0.0-beta.5 (/Users/revenge/code/WorkTable/codegen)
+   Compiling worktable v1.0.0-beta.5 (/Users/revenge/code/WorkTable)
+   Compiling wt-benchmarks v0.1.0 (/Users/revenge/code/wt-benchmarks)
