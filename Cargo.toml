@@ -42,6 +42,7 @@ worktable = { path = "../WorkTable", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["async_tokio"] }
+tempfile = "3"
 
 # KV throughput bench (Criterion Throughput::Elements). External engines behind
 # their adapter features; run e.g. `cargo bench --bench kv --features external-adapters`.
@@ -102,6 +103,13 @@ required-features = ["worktable-adapter"]
 name = "delete-cost-worktable"
 path = "src/bin/delete-cost-worktable.rs"
 required-features = ["worktable-adapter"]
+
+# The agentcode storage profile: generational publish (persisted against
+# memory), incremental update, generation scan, dependency walk.
+# `cargo bench --bench codegraph`.
+[[bench]]
+name = "codegraph"
+harness = false
 
 [profile.release]
 lto = "fat"
