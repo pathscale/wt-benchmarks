@@ -81,6 +81,13 @@ harness = false
 name = "deletes"
 harness = false
 
+# Mixed read/write across threads, per index backend. Adapted from the bench
+# that lived in WorkTablesIndex, reframed at table level so arctic and congee
+# can appear at all. `cargo bench --bench concurrent_mix`.
+[[bench]]
+name = "concurrent_mix"
+harness = false
+
 [profile.release]
 lto = "fat"
 codegen-units = 1

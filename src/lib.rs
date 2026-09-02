@@ -1,5 +1,7 @@
 pub mod config;
 #[cfg(feature = "worktable-adapter")]
+pub mod concurrent_mix;
+#[cfg(feature = "worktable-adapter")]
 pub mod deletes;
 pub mod fanout;
 pub mod kv;
