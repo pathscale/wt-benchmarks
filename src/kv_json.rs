@@ -33,7 +33,7 @@ impl Account {
             email: format!("user{k}@example.test"),
             age: 18 + (k % 60) as u32,
             balance: (k as f64) * 1.5,
-            active: k % 2 == 0,
+            active: k.is_multiple_of(2),
         }
     }
 
@@ -85,6 +85,12 @@ macro_rules! wt_doc_backend {
 
             pub struct $driver {
                 table: AccountDocWorkTable,
+            }
+
+            impl Default for $driver {
+                fn default() -> Self {
+                    Self::new()
+                }
             }
 
             impl $driver {
@@ -184,13 +190,19 @@ pub mod redb_engine {
         db: Database,
     }
 
+    // `new` creates a temporary directory and a database in it, either of
+    // which can fail. A `Default` that panicked on IO would be a worse API
+    // than a `new` that does.
+    #[allow(clippy::new_without_default)]
     impl RedbJson {
         pub fn new() -> Self {
             let dir = tempfile::tempdir().unwrap();
             let db = Database::create(dir.path().join("accounts.redb")).unwrap();
             {
                 let mut w = db.begin_write().unwrap();
-                w.set_durability(Durability::None);
+                w.set_durability(Durability::None).expect(
+                    "durability must be settable, or this arm silently measures fsynced writes",
+                );
                 {
                     let _ = w.open_table(T).unwrap();
                 }
@@ -201,7 +213,9 @@ pub mod redb_engine {
         pub fn load(rows: u64) -> Self {
             let e = Self::new();
             let mut w = e.db.begin_write().unwrap();
-            w.set_durability(Durability::None);
+            w.set_durability(Durability::None).expect(
+                "durability must be settable, or this arm silently measures fsynced writes",
+            );
             {
                 let mut t = w.open_table(T).unwrap();
                 for k in 0..rows {
@@ -215,7 +229,9 @@ pub mod redb_engine {
         pub fn insert(&self, k: u64) {
             let bytes = serde_json::to_vec(&Account::make(k)).unwrap();
             let mut w = self.db.begin_write().unwrap();
-            w.set_durability(Durability::None);
+            w.set_durability(Durability::None).expect(
+                "durability must be settable, or this arm silently measures fsynced writes",
+            );
             {
                 let mut t = w.open_table(T).unwrap();
                 t.insert(k, bytes.as_slice()).unwrap();
@@ -237,7 +253,9 @@ pub mod redb_engine {
         pub fn update_balance(&self, keys: &[u64]) {
             for k in keys {
                 let mut w = self.db.begin_write().unwrap();
-                w.set_durability(Durability::None);
+                w.set_durability(Durability::None).expect(
+                    "durability must be settable, or this arm silently measures fsynced writes",
+                );
                 {
                     let mut t = w.open_table(T).unwrap();
                     let mut a: Account = {
@@ -281,6 +299,10 @@ pub mod lmdb_engine {
         db: AccountDb,
     }
 
+    // `new` creates a temporary directory and a database in it, either of
+    // which can fail. A `Default` that panicked on IO would be a worse API
+    // than a `new` that does.
+    #[allow(clippy::new_without_default)]
     impl LmdbJson {
         pub fn new() -> Self {
             let dir = tempfile::tempdir().unwrap();
