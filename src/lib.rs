@@ -7,6 +7,8 @@ pub mod kv_json;
 pub mod nonunique;
 #[cfg(feature = "worktable-adapter")]
 pub mod kv_table;
+#[cfg(feature = "worktable-adapter")]
+pub mod partition_ticks;
 pub mod result;
 pub mod rng;
 pub mod ycsb;
