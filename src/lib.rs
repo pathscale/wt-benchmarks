@@ -1,10 +1,10 @@
 #[cfg(feature = "worktable-adapter")]
 pub mod agentcode;
 #[cfg(feature = "worktable-adapter")]
+pub mod codegraph;
+#[cfg(feature = "worktable-adapter")]
 pub mod concurrent_mix;
 pub mod config;
-#[cfg(feature = "worktable-adapter")]
-pub mod codegraph;
 #[cfg(feature = "worktable-adapter")]
 pub mod delete_cost;
 #[cfg(feature = "worktable-adapter")]
