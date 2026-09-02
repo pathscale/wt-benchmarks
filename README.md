@@ -110,6 +110,33 @@ scripts/summarize-criterion-changes.sh /path/to/cargo-target
 The input target must contain Criterion `change/estimates.json` files produced
 by a saved baseline comparison. Negative changes are faster elapsed time.
 
+## Partition routing under churn
+
+The tick loop WorkTable's partitioned tables exist for: readers route to a
+partition by key and read from it, while a writer removes and recreates
+partitions underneath them.
+
+```bash
+cargo bench --bench partition_ticks
+
+# Adds the batched `pinned` strategy. Needs worktable 1.0.0-beta.16 or newer.
+cargo bench --features partition-pinned --bench partition_ticks
+```
+
+It exists because WorkTable's own `partition_routing` benchmark measures the
+routing call in isolation, and isolation hides the two things that decide what
+it costs. It does no table work, so a difference worth 15% of the routing call
+is worth under 2% of the tick that contains it. And it never retires anything,
+so the grace period is never exercised and every reclamation scheme looks
+alike, including the ones that stop reclaiming entirely once readers stop
+arriving in gaps.
+
+This port does real reads through the routing call and churns partitions while
+the readers run. `Outcome::retired_backlog` is the number to watch: a backlog
+that tracks the churn count means retirements are piling up behind readers that
+keep arriving, which is the failure mode the reclamation scheme was chosen to
+avoid.
+
 ## Runnable comparison ladder
 
 ```bash
