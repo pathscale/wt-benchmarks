@@ -11,6 +11,12 @@ use wt_benchmarks::kv_table::IndexBackend;
 use wt_benchmarks::result::LatencySummary;
 use wt_benchmarks::rng::Rng;
 
+// The wide argument lists below are the LinkBench link tuple
+// (id1, link_type, id2, time, version, data) as the benchmark defines it.
+// Bundling them into a struct would make this code read less like the
+// specification it is implementing, which is the only thing keeping the port
+// checkable against the original.
+#[allow(clippy::too_many_arguments)]
 trait LinkBackend: Default {
     fn insert_node(&self, id: u64, time: u64, data: String);
     fn insert_link(
