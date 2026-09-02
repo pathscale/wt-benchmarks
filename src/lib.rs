@@ -1,4 +1,6 @@
 pub mod config;
+#[cfg(feature = "worktable-adapter")]
+pub mod codegraph;
 pub mod kv;
 pub mod kv_json;
 #[cfg(feature = "worktable-adapter")]

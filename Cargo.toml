@@ -38,6 +38,7 @@ worktable = { path = "../WorkTable", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["async_tokio"] }
+tempfile = "3"
 
 # KV throughput bench (Criterion Throughput::Elements). External engines behind
 # their adapter features; run e.g. `cargo bench --bench kv --features external-adapters`.
@@ -54,6 +55,13 @@ harness = false
 # YCSB two-port bench: throughput (Throughput::Elements) + latency (p99).
 [[bench]]
 name = "ycsb"
+harness = false
+
+# The agentcode storage profile: generational publish (persisted against
+# memory), incremental update, generation scan, dependency walk.
+# `cargo bench --bench codegraph`.
+[[bench]]
+name = "codegraph"
 harness = false
 
 [profile.release]

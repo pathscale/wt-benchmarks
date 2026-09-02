@@ -45,6 +45,22 @@ Priorities are:
 | Exclude | sysbench code port | External driver or independently specified generic operations only | GPL-2.0 code should not be incorporated into this MIT repository. |
 | Exclude | STAC-branded HFT tests | Independently named HFT workloads below | Specifications/results are controlled and comparability would be misleading. |
 
+## Consumer profiles
+
+Shapes taken from a real WorkTable consumer rather than from a published
+benchmark. They are not comparative: no other engine is run, because the
+question is whether a WorkTable change breaks a dependant, not how WorkTable
+ranks. A profile earns its place by naming a regression that reached a consumer
+and was not caught here.
+
+| Profile | Consumer | Operations | Guards |
+|---|---|---|---|
+| codegraph | `pathscale/agentcode` | generational publish (persisted and memory), one-file incremental update, hot-key generation scan, per-call graph adjacency walk | The 22x durable-write ratio that dominates this consumer; the one-hot-key fan-out that `WorkTablesIndex` 0.0.8 turned into a 21x regression; index insert and lookup, which beta.15 cost 13 to 30%. Documented in [CODEGRAPH_PROFILE.md](CODEGRAPH_PROFILE.md). |
+
+Not covered by this profile, and tracked elsewhere: eviction and vacuum reclaim
+(blocked on `pathscale/WorkTable#78`), on-disk footprint (`campaigns/footprint`),
+and concurrency, which this consumer does not yet exercise.
+
 ## WorkTable microbenchmark matrix
 
 These are not redundant with YCSB. They isolate the mechanisms behind the
