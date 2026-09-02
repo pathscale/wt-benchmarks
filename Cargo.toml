@@ -10,6 +10,10 @@ publish = false
 default = ["worktable-adapter"]
 worktable-adapter = ["dep:worktable"]
 versioned-row-publication = ["worktable-adapter", "worktable/versioned-row-publication"]
+# `PartitionSet::pinned` arrived in worktable 1.0.0-beta.16. Off by default so
+# this crate still builds against the published release; the partition_ticks
+# bench simply offers two routing strategies instead of three without it.
+partition-pinned = ["worktable-adapter"]
 redb-adapter = ["dep:redb", "dep:tempfile"]
 sqlite-adapter = ["dep:rusqlite"]
 lmdb-adapter = ["dep:heed", "dep:tempfile"]
@@ -102,3 +106,14 @@ required-features = ["sqlite-adapter"]
 [[bin]]
 name = "linkbench-worktable"
 path = "src/bin/linkbench-worktable.rs"
+
+# Partition routing under concurrent readers and live partition churn: the tick
+# loop the partitioned tables exist for. Unlike WorkTable's own
+# `partition_routing` microbenchmark this does real table reads and retires
+# partitions while the readers run, so the routing cost is measured against the
+# work it sits on and the grace period is actually exercised.
+# Run with `--features partition-pinned` to include the batched `pinned` path
+# (needs worktable 1.0.0-beta.16 or newer).
+[[bench]]
+name = "partition_ticks"
+harness = false
