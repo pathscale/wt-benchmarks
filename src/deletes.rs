@@ -105,15 +105,16 @@ macro_rules! delete_backend {
 
             /// One batched delete over an explicit key list.
             pub fn delete_many(table: &EvictWorkTable, keys: &[u64]) {
-                table.delete_many(keys.to_vec()).expect("delete_many");
+                futures::executor::block_on(table.delete_many(keys.to_vec())).expect("delete_many");
             }
 
             /// One batched delete over a span, which resolves its links by
             /// walking the primary index rather than by key lookups.
             pub fn delete_range(table: &EvictWorkTable, count: u64) {
-                table
-                    .delete_range(EvictPrimaryKey::from(0u64)..EvictPrimaryKey::from(count))
-                    .expect("delete_range");
+                futures::executor::block_on(
+                    table.delete_range(EvictPrimaryKey::from(0u64)..EvictPrimaryKey::from(count)),
+                )
+                .expect("delete_range");
             }
         }
     };

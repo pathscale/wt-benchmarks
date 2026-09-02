@@ -3,6 +3,8 @@ pub mod config;
 pub mod concurrent_mix;
 #[cfg(feature = "worktable-adapter")]
 pub mod deletes;
+#[cfg(feature = "worktable-adapter")]
+pub mod op_latency;
 pub mod fanout;
 pub mod kv;
 pub mod kv_json;

@@ -88,6 +88,19 @@ harness = false
 name = "concurrent_mix"
 harness = false
 
+# Single-operation latency, memory and disk. Deliberately not a Criterion
+# bench: Criterion reports a distribution over batches, which is the shape that
+# hides a latency question. `cargo bench --bench op_latency`.
+[[bench]]
+name = "op_latency"
+harness = false
+
+# Insert throughput against writer count. The shape is the finding.
+# `cargo bench --bench insert_scaling`.
+[[bench]]
+name = "insert_scaling"
+harness = false
+
 [profile.release]
 lto = "fat"
 codegen-units = 1
