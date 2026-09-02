@@ -56,6 +56,13 @@ harness = false
 name = "ycsb"
 harness = false
 
+# Non-unique index insert and read against key fan-out: fixed row count, rising
+# rows-per-key. Guards the scan-inside-insert shape that WorkTablesIndex 0.0.8
+# shipped. `cargo bench --bench fanout`.
+[[bench]]
+name = "fanout"
+harness = false
+
 [profile.release]
 lto = "fat"
 codegen-units = 1
