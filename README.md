@@ -231,6 +231,36 @@ redb, records both per-operation and batch redb transactions, and runs TATP at
 1, 4, and 8 threads. Every dimension can be overridden with the
 `CAMPAIGN_*` variables at the top of the script.
 
+## Consumer profiles
+
+Workload shapes taken from a real WorkTable consumer rather than from a
+published benchmark. They answer a narrower question than the ports above: not
+how WorkTable compares to another engine, but whether a change to WorkTable is
+about to break something that already depends on it.
+
+### codegraph, the agentcode storage profile
+
+```bash
+cargo bench --bench codegraph
+```
+
+`pathscale/agentcode` is a semantic code index that republishes a whole
+generation of facts about a repository on every source change: 43,200 persisted
+rows across three tables at its production fixture, every row tagged with one
+hot generation key, plus a graph adjacency walked on every query.
+
+Four groups: `publish` (persisted against memory, the 22x durable-write ratio
+that dominates this consumer), `incremental` (one file changing against a
+populated store), `generation_scan` (the hot non-unique key, whose fan-out is
+the whole generation), and `dependency_walk` (the per-call adjacency).
+
+Read `publish` as a ratio and `generation_scan` as a slope, not as absolutes.
+Full documentation, including what it deliberately does not cover, is in
+[CODEGRAPH_PROFILE.md](docs/CODEGRAPH_PROFILE.md).
+
+Three WorkTable releases in a row shipped a regression this consumer felt and no
+benchmark caught. That is what this profile is for.
+
 ## Repository rules
 
 - Never publish an unreviewed one-shot number.

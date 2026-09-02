@@ -67,6 +67,7 @@ phases**. Source: `agentcode-worktable-asks.md`, measured on beta.12.
 
 | Benchmark | Files | What it guards | State |
 |---|---|---|---|
+| Codegraph | `src/codegraph.rs`, `benches/codegraph.rs` | Generational publish (persisted and memory), one-file incremental update, hot-key generation scan, and per-call graph adjacency walk. Guards the durable-write ratio, fan-out regression, and index insert/lookup costs documented in [CODEGRAPH_PROFILE.md](CODEGRAPH_PROFILE.md). | Runnable |
 | Key fan-out | `src/fanout.rs`, `benches/fanout.rs` | A non-unique index under a shared generation id, where every row in a generation carries the same value. WorkTablesIndex 0.0.8 turned this into a linear scan inside insert and reached AgentCode as a 21x regression. | In PR #6 |
 | Write profile | `src/agentcode.rs`, `src/bin/agentcode-worktable.rs` | The generation write itself: 14,400 persisted rows, one at a time against `insert_many`, both timed to acceptance *and* to durability, plus the read-back. Finding: `insert_many` is 2.9x at the caller and 1.07x to durability, so the batch collapses the index apply but not the persistence queue. | In PR #6 |
 | Text index | not written | `ensure_text_index` is 37% of an update, the single largest phase, and nothing here represents it. | Missing |
