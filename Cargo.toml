@@ -93,6 +93,11 @@ name = "op-latency-worktable"
 path = "src/bin/op-latency-worktable.rs"
 required-features = ["worktable-adapter"]
 
+[[bin]]
+name = "delete-cost-worktable"
+path = "src/bin/delete-cost-worktable.rs"
+required-features = ["worktable-adapter"]
+
 [profile.release]
 lto = "fat"
 codegen-units = 1
