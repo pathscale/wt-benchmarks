@@ -1,10 +1,8 @@
-pub mod config;
 #[cfg(feature = "worktable-adapter")]
 pub mod concurrent_mix;
+pub mod config;
 #[cfg(feature = "worktable-adapter")]
 pub mod deletes;
-#[cfg(feature = "worktable-adapter")]
-pub mod op_latency;
 pub mod fanout;
 pub mod kv;
 pub mod kv_json;
@@ -12,6 +10,8 @@ pub mod kv_json;
 pub mod kv_table;
 #[cfg(feature = "worktable-adapter")]
 pub mod nonunique;
+#[cfg(feature = "worktable-adapter")]
+pub mod op_latency;
 #[cfg(feature = "worktable-adapter")]
 pub mod partition_ticks;
 pub mod result;

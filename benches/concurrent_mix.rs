@@ -21,7 +21,7 @@
 use std::time::Duration;
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
-use wt_benchmarks::concurrent_mix::{self, OPS_PER_THREAD, READERS, WRITERS, WRITE_RATIOS};
+use wt_benchmarks::concurrent_mix::{self, OPS_PER_THREAD, READERS, WRITE_RATIOS, WRITERS};
 
 // Bounded on purpose. Every sample rebuilds the table and spawns the full
 // thread set, so the budget is the fixture size times the sample count and

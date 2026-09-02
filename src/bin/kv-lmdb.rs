@@ -11,7 +11,7 @@ use std::hint::black_box;
 use std::time::Instant;
 
 use heed::types::{Bytes, U64};
-use heed::{byteorder::BigEndian, Database, EnvOpenOptions};
+use heed::{Database, EnvOpenOptions, byteorder::BigEndian};
 use wt_benchmarks::kv::{
     DurabilityMode, KvConfig, TransactionScope, emit, text_checksum, text_value,
 };
@@ -55,33 +55,77 @@ fn main() -> BenchResult<()> {
 
         let started = Instant::now();
         insert_rows(&env, &db, &config)?;
-        emit(&config, "lmdb", "insert", repetition, config.rows,
-            "not-applicable", started.elapsed().as_nanos(), config.rows);
+        emit(
+            &config,
+            "lmdb",
+            "insert",
+            repetition,
+            config.rows,
+            "not-applicable",
+            started.elapsed().as_nanos(),
+            config.rows,
+        );
 
         let started = Instant::now();
         let checksum = read_points(&env, &db, &config, &point_keys)?;
-        emit(&config, "lmdb", "point_read", repetition, config.operations,
-            "borrowed-mmap", started.elapsed().as_nanos(), checksum);
+        emit(
+            &config,
+            "lmdb",
+            "point_read",
+            repetition,
+            config.operations,
+            "borrowed-mmap",
+            started.elapsed().as_nanos(),
+            checksum,
+        );
 
         let started = Instant::now();
         update_rows(&env, &db, &config, &point_keys)?;
-        emit(&config, "lmdb", "overwrite", repetition, config.operations,
-            "not-applicable", started.elapsed().as_nanos(), config.operations);
+        emit(
+            &config,
+            "lmdb",
+            "overwrite",
+            repetition,
+            config.operations,
+            "not-applicable",
+            started.elapsed().as_nanos(),
+            config.operations,
+        );
 
         let started = Instant::now();
         let checksum = scan_rows(&env, &db, &config, &scan_starts)?;
-        emit(&config, "lmdb", "range_scan", repetition, config.scan_operations,
-            "borrowed-mmap", started.elapsed().as_nanos(), checksum);
+        emit(
+            &config,
+            "lmdb",
+            "range_scan",
+            repetition,
+            config.scan_operations,
+            "borrowed-mmap",
+            started.elapsed().as_nanos(),
+            checksum,
+        );
 
         let started = Instant::now();
         let deleted = delete_rows(&env, &db, &config, &point_keys)?;
-        emit(&config, "lmdb", "delete_random", repetition, config.operations,
-            "not-applicable", started.elapsed().as_nanos(), deleted);
+        emit(
+            &config,
+            "lmdb",
+            "delete_random",
+            repetition,
+            config.operations,
+            "not-applicable",
+            started.elapsed().as_nanos(),
+            deleted,
+        );
     }
     Ok(())
 }
 
-fn insert_rows(env: &heed::Env, db: &Database<LmdbKey, Bytes>, config: &KvConfig) -> BenchResult<()> {
+fn insert_rows(
+    env: &heed::Env,
+    db: &Database<LmdbKey, Bytes>,
+    config: &KvConfig,
+) -> BenchResult<()> {
     match config.transaction_scope {
         TransactionScope::PerOperation => {
             for key in 0..config.rows {
@@ -103,28 +147,40 @@ fn insert_rows(env: &heed::Env, db: &Database<LmdbKey, Bytes>, config: &KvConfig
     Ok(())
 }
 
-fn read_points(env: &heed::Env, db: &Database<LmdbKey, Bytes>, config: &KvConfig, keys: &[u64]) -> BenchResult<u64> {
+fn read_points(
+    env: &heed::Env,
+    db: &Database<LmdbKey, Bytes>,
+    config: &KvConfig,
+    keys: &[u64],
+) -> BenchResult<u64> {
     let mut checksum = 0_u64;
     match config.transaction_scope {
         TransactionScope::PerOperation => {
             for key in keys {
                 let rtxn = env.read_txn()?;
                 let value = db.get(&rtxn, key)?.expect("loaded key");
-                checksum = checksum.wrapping_add(text_checksum(*key, std::str::from_utf8(black_box(value))?));
+                checksum = checksum
+                    .wrapping_add(text_checksum(*key, std::str::from_utf8(black_box(value))?));
             }
         }
         TransactionScope::Batch => {
             let rtxn = env.read_txn()?;
             for key in keys {
                 let value = db.get(&rtxn, key)?.expect("loaded key");
-                checksum = checksum.wrapping_add(text_checksum(*key, std::str::from_utf8(black_box(value))?));
+                checksum = checksum
+                    .wrapping_add(text_checksum(*key, std::str::from_utf8(black_box(value))?));
             }
         }
     }
     Ok(checksum)
 }
 
-fn update_rows(env: &heed::Env, db: &Database<LmdbKey, Bytes>, config: &KvConfig, keys: &[u64]) -> BenchResult<()> {
+fn update_rows(
+    env: &heed::Env,
+    db: &Database<LmdbKey, Bytes>,
+    config: &KvConfig,
+    keys: &[u64],
+) -> BenchResult<()> {
     match config.transaction_scope {
         TransactionScope::PerOperation => {
             for key in keys {
@@ -146,24 +202,37 @@ fn update_rows(env: &heed::Env, db: &Database<LmdbKey, Bytes>, config: &KvConfig
     Ok(())
 }
 
-fn scan_rows(env: &heed::Env, db: &Database<LmdbKey, Bytes>, config: &KvConfig, starts: &[u64]) -> BenchResult<u64> {
+fn scan_rows(
+    env: &heed::Env,
+    db: &Database<LmdbKey, Bytes>,
+    config: &KvConfig,
+    starts: &[u64],
+) -> BenchResult<u64> {
     let mut checksum = 0_u64;
     match config.transaction_scope {
         TransactionScope::PerOperation => {
             for start in starts {
                 let rtxn = env.read_txn()?;
-                for row in db.range(&rtxn, &(*start..))?.take(config.scan_length as usize) {
+                for row in db
+                    .range(&rtxn, &(*start..))?
+                    .take(config.scan_length as usize)
+                {
                     let (key, value) = row?;
-                    checksum = checksum.wrapping_add(text_checksum(key, std::str::from_utf8(value)?));
+                    checksum =
+                        checksum.wrapping_add(text_checksum(key, std::str::from_utf8(value)?));
                 }
             }
         }
         TransactionScope::Batch => {
             let rtxn = env.read_txn()?;
             for start in starts {
-                for row in db.range(&rtxn, &(*start..))?.take(config.scan_length as usize) {
+                for row in db
+                    .range(&rtxn, &(*start..))?
+                    .take(config.scan_length as usize)
+                {
                     let (key, value) = row?;
-                    checksum = checksum.wrapping_add(text_checksum(key, std::str::from_utf8(value)?));
+                    checksum =
+                        checksum.wrapping_add(text_checksum(key, std::str::from_utf8(value)?));
                 }
             }
         }
@@ -171,7 +240,12 @@ fn scan_rows(env: &heed::Env, db: &Database<LmdbKey, Bytes>, config: &KvConfig, 
     Ok(checksum)
 }
 
-fn delete_rows(env: &heed::Env, db: &Database<LmdbKey, Bytes>, config: &KvConfig, keys: &[u64]) -> BenchResult<u64> {
+fn delete_rows(
+    env: &heed::Env,
+    db: &Database<LmdbKey, Bytes>,
+    config: &KvConfig,
+    keys: &[u64],
+) -> BenchResult<u64> {
     let mut deleted = 0_u64;
     match config.transaction_scope {
         TransactionScope::PerOperation => {
