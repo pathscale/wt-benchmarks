@@ -74,6 +74,13 @@ harness = false
 name = "fanout"
 harness = false
 
+# The three delete APIs against batch size and key distribution. Scattered keys
+# run two arms because delete_range cannot express them; contiguous keys run
+# three. `cargo bench --bench deletes`.
+[[bench]]
+name = "deletes"
+harness = false
+
 [profile.release]
 lto = "fat"
 codegen-units = 1

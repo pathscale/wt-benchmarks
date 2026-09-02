@@ -1,12 +1,13 @@
 pub mod config;
 #[cfg(feature = "worktable-adapter")]
+pub mod deletes;
 pub mod fanout;
 pub mod kv;
 pub mod kv_json;
 #[cfg(feature = "worktable-adapter")]
-pub mod nonunique;
-#[cfg(feature = "worktable-adapter")]
 pub mod kv_table;
+#[cfg(feature = "worktable-adapter")]
+pub mod nonunique;
 #[cfg(feature = "worktable-adapter")]
 pub mod partition_ticks;
 pub mod result;
