@@ -56,6 +56,13 @@ harness = false
 name = "ycsb"
 harness = false
 
+# Non-unique secondary index across the backends that support one (congee
+# cannot). Three arms so backend and key type separate: wti_u128 vs
+# arctic_u128 is the backend, wti_string vs wti_u128 is the key type.
+[[bench]]
+name = "nonunique"
+harness = false
+
 [profile.release]
 lto = "fat"
 codegen-units = 1
