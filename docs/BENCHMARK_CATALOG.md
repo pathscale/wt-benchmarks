@@ -45,6 +45,88 @@ Priorities are:
 | Exclude | sysbench code port | External driver or independently specified generic operations only | GPL-2.0 code should not be incorporated into this MIT repository. |
 | Exclude | STAC-branded HFT tests | Independently named HFT workloads below | Specifications/results are controlled and comparability would be misleading. |
 
+## Consumer profiles
+
+The sections above port *external* workloads. These are the workloads of our own
+consumers, and they are the ones that decide whether a release is an improvement
+in practice. A benchmark belongs here when its shape was taken from a real
+consumer's measured profile rather than from a published spec.
+
+**Label every such benchmark with the profile it serves**, in the module's doc
+header and in this table. Several agents add to this list, and a benchmark whose
+consumer is not written down cannot be prioritised against the rest.
+
+### AgentCode
+
+A semantic workspace for coding agents. Indexes a repository into immutable
+content-addressed generations: 11 tables, 8 of them `persist: true`. One
+generation of the fact-dense fixture is 800 files, 14,400 symbols and 14,400
+dependency edges, and every generation currently rewrites all of them. Its
+recorded phase profile puts **74% of an incremental update in three bulk write
+phases**. Source: `agentcode-worktable-asks.md`, measured on beta.12.
+
+| Benchmark | Files | What it guards | State |
+|---|---|---|---|
+| Key fan-out | `src/fanout.rs`, `benches/fanout.rs` | A non-unique index under a shared generation id, where every row in a generation carries the same value. WorkTablesIndex 0.0.8 turned this into a linear scan inside insert and reached AgentCode as a 21x regression. | In PR #6 |
+| Write profile | `src/agentcode.rs`, `src/bin/agentcode-worktable.rs` | The generation write itself: 14,400 persisted rows, one at a time against `insert_many`, both timed to acceptance *and* to durability, plus the read-back. Finding: `insert_many` is 2.9x at the caller and 1.07x to durability, so the batch collapses the index apply but not the persistence queue. | In PR #6 |
+| Text index | not written | `ensure_text_index` is 37% of an update, the single largest phase, and nothing here represents it. | Missing |
+| Incremental reuse | not written | One file changed 18 of 14,400 symbols, 0.125%, and the store wrote all of them. The floor is 13.7x below current. | Missing |
+
+### MoE-PGO
+
+Profile-guided re-partitioning of mixture-of-experts boundaries. This is
+**not** derived from a recorded phase profile: MoE-PGO does not use WorkTable
+at run time yet, so `src/moe_pgo.rs` encodes what its pipeline is designed to
+ask for. Read the shapes as a specification and the numbers as a baseline to
+design against.
+
+Parameters live in memory-mapped safetensors and never move; an expert is a
+*view* over that fixed block store, so re-partitioning writes a new map rather
+than relocating anything. A map is one `u16` per neuron, about 864 KB at donor
+scale. That leaves WorkTable holding exactly two things.
+
+| Benchmark | Files | What it guards | State |
+|---|---|---|---|
+| Control | `src/moe_pgo.rs`, `benches/moe_pgo.rs` | Nothing. Contains no WorkTable, so its result cannot legitimately move between arms or runs. **Read it first**: if it moved, the machine moved and the rest of the run is void. No other suite here has one, which is how a session once reported a 3.6x spread on a pure dereference and treated the surrounding numbers as real. | Runnable |
+| Accumulate | same | Profiling's read-modify-write stream over a dense key set with no locality and no Zipf tail: the working set is the whole table. Nothing else in this suite measures that shape. Retains ~0 bytes per update, measured at the allocator. | Runnable |
+| Publish | same | Building a new map version. Insert-dominated and two orders of magnitude larger than retiring one, so it is the cost of in-place retraining. | Runnable |
+| Retire | same | Dropping the version readers left behind while they keep arriving. Readers are continuous, so there is never a quiet instant, which is the one place epoch reclamation is load-bearing for this consumer and a quiescence-based scheme would fail. | Runnable |
+| Switch window | not written | A reader loads the current version, then looks it up. If a version can be retired between those two steps the reader gets nothing. Observed `missed 0` across every run so far, which is not proof the window is closed, only that it was not hit. Needs deliberate widening to settle. | Missing |
+
+Every group runs on all three primary-index backends. The key is a dense `u32`,
+which is the shape ART indexes exist for, and the gap is not small, so a
+single-backend number would mislead rather than merely be incomplete. Adding a
+fourth backend is one `moe_backend!` line and one `Backend` variant.
+
+**The axis this suite is really for is WorkTable versions, not backends.**
+Backend is a choice made once. A local build slower than the published crate is
+a regression, and it cannot appear in a run that only ever builds one of them.
+`scripts/compare-worktable-versions.sh <version> [bench]` runs both sides
+through a shared `CRITERION_HOME` so Criterion's own baseline machinery does
+the comparison.
+
+**Findings, 3 September 2026.** Congee and arctic insert about 25 to 30 percent
+faster than WorkTablesIndex, reproducibly: the ordering held across three
+passes with the order alternated, across published beta.16 and local beta.17,
+and across two dependency sets. Release build, roughly 260 to 380 ns per row
+depending on backend; a full 442k map version is about 0.15 s.
+
+An earlier figure of 6.3 us per row in this section was a debug build and was
+wrong by twenty times.
+
+Published beta.16 measured no slower than local beta.17, with beta.17's first
+pass elevated and its later passes matching. That is **unresolved, not
+absent**, and it is exactly the comparison the script above exists to settle.
+
+**Deliberately not measured.** Per-token neuron routing: the partition is drawn
+so a request's needs are known before compute starts, and if per-token routing
+were needed that would be evidence the partition failed. Weight paging:
+WorkTable does not hold parameters. Generational churn at scale: versions are
+864 KB and a resident block stays valid across a re-partition, because experts
+are views. The neuron-pair co-activation matrix is not a table and must never
+become one: `F * (F + 1) / 2` u32 counters, 302 MB per layer at F = 12288, in a
+memory-mapped file.
+
 ## WorkTable microbenchmark matrix
 
 These are not redundant with YCSB. They isolate the mechanisms behind the

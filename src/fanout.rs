@@ -1,6 +1,8 @@
 //! Non-unique index insert against key fan-out, the shape that hides a linear
 //! scan inside an insert.
 //!
+//! **Consumer profile: AgentCode.** See `docs/BENCHMARK_CATALOG.md`.
+//!
 //! Every other index bench here spreads its keys, so each key holds one or a
 //! few values and an insert that scans the values already under the key costs
 //! the same as one that seeks. Skew is what separates them: hold the row count

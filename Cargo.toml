@@ -94,6 +94,11 @@ path = "src/bin/op-latency-worktable.rs"
 required-features = ["worktable-adapter"]
 
 [[bin]]
+name = "agentcode-worktable"
+path = "src/bin/agentcode-worktable.rs"
+required-features = ["worktable-adapter"]
+
+[[bin]]
 name = "delete-cost-worktable"
 path = "src/bin/delete-cost-worktable.rs"
 required-features = ["worktable-adapter"]
@@ -154,4 +159,13 @@ path = "src/bin/linkbench-worktable.rs"
 # (needs worktable 1.0.0-beta.16 or newer).
 [[bench]]
 name = "partition_ticks"
+harness = false
+
+# The MoE-PGO phase profile: bulk corpus ingest, a read-modify-write storm with
+# no locality over the whole neuron key set, read-only routing lookups at
+# serving rate partitioned by layer, and a per-layer scan. Encodes what that
+# project's pipeline will ask of WorkTable, so a regression it would be
+# sensitive to fails here rather than there.
+[[bench]]
+name = "moe_pgo"
 harness = false
