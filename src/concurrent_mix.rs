@@ -63,13 +63,20 @@ pub fn scripts(write_ratio: u32) -> Vec<Vec<Op>> {
     (0..threads)
         .map(|thread| {
             let start = thread as u64 * span;
-            let mut state = 0x2545_F491_4F6C_DD1D ^ (thread as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+            let mut state =
+                0x2545_F491_4F6C_DD1D ^ (thread as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
             (0..OPS_PER_THREAD)
                 .map(|_| {
-                    state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+                    state = state
+                        .wrapping_mul(6364136223846793005)
+                        .wrapping_add(1442695040888963407);
                     let key = start + (state >> 33) % span.max(1);
                     let writes = thread < WRITERS || (state >> 11) % 100 < write_ratio as u64;
-                    if writes { Op::Write(key) } else { Op::Read(key) }
+                    if writes {
+                        Op::Write(key)
+                    } else {
+                        Op::Read(key)
+                    }
                 })
                 .collect()
         })

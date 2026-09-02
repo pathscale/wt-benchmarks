@@ -12,7 +12,7 @@
 use std::hint::black_box;
 use std::time::Instant;
 
-use duckdb::{params, Connection};
+use duckdb::{Connection, params};
 use wt_benchmarks::kv::{
     DurabilityMode, KvConfig, TransactionScope, emit, text_checksum, text_value,
 };
@@ -36,34 +36,73 @@ fn main() -> BenchResult<()> {
                 Connection::open(directory.path().join("bench.duckdb"))?
             }
         };
-        connection.execute_batch(
-            "CREATE TABLE kv (id UBIGINT PRIMARY KEY, payload VARCHAR NOT NULL);",
-        )?;
+        connection
+            .execute_batch("CREATE TABLE kv (id UBIGINT PRIMARY KEY, payload VARCHAR NOT NULL);")?;
 
         let started = Instant::now();
         insert_rows(&connection, &config)?;
-        emit(&config, "duckdb", "insert", repetition, config.rows,
-            "not-applicable", started.elapsed().as_nanos(), config.rows);
+        emit(
+            &config,
+            "duckdb",
+            "insert",
+            repetition,
+            config.rows,
+            "not-applicable",
+            started.elapsed().as_nanos(),
+            config.rows,
+        );
 
         let started = Instant::now();
         let checksum = read_points(&connection, &config, &point_keys)?;
-        emit(&config, "duckdb", "point_read", repetition, config.operations,
-            "materialized-owned-row", started.elapsed().as_nanos(), checksum);
+        emit(
+            &config,
+            "duckdb",
+            "point_read",
+            repetition,
+            config.operations,
+            "materialized-owned-row",
+            started.elapsed().as_nanos(),
+            checksum,
+        );
 
         let started = Instant::now();
         update_rows(&connection, &config, &point_keys)?;
-        emit(&config, "duckdb", "overwrite", repetition, config.operations,
-            "not-applicable", started.elapsed().as_nanos(), config.operations);
+        emit(
+            &config,
+            "duckdb",
+            "overwrite",
+            repetition,
+            config.operations,
+            "not-applicable",
+            started.elapsed().as_nanos(),
+            config.operations,
+        );
 
         let started = Instant::now();
         let checksum = scan_rows(&connection, &config, &scan_starts)?;
-        emit(&config, "duckdb", "range_scan", repetition, config.scan_operations,
-            "materialized-owned-row", started.elapsed().as_nanos(), checksum);
+        emit(
+            &config,
+            "duckdb",
+            "range_scan",
+            repetition,
+            config.scan_operations,
+            "materialized-owned-row",
+            started.elapsed().as_nanos(),
+            checksum,
+        );
 
         let started = Instant::now();
         let deleted = delete_rows(&connection, &config, &point_keys)?;
-        emit(&config, "duckdb", "delete_random", repetition, config.operations,
-            "not-applicable", started.elapsed().as_nanos(), deleted);
+        emit(
+            &config,
+            "duckdb",
+            "delete_random",
+            repetition,
+            config.operations,
+            "not-applicable",
+            started.elapsed().as_nanos(),
+            deleted,
+        );
     }
     Ok(())
 }
@@ -103,15 +142,18 @@ fn read_points(connection: &Connection, _config: &KvConfig, keys: &[u64]) -> Ben
 fn update_rows(connection: &Connection, config: &KvConfig, keys: &[u64]) -> BenchResult<()> {
     let mut stmt = connection.prepare("UPDATE kv SET payload = ? WHERE id = ?")?;
     for key in keys {
-        stmt.execute(params![text_value(key.wrapping_mul(17), config.payload_bytes), *key])?;
+        stmt.execute(params![
+            text_value(key.wrapping_mul(17), config.payload_bytes),
+            *key
+        ])?;
     }
     Ok(())
 }
 
 fn scan_rows(connection: &Connection, config: &KvConfig, starts: &[u64]) -> BenchResult<u64> {
     let mut checksum = 0_u64;
-    let mut stmt = connection
-        .prepare("SELECT id, payload FROM kv WHERE id >= ? ORDER BY id LIMIT ?")?;
+    let mut stmt =
+        connection.prepare("SELECT id, payload FROM kv WHERE id >= ? ORDER BY id LIMIT ?")?;
     for start in starts {
         let mut rows = stmt.query(params![*start, config.scan_length])?;
         while let Some(row) = rows.next()? {
