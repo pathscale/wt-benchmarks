@@ -4,9 +4,9 @@ version = 4
 
 [[package]]
 name = "WorkTablesIndex"
-version = "0.0.5"
+version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66f3e28bdea83d1c8bde508f7593113e0e6bc246b434527b82e277a7cabbf4d6"
+checksum = "613e6baa623e8acecd7259768d8c0f0f7c5bae34a5377cbeea9c9e75ce26f151"
 dependencies = [
  "crossbeam-skiplist",
  "crossbeam-utils",
@@ -20,17 +20,6 @@ name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
-
-[[package]]
-name = "ahash"
-version = "0.7.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "891477e0c6a8957309ee5c45a6368af3ae14bb510732d2684ffa19af310920f9"
-dependencies = [
- "getrandom 0.2.17",
- "once_cell",
- "version_check",
-]
 
 [[package]]
 name = "ahash"
@@ -102,9 +91,9 @@ checksum = "993a810118f8f37e9c4411c86f1c4c940a09a7ab34b7bf2d88d06f50c553fab7"
 
 [[package]]
 name = "arctic-wt"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "525ddffcc39496cf25429bfa2e5b1476e2e71b792c686cbe2080ac5a6d751a3d"
+checksum = "c142c00246cb06a9d0770e9d194c917c1fc84327fa3f447aa1ef578e8bc58577"
 dependencies = [
  "fearless_simd",
  "ribbit",
@@ -149,7 +138,7 @@ version = "58.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae33dad492b7df00a217563a7b0ef2874df68a0deea1b1a3acf628152f7f7a69"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
  "arrow-buffer",
  "arrow-data",
  "arrow-schema",
@@ -249,7 +238,7 @@ version = "58.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c58da39eb3d8350ad4a549e5c2bc49284dac554016c69829310350f1731b0aad"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
  "arrow-array",
  "arrow-buffer",
  "arrow-data",
@@ -325,18 +314,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bitvec"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddcec3d12c579d40898fe0a9a358a803c23e9c52ca3c425707f81c9436211837"
-dependencies = [
- "funty",
- "radium",
- "tap",
- "wyz",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -344,37 +321,15 @@ checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 
 [[package]]
 name = "bytecheck"
-version = "0.6.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23cdc57ce23ac53c931e88a43d06d070a6fd142f2617be5855eb75efc9beb1c2"
-dependencies = [
- "bytecheck_derive 0.6.12",
- "ptr_meta 0.1.4",
- "simdutf8",
-]
-
-[[package]]
-name = "bytecheck"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0caa33a2c0edca0419d15ac723dff03f1956f7978329b1e3b5fdaaaed9d3ca8b"
 dependencies = [
- "bytecheck_derive 0.8.2",
- "ptr_meta 0.3.1",
+ "bytecheck_derive",
+ "ptr_meta",
  "rancor",
  "simdutf8",
  "uuid",
-]
-
-[[package]]
-name = "bytecheck_derive"
-version = "0.6.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3db406d29fbcd95542e92559bed4d8ad92636d1ca8b3b72ede10b4bcc010e659"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -500,9 +455,9 @@ dependencies = [
 
 [[package]]
 name = "congee-wt"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "341f16608dbae8a05601aaaac7ff990e8ef89006e8762ffe3516915e9e3c9598"
+checksum = "1822f744ce6e020e2dfd456f43a22c27138c342ebd080b9e3602a23589400b4f"
 dependencies = [
  "crossbeam-epoch",
 ]
@@ -739,9 +694,9 @@ dependencies = [
 
 [[package]]
 name = "data_bucket"
-version = "0.5.2"
+version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fd71b907f49692213e4490fd7ded71252dcf2201f5fa16ed422f885cf723d46"
+checksum = "1408014a7df57e81867b8250cd702c3395a4592053f844f003d97be7869063ce"
 dependencies = [
  "WorkTablesIndex",
  "data_bucket_derive",
@@ -749,7 +704,7 @@ dependencies = [
  "eyre",
  "ordered-float",
  "psc-nanoid",
- "rkyv 0.8.17",
+ "rkyv",
  "tokio",
  "uuid",
 ]
@@ -998,12 +953,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "funty"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
-
-[[package]]
 name = "futures"
 version = "0.3.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1135,15 +1084,6 @@ dependencies = [
  "crunchy",
  "num-traits",
  "zerocopy",
-]
-
-[[package]]
-name = "hashbrown"
-version = "0.12.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
-dependencies = [
- "ahash 0.7.8",
 ]
 
 [[package]]
@@ -1903,23 +1843,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ps-reclaim"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65db0f6d8986c4a5a2069261be0690ea83a48f4c09ac9ab387c51a6ce6bcdbc3"
+
+[[package]]
 name = "psc-nanoid"
 version = "3.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ccad98264c119c282b9c89de2e7fca04a0a47a0e3a314b7f98c34012a7f08044"
 dependencies = [
  "rand",
- "rkyv 0.8.17",
+ "rkyv",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "ptr_meta"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0738ccf7ea06b608c10564b31debd4f5bc5e197fc8bfe088f68ae5ce81e7a4f1"
-dependencies = [
- "ptr_meta_derive 0.1.4",
 ]
 
 [[package]]
@@ -1928,18 +1865,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b9a0cf95a1196af61d4f1cbdab967179516d9a4a4312af1f31948f8f6224a79"
 dependencies = [
- "ptr_meta_derive 0.3.1",
-]
-
-[[package]]
-name = "ptr_meta_derive"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16b845dbfca988fa33db069c0e230574d15a3088f147a87b64c7589eb662c9ac"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
+ "ptr_meta_derive",
 ]
 
 [[package]]
@@ -1975,18 +1901,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
-name = "radium"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
-
-[[package]]
 name = "rancor"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "daff8b7b3ccf5f7ba270b3e7a0a4d4c701c5797e38dec27c7e2c3dbb830fed1c"
 dependencies = [
- "ptr_meta 0.3.1",
+ "ptr_meta",
 ]
 
 [[package]]
@@ -2099,20 +2019,11 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "rend"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71fe3824f5629716b1589be05dacd749f6aa084c87e00e016714a8cdfccc997c"
-dependencies = [
- "bytecheck 0.6.12",
-]
-
-[[package]]
-name = "rend"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "663ba70707f96e871406fe10d68128412e619b06d1d47cb91c3a4c6501176240"
 dependencies = [
- "bytecheck 0.8.2",
+ "bytecheck",
 ]
 
 [[package]]
@@ -2155,50 +2066,21 @@ dependencies = [
 
 [[package]]
 name = "rkyv"
-version = "0.7.46"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2297bf9c81a3f0dc96bc9521370b88f054168c29826a75e89c55ff196e7ed6a1"
-dependencies = [
- "bitvec",
- "bytecheck 0.6.12",
- "bytes",
- "hashbrown 0.12.3",
- "ptr_meta 0.1.4",
- "rend 0.4.2",
- "rkyv_derive 0.7.46",
- "seahash",
- "tinyvec",
- "uuid",
-]
-
-[[package]]
-name = "rkyv"
 version = "0.8.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "815cc8a37159a463064825246cadb07961e25cd9885908606f6d08a98d8f8874"
 dependencies = [
- "bytecheck 0.8.2",
+ "bytecheck",
  "bytes",
  "hashbrown 0.17.1",
  "indexmap",
  "munge",
- "ptr_meta 0.3.1",
+ "ptr_meta",
  "rancor",
- "rend 0.5.4",
- "rkyv_derive 0.8.17",
+ "rend",
+ "rkyv_derive",
  "tinyvec",
  "uuid",
-]
-
-[[package]]
-name = "rkyv_derive"
-version = "0.7.46"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84d7b42d4b8d06048d3ac8db0eb31bcb942cbeb709f0b5f2b2ebde398d3038f5"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -2339,12 +2221,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "seahash"
-version = "4.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c107b6f4780854c8b126e228ea8869f4d7b71260f962fefb57b996b8959ba6b"
 
 [[package]]
 name = "seize"
@@ -2525,17 +2401,6 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
-version = "1.0.109"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
-dependencies = [
- "proc-macro2",
- "quote",
- "unicode-ident",
-]
-
-[[package]]
-name = "syn"
 version = "2.0.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
@@ -2575,12 +2440,6 @@ dependencies = [
  "quote",
  "syn 2.0.119",
 ]
-
-[[package]]
-name = "tap"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
 name = "tar"
@@ -3149,7 +3008,7 @@ checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
 name = "worktable"
-version = "1.0.0-beta.5"
+version = "1.0.0-beta.17"
 dependencies = [
  "WorkTablesIndex",
  "arctic-wt",
@@ -3167,8 +3026,9 @@ dependencies = [
  "ordered-float",
  "parking_lot",
  "prettytable-rs",
+ "ps-reclaim",
  "psc-nanoid",
- "rkyv 0.8.17",
+ "rkyv",
  "rustc-hash",
  "smart-default",
  "tokio",
@@ -3179,13 +3039,25 @@ dependencies = [
 
 [[package]]
 name = "worktable_codegen"
-version = "1.0.0-beta.5"
+version = "1.0.0-beta.17"
 dependencies = [
  "convert_case 0.6.0",
  "indexmap",
  "proc-macro2",
  "quote",
- "rkyv 0.7.46",
+ "rkyv",
+ "syn 2.0.119",
+ "worktable_dsl",
+]
+
+[[package]]
+name = "worktable_dsl"
+version = "1.0.0-beta.17"
+dependencies = [
+ "convert_case 0.6.0",
+ "indexmap",
+ "proc-macro2",
+ "quote",
  "syn 2.0.119",
 ]
 
@@ -3208,7 +3080,7 @@ dependencies = [
  "heed",
  "parking_lot",
  "redb",
- "rkyv 0.8.17",
+ "rkyv",
  "rusqlite",
  "serde",
  "serde_json",
@@ -3216,15 +3088,6 @@ dependencies = [
  "tokio",
  "uuid",
  "worktable",
-]
-
-[[package]]
-name = "wyz"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05f360fc0b24296329c78fda852a1e9ae82de9cf7b27dae4b7f62f118f77b9ed"
-dependencies = [
- "tap",
 ]
 
 [[package]]

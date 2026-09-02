@@ -1,4 +1,6 @@
 #[cfg(feature = "worktable-adapter")]
+pub mod agentcode;
+#[cfg(feature = "worktable-adapter")]
 pub mod concurrent_mix;
 pub mod config;
 #[cfg(feature = "worktable-adapter")]
@@ -10,6 +12,8 @@ pub mod kv;
 pub mod kv_json;
 #[cfg(feature = "worktable-adapter")]
 pub mod kv_table;
+#[cfg(feature = "worktable-adapter")]
+pub mod moe_pgo;
 #[cfg(feature = "worktable-adapter")]
 pub mod nonunique;
 #[cfg(feature = "worktable-adapter")]
