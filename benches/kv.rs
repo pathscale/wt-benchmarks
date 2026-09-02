@@ -99,6 +99,19 @@ macro_rules! worktable_backend_engine {
                     b.iter(|| kv.range_scan_checksum(starts, SCAN_LEN))
                 });
             }
+
+            /// A range of an arbitrary length, so the same driver can measure
+            /// per-query setup as well as scan throughput.
+            pub fn range_scan_len(
+                g: &mut BenchmarkGroup<'_, WallTime>,
+                starts: &[u64],
+                scan_len: u64,
+            ) {
+                let kv = $driver::load(PAYLOAD, ROWS);
+                g.bench_function($label, |b| {
+                    b.iter(|| kv.range_scan_checksum(starts, scan_len))
+                });
+            }
         }
     };
 }
@@ -597,11 +610,36 @@ fn bench_range_scan(c: &mut Criterion) {
     g.finish();
 }
 
+/// A one-row range: the cost of *issuing* a range query, not of scanning one.
+///
+/// `kv/range_scan` uses a 100-row scan, which amortises cursor construction and
+/// bound checks across 100 rows and so hides anything that costs per query. A
+/// one-row range pays that setup every time. WorkTable's own
+/// `art_primary_key_single_row_range` measures this shape, and it is where the
+/// index backends diverge most: the 100-row scan is dominated by row decode,
+/// which every backend shares.
+///
+/// WorkTable backends only, deliberately. This group answers "which index
+/// backend", so putting sqlite/redb/lmdb in it would compare storage engines on
+/// an axis they do not vary along.
+fn bench_range_scan_single(c: &mut Criterion) {
+    let starts = scan_starts();
+    let mut g = grp(c, "kv/range_scan_single", SCAN_OPS);
+    #[cfg(feature = "worktable-adapter")]
+    worktable_engine::range_scan_len(&mut g, &starts, 1);
+    #[cfg(feature = "worktable-adapter")]
+    worktable_congee_engine::range_scan_len(&mut g, &starts, 1);
+    #[cfg(feature = "worktable-adapter")]
+    worktable_arctic_engine::range_scan_len(&mut g, &starts, 1);
+    g.finish();
+}
+
 criterion_group!(
     benches,
     bench_insert,
     bench_point_read,
     bench_overwrite,
-    bench_range_scan
+    bench_range_scan,
+    bench_range_scan_single
 );
 criterion_main!(benches);
