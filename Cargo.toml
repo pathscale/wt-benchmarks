@@ -22,7 +22,7 @@ external-adapters = ["redb-adapter", "sqlite-adapter", "lmdb-adapter", "duckdb-a
 
 [dependencies]
 dashmap = "6"
-derive_more = { version = "2.0.1", features = ["from", "error", "display", "debug", "into"] }
+derive_more = { version = "2", features = ["from", "error", "display", "debug", "into"] }
 eyre = "0.6"
 futures = "0.3"
 parking_lot = "0.12"
@@ -30,9 +30,9 @@ parking_lot = "0.12"
 # to the Linux paper box.
 duckdb = { version = "1", features = ["bundled"], optional = true }
 heed = { version = "0.20", optional = true }
-redb = { version = "4.1.0", optional = true }
-rkyv = { version = "0.8.9", features = ["uuid-1"] }
-rusqlite = { version = "0.40.1", features = ["bundled"], optional = true }
+redb = { version = "4", optional = true }
+rkyv = { version = "0.8", features = ["uuid-1"] }
+rusqlite = { version = "0.40", features = ["bundled"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tempfile = { version = "3", optional = true }
