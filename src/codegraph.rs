@@ -256,8 +256,10 @@ macro_rules! codegraph_driver {
                         }
                     }
                     let written = (postings.len() + lexemes.len() + edges.len()) as u64;
-                    futures::executor::block_on(self.postings.insert_many(postings)).expect("postings");
-                    futures::executor::block_on(self.lexemes.insert_many(lexemes)).expect("lexemes");
+                    futures::executor::block_on(self.postings.insert_many(postings))
+                        .expect("postings");
+                    futures::executor::block_on(self.lexemes.insert_many(lexemes))
+                        .expect("lexemes");
                     futures::executor::block_on(self.edges.insert_many(edges)).expect("edges");
                     written
                 }

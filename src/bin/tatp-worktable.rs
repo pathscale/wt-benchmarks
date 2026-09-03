@@ -421,65 +421,57 @@ fn load(tables: &Tables, config: &Config) -> LoadCounts {
     let mut rng = Rng::new(config.seed ^ 0x7461_7470);
     let mut counts = LoadCounts::default();
     for s_id in 1..=config.subscribers {
-        futures::executor::block_on(tables
-            .subscribers
-            .insert(TatpSubscriberRow {
-                s_id,
-                sub_nbr: subscriber_number(s_id),
-                bit_1: rng.below(2) as u8,
-                bit_rest: std::array::from_fn(|_| rng.below(2) as u8),
-                hex_values: std::array::from_fn(|_| rng.below(16) as u8),
-                byte2_values: std::array::from_fn(|_| rng.below(256) as u16),
-                msc_location: rng.next_u64() as u32,
-                vlr_location: rng.next_u64() as u32,
-            }))
-            .expect("subscriber keys and numbers must be unique");
+        futures::executor::block_on(tables.subscribers.insert(TatpSubscriberRow {
+            s_id,
+            sub_nbr: subscriber_number(s_id),
+            bit_1: rng.below(2) as u8,
+            bit_rest: std::array::from_fn(|_| rng.below(2) as u8),
+            hex_values: std::array::from_fn(|_| rng.below(16) as u8),
+            byte2_values: std::array::from_fn(|_| rng.below(256) as u16),
+            msc_location: rng.next_u64() as u32,
+            vlr_location: rng.next_u64() as u32,
+        }))
+        .expect("subscriber keys and numbers must be unique");
         counts.subscribers += 1;
 
         for ai_type in random_subset(&mut rng, &[1, 2, 3, 4], 1, 4) {
-            futures::executor::block_on(tables
-                .access_info
-                .insert(TatpAccessInfoRow {
-                    id: facility_key(s_id, ai_type),
-                    s_id,
-                    ai_type,
-                    data1: rng.below(256) as u16,
-                    data2: rng.below(256) as u16,
-                    data3: alpha_string(&mut rng, 3),
-                    data4: alpha_string(&mut rng, 5),
-                }))
-                .expect("access-info primary keys must be unique");
+            futures::executor::block_on(tables.access_info.insert(TatpAccessInfoRow {
+                id: facility_key(s_id, ai_type),
+                s_id,
+                ai_type,
+                data1: rng.below(256) as u16,
+                data2: rng.below(256) as u16,
+                data3: alpha_string(&mut rng, 3),
+                data4: alpha_string(&mut rng, 5),
+            }))
+            .expect("access-info primary keys must be unique");
             counts.access_info += 1;
         }
 
         for sf_type in random_subset(&mut rng, &[1, 2, 3, 4], 1, 4) {
-            futures::executor::block_on(tables
-                .special_facilities
-                .insert(TatpSpecialFacilityRow {
-                    id: facility_key(s_id, sf_type),
-                    s_id,
-                    sf_type,
-                    is_active: u8::from(rng.below(100) < 85),
-                    error_control: rng.below(256) as u16,
-                    data_a: rng.below(256) as u16,
-                    data_b: alpha_string(&mut rng, 5),
-                }))
-                .expect("special-facility primary keys must be unique");
+            futures::executor::block_on(tables.special_facilities.insert(TatpSpecialFacilityRow {
+                id: facility_key(s_id, sf_type),
+                s_id,
+                sf_type,
+                is_active: u8::from(rng.below(100) < 85),
+                error_control: rng.below(256) as u16,
+                data_a: rng.below(256) as u16,
+                data_b: alpha_string(&mut rng, 5),
+            }))
+            .expect("special-facility primary keys must be unique");
             counts.special_facilities += 1;
 
             for start_time in random_subset(&mut rng, &[0, 8, 16], 0, 3) {
-                futures::executor::block_on(tables
-                    .call_forwarding
-                    .insert(TatpCallForwardingRow {
-                        id: call_forwarding_key(s_id, sf_type, start_time),
-                        s_id,
-                        sf_type,
-                        start_time,
-                        facility: facility_key(s_id, sf_type),
-                        end_time: start_time + 1 + rng.below(8) as u8,
-                        numberx: numeric_string(&mut rng, 15),
-                    }))
-                    .expect("call-forwarding primary keys must be unique");
+                futures::executor::block_on(tables.call_forwarding.insert(TatpCallForwardingRow {
+                    id: call_forwarding_key(s_id, sf_type, start_time),
+                    s_id,
+                    sf_type,
+                    start_time,
+                    facility: facility_key(s_id, sf_type),
+                    end_time: start_time + 1 + rng.below(8) as u8,
+                    numberx: numeric_string(&mut rng, 15),
+                }))
+                .expect("call-forwarding primary keys must be unique");
                 counts.call_forwarding += 1;
             }
         }
@@ -684,15 +676,17 @@ async fn execute(tables: &Tables, operation: Operation) -> Outcome {
             {
                 return Outcome::ExpectedAbort;
             }
-            match futures::executor::block_on(tables.call_forwarding.insert(TatpCallForwardingRow {
-                id: call_forwarding_key(s_id, sf_type, start_time),
-                s_id,
-                sf_type,
-                start_time,
-                facility: facility_key(s_id, sf_type),
-                end_time,
-                numberx,
-            })) {
+            match futures::executor::block_on(tables.call_forwarding.insert(
+                TatpCallForwardingRow {
+                    id: call_forwarding_key(s_id, sf_type, start_time),
+                    s_id,
+                    sf_type,
+                    start_time,
+                    facility: facility_key(s_id, sf_type),
+                    end_time,
+                    numberx,
+                },
+            )) {
                 Ok(_) => Outcome::Completed,
                 Err(WorkTableError::AlreadyExists(_) | WorkTableError::PrimaryAlreadyExists) => {
                     Outcome::ExpectedAbort

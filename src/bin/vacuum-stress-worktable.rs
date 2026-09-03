@@ -21,7 +21,9 @@ async fn main() {
         }
     };
     if cfg!(debug_assertions) {
-        eprintln!("warning: debug build. Per-call overhead swamps what vacuum costs. Use --release.");
+        eprintln!(
+            "warning: debug build. Per-call overhead swamps what vacuum costs. Use --release."
+        );
     }
     run_all(&config).await;
 }

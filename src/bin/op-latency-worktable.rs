@@ -118,7 +118,9 @@ fn main() {
                     let table = std::sync::Arc::clone(&table);
                     scope.spawn(move || {
                         for i in (w * per)..((w + 1) * per) {
-                            let _ = futures::executor::block_on(table.insert(memory::row(i, 1_000_000)));
+                            let _ = futures::executor::block_on(
+                                table.insert(memory::row(i, 1_000_000)),
+                            );
                         }
                     });
                 }

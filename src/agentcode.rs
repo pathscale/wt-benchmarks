@@ -230,9 +230,10 @@ pub fn run(config: &Config) {
     // update on its own.
     {
         let table = memory::MemPostingWorkTable::default();
-        futures::executor::block_on(table
-            .insert_many((0..rows).map(|i| memory::row(i, 1)).collect()))
-            .expect("fixture");
+        futures::executor::block_on(
+            table.insert_many((0..rows).map(|i| memory::row(i, 1)).collect()),
+        )
+        .expect("fixture");
         let started = Instant::now();
         let mut seen = 0u64;
         for i in 0..rows {
@@ -305,7 +306,8 @@ pub fn run(config: &Config) {
         {
             let table = disk::table(&format!("{}/load", config.dir)).await;
             table
-                .insert_many((0..rows).map(|i| disk::row(i, 1)).collect()).await
+                .insert_many((0..rows).map(|i| disk::row(i, 1)).collect())
+                .await
                 .expect("fixture");
             table.wait_for_ops().await.expect("drain");
             let started = Instant::now();
