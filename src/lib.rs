@@ -24,4 +24,5 @@ pub mod op_latency;
 pub mod partition_ticks;
 pub mod result;
 pub mod rng;
+pub mod vacuum_stress;
 pub mod ycsb;

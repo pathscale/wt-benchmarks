@@ -99,6 +99,13 @@ name = "agentcode-worktable"
 path = "src/bin/agentcode-worktable.rs"
 required-features = ["worktable-adapter"]
 
+# What vacuum costs the foreground while it runs. Each cell measured twice,
+# with vacuum stopped and running; the delta is the point.
+[[bin]]
+name = "vacuum-stress-worktable"
+path = "src/bin/vacuum-stress-worktable.rs"
+required-features = ["worktable-adapter"]
+
 [[bin]]
 name = "delete-cost-worktable"
 path = "src/bin/delete-cost-worktable.rs"
