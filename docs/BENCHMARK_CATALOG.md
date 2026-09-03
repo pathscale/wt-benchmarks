@@ -65,13 +65,23 @@ dependency edges, and every generation currently rewrites all of them. Its
 recorded phase profile puts **74% of an incremental update in three bulk write
 phases**. Source: `agentcode-worktable-asks.md`, measured on beta.12.
 
-| Benchmark | Files | What it guards | State |
-|---|---|---|---|
-| Codegraph | `src/codegraph.rs`, `benches/codegraph.rs` | Generational publish (persisted and memory), one-file incremental update, hot-key generation scan, and per-call graph adjacency walk. Guards the durable-write ratio, fan-out regression, and index insert/lookup costs documented in [CODEGRAPH_PROFILE.md](CODEGRAPH_PROFILE.md). | Runnable |
-| Key fan-out | `src/fanout.rs`, `benches/fanout.rs` | A non-unique index under a shared generation id, where every row in a generation carries the same value. WorkTablesIndex 0.0.8 turned this into a linear scan inside insert and reached AgentCode as a 21x regression. | In PR #6 |
-| Write profile | `src/agentcode.rs`, `src/bin/agentcode-worktable.rs` | The generation write itself: 14,400 persisted rows, one at a time against `insert_many`, both timed to acceptance *and* to durability, plus the read-back. Finding: `insert_many` is 2.9x at the caller and 1.07x to durability, so the batch collapses the index apply but not the persistence queue. | In PR #6 |
-| Text index | not written | `ensure_text_index` is 37% of an update, the single largest phase, and nothing here represents it. | Missing |
-| Incremental reuse | not written | One file changed 18 of 14,400 symbols, 0.125%, and the store wrote all of them. The floor is 13.7x below current. | Missing |
+| Benchmark | Files | What it guards |
+|---|---|---|
+| Codegraph | `src/codegraph.rs`, `benches/codegraph.rs` | Generational publish (persisted and memory), one-file incremental update, hot-key generation scan, per-call graph adjacency walk. The 22x durable-write ratio that dominates this consumer, and index insert and lookup, which beta.15 cost 13 to 30%. See [CODEGRAPH_PROFILE.md](CODEGRAPH_PROFILE.md). |
+| Write profile | `src/agentcode.rs`, `src/bin/agentcode-worktable.rs` | The default WorkTablesIndex generation write: 14,400 persisted rows, one at a time against `insert_many`, timed both to acceptance *and* to durability. The all-backend comparisons live in the PGO, YCSB, and concurrency suites. |
+| Key fan-out | `src/fanout.rs`, `benches/fanout.rs` | A non-unique index under a shared generation id, where every row in a generation carries the same value. WorkTablesIndex 0.0.8 turned this into a linear scan inside insert and reached AgentCode as a 21x regression. |
+| Text index | not written | `ensure_text_index` is 37% of an update, the single largest phase, and nothing here represents it. |
+| Incremental reuse | not written | One file changed 18 of 14,400 symbols, 0.125%, and the store wrote all of them. The floor is 13.7x below current. |
+
+**Codegraph and the write profile overlap and should be merged into one
+benchmark.** They were written independently and cover different halves: the
+first has the profile document and the graph shapes, the second has the backend
+grid and the acceptance-versus-durability split. Do not extend both.
+
+Not covered by either, and tracked elsewhere: eviction and vacuum reclaim
+(blocked on `pathscale/WorkTable#78`), on-disk footprint
+(`campaigns/footprint`), and concurrency, which this consumer does not yet
+exercise.
 
 ### MoE-PGO
 

@@ -27,9 +27,11 @@
 //! where it should lose is this bench working; an arm that wins everywhere is
 //! worth distrusting before it is worth believing.
 
+use std::hint::black_box;
 use std::time::Duration;
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use worktable::lock::{FullRowLock, LockMap};
 use wt_benchmarks::deletes::{self, BATCH};
 
 // Every measured delete needs a table nobody has already deleted from, and
@@ -186,5 +188,20 @@ sweeps!(wti, wti, "wti");
 sweeps!(arctic, arctic, "arctic");
 sweeps!(congee, congee, "congee");
 
-criterion_group!(benches, wti, arctic, congee);
+/// Cost of the operation-wide "vacuum, stay out" lease used by `delete_many`,
+/// `delete_range`, and generated multi-row updates/deletes. It is acquired
+/// once per public bulk call, so this absolute cost is the regression bound:
+/// it must stay tiny relative to even the one-row bulk-operation rung.
+fn bulk_activity_signal(c: &mut Criterion) {
+    let lock_map: LockMap<FullRowLock, u64> = LockMap::default();
+    c.bench_function("deletes/bulk_activity_signal", |b| {
+        b.iter(|| {
+            let guard = lock_map.bulk_mutation_guard();
+            black_box(&guard);
+            drop(guard);
+        });
+    });
+}
+
+criterion_group!(benches, bulk_activity_signal, wti, arctic, congee);
 criterion_main!(benches);

@@ -2,15 +2,15 @@
 //!
 //! ```sh
 //! cargo run --release --bin vacuum-yield-worktable
-//! cargo run --release --bin vacuum-yield-worktable -- --rows 100000 --load-secs 3
+//! cargo run --release --bin vacuum-yield-worktable -- --rows 100000 --load-secs 3 --repetitions 6
 //! ```
 //!
-//! Two phases per arm. Under sustained upsert and delete pressure, vacuum
-//! should defer: the foreground's latency has to match the identical arm with
-//! vacuum stopped, and any daylight between them is vacuum interfering. Then
-//! the load stops and the arm stays open until vacuum has finished reclaiming,
-//! because a sweep that waits politely and then never returns the memory has
-//! failed just as surely as one that got in the way.
+//! Three modes run repeatedly in rotated order: vacuum stopped measures the
+//! machine's null spread, reactive vacuum is the shipping policy, and unpaced
+//! vacuum is the deliberately interfering positive control. Unless the
+//! positive control is detectably worse than vacuum stopped, the workload
+//! cannot validate the reactive result. After load stops, each vacuum arm
+//! stays open until it has finished reclaiming memory.
 
 use wt_benchmarks::vacuum_yield::{Config, run_all};
 
@@ -24,7 +24,9 @@ async fn main() {
         }
     };
     if cfg!(debug_assertions) {
-        eprintln!("warning: debug build. Per-call overhead swamps what vacuum costs. Use --release.");
+        eprintln!(
+            "warning: debug build. Per-call overhead swamps what vacuum costs. Use --release."
+        );
     }
     run_all(&config).await;
 }
