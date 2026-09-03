@@ -42,7 +42,7 @@ fn main() {
     // ---- latency, in memory ----
     let table = memory::table();
     let (samples, elapsed) = time_each(config.operations, |i| {
-        table.insert(memory::row(i, 1_000_000)).expect("insert");
+        futures::executor::block_on(table.insert(memory::row(i, 1_000_000))).expect("insert");
     });
     emit_latency(Mode::Memory, "insert", samples, elapsed);
 
@@ -74,7 +74,9 @@ fn main() {
         let table = runtime.block_on(disk::table(&config.disk_dir));
 
         let (samples, elapsed) = time_each(config.operations, |i| {
-            table.insert(disk::row(i, 1_000_000)).expect("insert");
+            runtime
+                .block_on(table.insert(disk::row(i, 1_000_000)))
+                .expect("insert");
         });
         emit_latency(Mode::Disk, "insert", samples, elapsed);
 
@@ -116,7 +118,7 @@ fn main() {
                     let table = std::sync::Arc::clone(&table);
                     scope.spawn(move || {
                         for i in (w * per)..((w + 1) * per) {
-                            let _ = table.insert(memory::row(i, 1_000_000));
+                            let _ = futures::executor::block_on(table.insert(memory::row(i, 1_000_000)));
                         }
                     });
                 }

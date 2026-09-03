@@ -69,12 +69,12 @@ macro_rules! fanout_backend_table {
                 pub fn insert_at_fan_out(&self, rows: u64, fan_out: u64) -> u64 {
                     let groups = (rows / fan_out).max(1);
                     for i in 0..rows {
-                        self.table
+                        futures::executor::block_on(self.table
                             .insert(FanoutRow {
                                 id: self.table.get_next_pk().into(),
                                 group_key: i % groups,
                                 payload: i,
-                            })
+                            }))
                             .expect("insert");
                     }
                     rows

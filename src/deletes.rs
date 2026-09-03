@@ -91,7 +91,7 @@ macro_rules! delete_backend {
                         generation: (id % 8) as u32,
                     })
                     .collect();
-                table.insert_many(rows).expect("fixture inserts");
+                futures::executor::block_on(table.insert_many(rows)).expect("fixture inserts");
                 table
             }
 

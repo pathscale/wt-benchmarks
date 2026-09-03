@@ -55,8 +55,8 @@ macro_rules! speed_backend {
 
             impl SpeedBackend for Driver {
                 fn insert_integer(&self, id: u64, group_id: u64, payload: String) {
-                    self.0
-                        .insert(SpeedIntRow { id, group_id, counter: id, payload })
+                    futures::executor::block_on(self.0
+                        .insert(SpeedIntRow { id, group_id, counter: id, payload }))
                         .expect("sequential integer key must insert");
                 }
 
@@ -129,11 +129,11 @@ mod wti_text {
         let text = SpeedTextWorkTable::default();
         let started = Instant::now();
         for id in 0..config.rows {
-            text.insert(SpeedTextRow {
+            futures::executor::block_on(text.insert(SpeedTextRow {
                 key: text_key(id),
                 value: id,
                 payload: text_value(id, config.payload_bytes),
-            })
+            }))
             .expect("sequential text key must insert");
         }
         emit(

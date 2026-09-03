@@ -82,7 +82,7 @@ macro_rules! ycsb_backend_table {
                         field8,
                         field9,
                     ] = fields;
-                    self.0
+                    futures::executor::block_on(self.0
                         .insert(YcsbRow {
                             id: key,
                             field0,
@@ -95,7 +95,7 @@ macro_rules! ycsb_backend_table {
                             field7,
                             field8,
                             field9,
-                        })
+                        }))
                         .is_ok()
                 }
 

@@ -421,7 +421,7 @@ fn load(tables: &Tables, config: &Config) -> LoadCounts {
     let mut rng = Rng::new(config.seed ^ 0x7461_7470);
     let mut counts = LoadCounts::default();
     for s_id in 1..=config.subscribers {
-        tables
+        futures::executor::block_on(tables
             .subscribers
             .insert(TatpSubscriberRow {
                 s_id,
@@ -432,12 +432,12 @@ fn load(tables: &Tables, config: &Config) -> LoadCounts {
                 byte2_values: std::array::from_fn(|_| rng.below(256) as u16),
                 msc_location: rng.next_u64() as u32,
                 vlr_location: rng.next_u64() as u32,
-            })
+            }))
             .expect("subscriber keys and numbers must be unique");
         counts.subscribers += 1;
 
         for ai_type in random_subset(&mut rng, &[1, 2, 3, 4], 1, 4) {
-            tables
+            futures::executor::block_on(tables
                 .access_info
                 .insert(TatpAccessInfoRow {
                     id: facility_key(s_id, ai_type),
@@ -447,13 +447,13 @@ fn load(tables: &Tables, config: &Config) -> LoadCounts {
                     data2: rng.below(256) as u16,
                     data3: alpha_string(&mut rng, 3),
                     data4: alpha_string(&mut rng, 5),
-                })
+                }))
                 .expect("access-info primary keys must be unique");
             counts.access_info += 1;
         }
 
         for sf_type in random_subset(&mut rng, &[1, 2, 3, 4], 1, 4) {
-            tables
+            futures::executor::block_on(tables
                 .special_facilities
                 .insert(TatpSpecialFacilityRow {
                     id: facility_key(s_id, sf_type),
@@ -463,12 +463,12 @@ fn load(tables: &Tables, config: &Config) -> LoadCounts {
                     error_control: rng.below(256) as u16,
                     data_a: rng.below(256) as u16,
                     data_b: alpha_string(&mut rng, 5),
-                })
+                }))
                 .expect("special-facility primary keys must be unique");
             counts.special_facilities += 1;
 
             for start_time in random_subset(&mut rng, &[0, 8, 16], 0, 3) {
-                tables
+                futures::executor::block_on(tables
                     .call_forwarding
                     .insert(TatpCallForwardingRow {
                         id: call_forwarding_key(s_id, sf_type, start_time),
@@ -478,7 +478,7 @@ fn load(tables: &Tables, config: &Config) -> LoadCounts {
                         facility: facility_key(s_id, sf_type),
                         end_time: start_time + 1 + rng.below(8) as u8,
                         numberx: numeric_string(&mut rng, 15),
-                    })
+                    }))
                     .expect("call-forwarding primary keys must be unique");
                 counts.call_forwarding += 1;
             }
@@ -684,7 +684,7 @@ async fn execute(tables: &Tables, operation: Operation) -> Outcome {
             {
                 return Outcome::ExpectedAbort;
             }
-            match tables.call_forwarding.insert(TatpCallForwardingRow {
+            match futures::executor::block_on(tables.call_forwarding.insert(TatpCallForwardingRow {
                 id: call_forwarding_key(s_id, sf_type, start_time),
                 s_id,
                 sf_type,
@@ -692,7 +692,7 @@ async fn execute(tables: &Tables, operation: Operation) -> Outcome {
                 facility: facility_key(s_id, sf_type),
                 end_time,
                 numberx,
-            }) {
+            })) {
                 Ok(_) => Outcome::Completed,
                 Err(WorkTableError::AlreadyExists(_) | WorkTableError::PrimaryAlreadyExists) => {
                     Outcome::ExpectedAbort

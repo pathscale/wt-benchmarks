@@ -86,7 +86,7 @@ pub fn table(rows: u64) -> DelCostWorkTable {
             bucket: (id % 16) as u32,
         })
         .collect();
-    table.insert_many(batch).expect("fixture inserts");
+    futures::executor::block_on(table.insert_many(batch)).expect("fixture inserts");
     table
 }
 
@@ -349,11 +349,11 @@ pub fn run(config: &Config) {
     // being compared against a number from another session.
     rung("insert", false, rows, table(0), |t| {
         for id in 0..rows {
-            t.insert(DelCostRow {
+            futures::executor::block_on(t.insert(DelCostRow {
                 id,
                 payload: 1_000_000 + id,
                 bucket: (id % 16) as u32,
-            })
+            }))
             .expect("insert");
         }
     });
@@ -371,11 +371,11 @@ pub fn run(config: &Config) {
                 futures::executor::block_on(t.delete(pk.clone())).expect("delete");
             }
             for id in 0..rows {
-                t.insert(DelCostRow {
+                futures::executor::block_on(t.insert(DelCostRow {
                     id: rows + id,
                     payload: 2_000_000 + id,
                     bucket: (id % 16) as u32,
-                })
+                }))
                 .expect("insert");
             }
         },

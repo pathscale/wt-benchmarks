@@ -199,7 +199,7 @@ pub fn run(config: &Config) {
         let started = Instant::now();
         for i in 0..rows {
             if table.select_by_posting_hash(1_000_000 + i).is_none() {
-                table.insert(memory::row(i, 1)).expect("insert");
+                futures::executor::block_on(table.insert(memory::row(i, 1))).expect("insert");
             }
         }
         emit(
@@ -217,7 +217,7 @@ pub fn run(config: &Config) {
         let table = memory::MemPostingWorkTable::default();
         let batch: Vec<_> = (0..rows).map(|i| memory::row(i, 1)).collect();
         let started = Instant::now();
-        table.insert_many(batch).expect("insert_many");
+        futures::executor::block_on(table.insert_many(batch)).expect("insert_many");
         emit(
             "memory",
             "put_symbols_insert_many",
@@ -230,8 +230,8 @@ pub fn run(config: &Config) {
     // update on its own.
     {
         let table = memory::MemPostingWorkTable::default();
-        table
-            .insert_many((0..rows).map(|i| memory::row(i, 1)).collect())
+        futures::executor::block_on(table
+            .insert_many((0..rows).map(|i| memory::row(i, 1)).collect()))
             .expect("fixture");
         let started = Instant::now();
         let mut seen = 0u64;
@@ -253,7 +253,7 @@ pub fn run(config: &Config) {
             let started = Instant::now();
             for i in 0..rows {
                 if table.select_by_posting_hash(1_000_000 + i).is_none() {
-                    table.insert(disk::row(i, 1)).expect("insert");
+                    table.insert(disk::row(i, 1)).await.expect("insert");
                 }
             }
             // Caller-visible cost, matching the memory arm.
@@ -281,7 +281,7 @@ pub fn run(config: &Config) {
             let table = disk::table(&format!("{}/insert-many", config.dir)).await;
             let batch: Vec<_> = (0..rows).map(|i| disk::row(i, 1)).collect();
             let started = Instant::now();
-            table.insert_many(batch).expect("insert_many");
+            table.insert_many(batch).await.expect("insert_many");
             emit(
                 "disk",
                 "put_symbols_insert_many",
@@ -305,7 +305,7 @@ pub fn run(config: &Config) {
         {
             let table = disk::table(&format!("{}/load", config.dir)).await;
             table
-                .insert_many((0..rows).map(|i| disk::row(i, 1)).collect())
+                .insert_many((0..rows).map(|i| disk::row(i, 1)).collect()).await
                 .expect("fixture");
             table.wait_for_ops().await.expect("drain");
             let started = Instant::now();

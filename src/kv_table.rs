@@ -105,11 +105,11 @@ macro_rules! kv_backend_table {
                 }
 
                 pub fn insert(&self, key: u64) {
-                    self.table
+                    futures::executor::block_on(self.table
                         .insert(KvBenchRow {
                             id: key,
                             payload: text_value(key, self.payload_bytes),
-                        })
+                        }))
                         .expect("insert");
                 }
 
