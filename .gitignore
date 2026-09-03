@@ -13,3 +13,8 @@
 campaigns/**/results-*.csv
 /results/paper-*/
 .venv/
+
+# Cargo.lock is not tracked: requirements are carets at minor granularity, so a
+# lockfile would pin what the carets exist to let float, and would silently
+# decide which WorkTable a benchmark measured.
+Cargo.lock
