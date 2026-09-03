@@ -101,6 +101,13 @@ required-features = ["worktable-adapter"]
 
 # What vacuum costs the foreground while it runs. Each cell measured twice,
 # with vacuum stopped and running; the delta is the point.
+# Does vacuum stay out of the way under load, and still return everything
+# once the load stops? Two phases: pressure, then quiet.
+[[bin]]
+name = "vacuum-yield-worktable"
+path = "src/bin/vacuum-yield-worktable.rs"
+required-features = ["worktable-adapter"]
+
 [[bin]]
 name = "vacuum-stress-worktable"
 path = "src/bin/vacuum-stress-worktable.rs"
