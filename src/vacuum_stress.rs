@@ -69,6 +69,23 @@ pub struct VacuumArm {
     /// burst, is never exercised at all.
     pub churning: bool,
     pub deletes: u64,
+    /// Pages the sweep actually reclaimed, measured at the end of the arm.
+    ///
+    /// Without this the cost columns are unreadable: a sweep that stands down
+    /// so hard it never runs reports a penalty of zero, which looks like a win
+    /// and is a regression in the thing vacuum exists to do. Cost is only
+    /// meaningful next to work done.
+    pub empty_pages: usize,
+    /// Reclaimable bytes still registered when the arm ended. The lower this
+    /// is against the vacuum-off arm, the more the sweep kept up.
+    pub reclaimable_bytes_left: u64,
+    /// Sweeps the manager actually ran during the arm.
+    ///
+    /// The question a cost column cannot answer: does a reactive sweep keep
+    /// firing, or does it fire once and never again? A penalty of zero means
+    /// nothing until you know which.
+    pub sweeps: u64,
+    pub sweep_pages_freed: u64,
     pub inserts: u64,
     pub selects: u64,
     pub insert_latency: LatencySummary,
@@ -211,10 +228,12 @@ macro_rules! vacuum_stress_backend {
                 let vacuum_running = trigger != "off";
                 let (table, mut next_id) = fragmented(seed_rows, fragmentation_pct).await;
 
+                let mut manager_handle = None;
                 let vacuum_task = if vacuum_running {
                     // Shipping defaults, on purpose: woken by freed space,
                     // with the delete burst allowed to settle first.
                     let manager = Arc::new(VacuumManager::with_config(VacuumManagerConfig::default()));
+                    manager_handle = Some(Arc::clone(&manager));
                     manager.register(table.vacuum());
                     Some(manager.run_vacuum_task())
                 } else {
@@ -245,8 +264,15 @@ macro_rules! vacuum_stress_backend {
                     std::hint::black_box(table.select(probe));
                     select_ns.push(t.elapsed().as_nanos() as u64);
 
-                    if churning && insert_ns.len() % 500 == 0 {
-                        for _ in 0..200 {
+                    // Delete more than the turn inserted, so fragmentation is
+                    // *sustained* rather than consumed. The previous ratio
+                    // deleted 200 per 500 inserts, which the inserts recycled
+                    // immediately: the registry ended every arm at roughly zero
+                    // reclaimable bytes and the sweep correctly never fired,
+                    // which made every cost number here a measurement of
+                    // nothing.
+                    if churning && insert_ns.len() % 100 == 0 {
+                        for _ in 0..300 {
                             delete_cursor += 1;
                             if table.delete(delete_cursor).await.is_ok() {
                                 deletes += 1;
@@ -255,6 +281,13 @@ macro_rules! vacuum_stress_backend {
                     }
                 }
                 let elapsed = started.elapsed();
+
+                let (sweeps, sweep_pages_freed, _) = manager_handle
+                    .as_ref()
+                    .map(|m| m.stats.snapshot())
+                    .unwrap_or((0, 0, 0));
+                let empty_pages = table.0.data.get_empty_pages().len();
+                let reclaimable_bytes_left = table.0.data.empty_links_registry().reclaimable_bytes();
 
                 if let Some(task) = vacuum_task {
                     task.abort();
@@ -271,6 +304,10 @@ macro_rules! vacuum_stress_backend {
                     trigger,
                     churning,
                     deletes,
+                    empty_pages,
+                    reclaimable_bytes_left,
+                    sweeps,
+                    sweep_pages_freed,
                     inserts: insert_ns.len() as u64,
                     selects: select_ns.len() as u64,
                     insert_latency: LatencySummary::from_samples(insert_ns),
