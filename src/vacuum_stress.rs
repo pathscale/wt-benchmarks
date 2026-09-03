@@ -142,19 +142,25 @@ impl Config {
             match args[i].as_str() {
                 "--rows" => {
                     let v = args.get(i + 1).ok_or("--rows needs a value")?;
-                    seed_rows = v.parse().map_err(|_| format!("--rows: {v} is not a number"))?;
+                    seed_rows = v
+                        .parse()
+                        .map_err(|_| format!("--rows: {v} is not a number"))?;
                     i += 2;
                 }
                 "--arm-secs" => {
                     let v = args.get(i + 1).ok_or("--arm-secs needs a value")?;
-                    let secs: u64 = v.parse().map_err(|_| format!("--arm-secs: {v} is not a number"))?;
+                    let secs: u64 = v
+                        .parse()
+                        .map_err(|_| format!("--arm-secs: {v} is not a number"))?;
                     if secs == 0 || secs > 30 {
                         return Err("--arm-secs must be between 1 and 30: a benchmark nobody will wait for is one nobody runs".into());
                     }
                     arm = Duration::from_secs(secs);
                     i += 2;
                 }
-                "--help" => return Err("usage: vacuum-stress-worktable [--rows N] [--arm-secs S]".into()),
+                "--help" => {
+                    return Err("usage: vacuum-stress-worktable [--rows N] [--arm-secs S]".into());
+                }
                 other => return Err(format!("unrecognised argument {other}")),
             }
         }

@@ -189,13 +189,12 @@ pub fn populate(shape: Shape) -> TickPartitions {
             .partition_or_create(symbol)
             .expect("under the partition limit");
         for id in 0..shape.rows_per_partition {
-            futures::executor::block_on(partition
-                .insert(TickRow {
-                    id,
-                    price: id as f64,
-                    qty: id,
-                }))
-                .expect("fresh partition, unique ids");
+            futures::executor::block_on(partition.insert(TickRow {
+                id,
+                price: id as f64,
+                qty: id,
+            }))
+            .expect("fresh partition, unique ids");
         }
     }
     table
