@@ -46,6 +46,16 @@ pub struct YieldArm {
     pub backend: &'static str,
     /// Whether vacuum was running during the load phase.
     pub vacuum_running: bool,
+    /// Which pass of this configuration this is.
+    ///
+    /// Every configuration runs twice, including vacuum-off. The two
+    /// vacuum-off passes are the null: whatever they differ by is what this
+    /// machine produces from identical work, and an on-versus-off difference
+    /// smaller than that is not evidence of anything. Without it the
+    /// interference number cannot gate a release, because the spread between
+    /// runs on this machine reaches 30 points while any real interference is
+    /// far smaller.
+    pub repetition: u32,
     pub upserts: u64,
     pub deletes: u64,
     /// Foreground latency during the load. The comparison against the
@@ -164,7 +174,7 @@ macro_rules! vacuum_yield_backend {
                 }
             }
 
-            pub async fn arm(seed_rows: u64, load: Duration, vacuum_running: bool) {
+            pub async fn arm(seed_rows: u64, load: Duration, vacuum_running: bool, repetition: u32) {
                 let table = Arc::new(VacYieldWorkTable::default());
                 for id in 0..seed_rows {
                     table.insert(row(id)).await.expect("seed");
@@ -258,6 +268,7 @@ macro_rules! vacuum_yield_backend {
                     engine: "worktable",
                     backend: stringify!($module),
                     vacuum_running,
+                    repetition,
                     upserts,
                     deletes,
                     upsert_latency: LatencySummary::from_samples(upsert_ns),
@@ -283,9 +294,13 @@ vacuum_yield_backend!(arctic, arctic);
 vacuum_yield_backend!(congee, congee);
 
 pub async fn run_all(config: &Config) {
-    for running in [false, true] {
-        wti::arm(config.seed_rows, config.load, running).await;
-        arctic::arm(config.seed_rows, config.load, running).await;
-        congee::arm(config.seed_rows, config.load, running).await;
+    // Interleaved rather than grouped, so a machine that drifts over the run
+    // drifts across both arms of each comparison instead of favouring one.
+    for repetition in 0..2 {
+        for running in [false, true] {
+            wti::arm(config.seed_rows, config.load, running, repetition).await;
+            arctic::arm(config.seed_rows, config.load, running, repetition).await;
+            congee::arm(config.seed_rows, config.load, running, repetition).await;
+        }
     }
 }
