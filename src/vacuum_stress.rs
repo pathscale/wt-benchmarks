@@ -42,6 +42,11 @@ pub const ARM: Duration = Duration::from_secs(2);
 /// how long a pass takes.
 pub const FRAGMENTATION: [u64; 2] = [25, 60];
 
+/// How long an arm waits for the sweep to finish reclaiming after the workload
+/// stops. Generous on purpose: the question is whether the memory comes back
+/// at all and how long it takes, so cutting this short would answer neither.
+const DRAIN_LIMIT: Duration = Duration::from_secs(20);
+
 #[derive(Serialize)]
 pub struct VacuumArm {
     pub schema_version: u32,
@@ -98,6 +103,17 @@ pub struct VacuumArm {
     /// Pages allocated but on the empty list at the end: reclaimed by a sweep
     /// and reusable without going back to the allocator.
     pub pages_reusable_end: usize,
+    /// Pages still held after the workload stopped and the sweep was given as
+    /// long as it wanted. This is the number that says whether vacuum returns
+    /// everything or only some of it.
+    pub pages_after_drain: usize,
+    /// Pages a packed table holding `rows_left` would need. `pages_after_drain`
+    /// equal to this is a full return; above it is memory never given back.
+    pub ideal_pages: usize,
+    pub rows_left: u64,
+    /// How long the sweep took to stop reclaiming, once nothing else was
+    /// running. The answer to "how long until the memory comes back".
+    pub drain_ns: u128,
     pub inserts: u64,
     pub selects: u64,
     pub insert_latency: LatencySummary,
@@ -212,11 +228,16 @@ macro_rules! vacuum_stress_backend {
 
             /// Seed, then delete `fragmentation_pct` of the rows so vacuum has
             /// work. Returns the table and the next free id.
-            async fn fragmented(seed_rows: u64, fragmentation_pct: u64) -> (Arc<VacStressWorkTable>, u64) {
+            /// Returns the table, the next free id, and the pages a *packed*
+            /// table of `seed_rows` occupies. That last number is the yardstick:
+            /// a fully reclaimed table should need the same pages per row, so
+            /// anything above it is memory the sweep has not given back yet.
+            async fn fragmented(seed_rows: u64, fragmentation_pct: u64) -> (Arc<VacStressWorkTable>, u64, usize) {
                 let table = Arc::new(VacStressWorkTable::default());
                 for id in 0..seed_rows {
                     table.insert(row(id)).await.expect("seed");
                 }
+                let packed_pages = table.0.data.allocated_pages();
                 if fragmentation_pct > 0 {
                     let step = (100 / fragmentation_pct).max(1);
                     let mut id = 0;
@@ -225,7 +246,7 @@ macro_rules! vacuum_stress_backend {
                         id += step;
                     }
                 }
-                (table, seed_rows)
+                (table, seed_rows, packed_pages)
             }
 
             /// One arm: run inserts and selects against the table for the
@@ -238,7 +259,7 @@ macro_rules! vacuum_stress_backend {
                 churning: bool,
             ) {
                 let vacuum_running = trigger != "off";
-                let (table, mut next_id) = fragmented(seed_rows, fragmentation_pct).await;
+                let (table, mut next_id, packed_pages) = fragmented(seed_rows, fragmentation_pct).await;
 
                 let mut manager_handle = None;
                 let vacuum_task = if vacuum_running {
@@ -304,6 +325,39 @@ macro_rules! vacuum_stress_backend {
                 let empty_pages = table.0.data.get_empty_pages().len();
                 let reclaimable_bytes_left = table.0.data.empty_links_registry().reclaimable_bytes();
 
+                // The workload has stopped. Hold the arm open and let the
+                // sweep finish, because a partial return is not a result: a
+                // vacuum that hands back 37% and stops has not done its job,
+                // and closing here would record that as success. Poll until
+                // the page count stops falling, then report where it landed
+                // and how long it took.
+                let drain_started = now();
+                let mut pages_after_drain = table.0.data.allocated_pages();
+                let mut stable_for = 0u32;
+                while drain_started.elapsed() < DRAIN_LIMIT {
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                    let current = table.0.data.allocated_pages();
+                    if current < pages_after_drain {
+                        pages_after_drain = current;
+                        stable_for = 0;
+                    } else {
+                        stable_for += 1;
+                        // Half a second with no further reclamation is as
+                        // finished as it is going to get.
+                        if stable_for >= 10 {
+                            break;
+                        }
+                    }
+                }
+                let drain_ns = drain_started.elapsed().as_nanos();
+                let rows_left = table.count() as u64;
+                // What a packed table holding this many rows would need.
+                let ideal_pages = if seed_rows == 0 {
+                    0
+                } else {
+                    ((rows_left as f64 / seed_rows as f64) * packed_pages as f64).ceil() as usize
+                };
+
                 if let Some(task) = vacuum_task {
                     task.abort();
                 }
@@ -326,6 +380,10 @@ macro_rules! vacuum_stress_backend {
                     pages_start,
                     pages_end,
                     pages_reusable_end,
+                    pages_after_drain,
+                    ideal_pages,
+                    rows_left,
+                    drain_ns,
                     inserts: insert_ns.len() as u64,
                     selects: select_ns.len() as u64,
                     insert_latency: LatencySummary::from_samples(insert_ns),

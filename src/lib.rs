@@ -25,4 +25,5 @@ pub mod partition_ticks;
 pub mod result;
 pub mod rng;
 pub mod vacuum_stress;
+pub mod vacuum_yield;
 pub mod ycsb;
