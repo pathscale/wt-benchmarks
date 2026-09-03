@@ -108,11 +108,11 @@ macro_rules! link_backend {
 
             impl LinkBackend for Driver {
                 fn insert_node(&self, id: u64, time: u64, data: String) {
-                    self.nodes.insert(LinkBenchNodeRow { id, version: 0, time, data }).expect("fresh node key");
+                    futures::executor::block_on(self.nodes.insert(LinkBenchNodeRow { id, version: 0, time, data })).expect("fresh node key");
                 }
 
                 fn insert_link(&self, config: &Config, id1: u64, link_type: u64, id2: u64, time: u64, version: u64, data: String) {
-                    self.links.insert(LinkBenchLinkRow { id: link_key(config, id1, link_type, id2), id1, link_type, id2, source_type: source_type(id1, link_type), time, version, data }).expect("fresh link key");
+                    futures::executor::block_on(self.links.insert(LinkBenchLinkRow { id: link_key(config, id1, link_type, id2), id1, link_type, id2, source_type: source_type(id1, link_type), time, version, data })).expect("fresh link key");
                 }
 
                 async fn upsert_link(&self, config: &Config, id1: u64, link_type: u64, id2: u64, time: u64, version: u64, data: String) -> Result<u64, ()> {

@@ -106,7 +106,7 @@ macro_rules! wt_doc_backend {
                 }
                 pub fn insert(&self, k: u64) {
                     let a = Account::make(k);
-                    self.table
+                    futures::executor::block_on(self.table
                         .insert(AccountDocRow {
                             id: a.id,
                             name: a.name,
@@ -114,7 +114,7 @@ macro_rules! wt_doc_backend {
                             age: a.age,
                             balance: a.balance,
                             active: a.active,
-                        })
+                        }))
                         .expect("insert");
                 }
                 pub fn point_get_checksum(&self, keys: &[u64]) -> u64 {

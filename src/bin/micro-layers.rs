@@ -47,12 +47,12 @@ macro_rules! micro_backend {
 
             impl MicroBackend for Driver {
                 fn insert(&self, row: Row) {
-                    self.0
+                    futures::executor::block_on(self.0
                         .insert(MicroRow {
                             id: row.id,
                             value: row.value,
                             payload: row.payload,
-                        })
+                        }))
                         .expect("unique key");
                 }
 

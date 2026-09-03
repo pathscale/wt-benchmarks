@@ -189,12 +189,12 @@ pub fn populate(shape: Shape) -> TickPartitions {
             .partition_or_create(symbol)
             .expect("under the partition limit");
         for id in 0..shape.rows_per_partition {
-            partition
+            futures::executor::block_on(partition
                 .insert(TickRow {
                     id,
                     price: id as f64,
                     qty: id,
-                })
+                }))
                 .expect("fresh partition, unique ids");
         }
     }
@@ -231,11 +231,11 @@ pub fn run(shape: Shape, ticks_per_reader: u64) -> Outcome {
                 let fresh = table
                     .partition_or_create(symbol)
                     .expect("under the partition limit");
-                let _ = fresh.insert(TickRow {
+                let _ = futures::executor::block_on(fresh.insert(TickRow {
                     id: rng.below(shape.rows_per_partition),
                     price: 1.0,
                     qty: 1,
-                });
+                }));
                 // `remove` retires, advances and collects on its own, so
                 // there is deliberately no `collect` call here: adding one
                 // measures an already-drained queue and always reports zero.

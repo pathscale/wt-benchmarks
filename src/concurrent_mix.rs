@@ -113,7 +113,7 @@ macro_rules! concurrent_backend {
                 let rows: Vec<_> = (0..TABLE_ROWS)
                     .map(|id| MixRow { id, payload: 1_000_000 + id, bucket: (id % 16) as u32 })
                     .collect();
-                table.insert_many(rows).expect("fixture inserts");
+                futures::executor::block_on(table.insert_many(rows)).expect("fixture inserts");
                 Arc::new(table)
             }
 

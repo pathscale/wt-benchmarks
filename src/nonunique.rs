@@ -95,12 +95,12 @@ macro_rules! nonunique_backend_table {
                     let table = AdjacencyWorkTable::default();
                     for seed in 0..keys {
                         for copy in 0..fan_out {
-                            table
+                            futures::executor::block_on(table
                                 .insert(AdjacencyRow {
                                     id: table.get_next_pk().into(),
                                     source: <$key as NonUniqueKey>::from_seed(seed),
                                     payload: copy,
-                                })
+                                }))
                                 .expect("insert");
                         }
                     }
@@ -116,7 +116,7 @@ macro_rules! nonunique_backend_table {
                 }
 
                 pub fn insert_row(&self, row: AdjacencyRow) {
-                    self.table.insert(row).expect("insert");
+                    futures::executor::block_on(self.table.insert(row)).expect("insert");
                 }
 
                 /// Every row under one key. The fan-out is what the index has
