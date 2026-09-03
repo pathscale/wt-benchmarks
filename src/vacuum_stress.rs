@@ -52,6 +52,23 @@ pub struct VacuumArm {
     pub fragmentation_pct: u64,
     /// Whether vacuum was running during the arm.
     pub vacuum_running: bool,
+    /// How the sweep was triggered: "off" or "reactive".
+    ///
+    /// There is no polling mode to compare against any more. The interval was
+    /// removed from the manager's config, because exposing it invited exactly
+    /// what this benchmark used to do: turn it down to 5ms, at which point the
+    /// timer wins every wake and neither the fragmentation threshold nor the
+    /// settle does anything. The arm now measures what ships.
+    pub trigger: &'static str,
+    /// Whether the arm deleted while it measured.
+    ///
+    /// Without this the arm fragments up front and then only inserts, so the
+    /// table is never *becoming* fragmented while vacuum decides what to do.
+    /// That leaves the reactive path untested: the wake fires once at the
+    /// start and the settle, which exists to keep a sweep out of a live delete
+    /// burst, is never exercised at all.
+    pub churning: bool,
+    pub deletes: u64,
     pub inserts: u64,
     pub selects: u64,
     pub insert_latency: LatencySummary,
@@ -184,16 +201,20 @@ macro_rules! vacuum_stress_backend {
 
             /// One arm: run inserts and selects against the table for the
             /// duration, timing each call, optionally with vacuum running.
-            pub async fn arm(seed_rows: u64, fragmentation_pct: u64, duration: Duration, vacuum_running: bool) {
+            pub async fn arm(
+                seed_rows: u64,
+                fragmentation_pct: u64,
+                duration: Duration,
+                trigger: &'static str,
+                churning: bool,
+            ) {
+                let vacuum_running = trigger != "off";
                 let (table, mut next_id) = fragmented(seed_rows, fragmentation_pct).await;
 
                 let vacuum_task = if vacuum_running {
-                    let manager = Arc::new(VacuumManager::with_config(VacuumManagerConfig {
-                        // Hard, on purpose. A 60 second default would measure
-                        // an idle table and report that vacuum is free.
-                        check_interval: Duration::from_millis(5),
-                        ..Default::default()
-                    }));
+                    // Shipping defaults, on purpose: woken by freed space,
+                    // with the delete burst allowed to settle first.
+                    let manager = Arc::new(VacuumManager::with_config(VacuumManagerConfig::default()));
                     manager.register(table.vacuum());
                     Some(manager.run_vacuum_task())
                 } else {
@@ -203,6 +224,12 @@ macro_rules! vacuum_stress_backend {
                 let (stop, timer) = Stop::armed_for(duration);
                 let mut insert_ns: Vec<u64> = Vec::new();
                 let mut select_ns: Vec<u64> = Vec::new();
+                let mut deletes = 0u64;
+                // Deleted in runs rather than one per turn: a ranged delete is
+                // what produces garbage in bursts, and bursts are what the
+                // settle is for. One-at-a-time would be a steady trickle and
+                // would not exercise it either.
+                let mut delete_cursor = 0u64;
                 let started = now();
 
                 while !stop.hit() {
@@ -217,6 +244,15 @@ macro_rules! vacuum_stress_backend {
                     let t = now();
                     std::hint::black_box(table.select(probe));
                     select_ns.push(t.elapsed().as_nanos() as u64);
+
+                    if churning && insert_ns.len() % 500 == 0 {
+                        for _ in 0..200 {
+                            delete_cursor += 1;
+                            if table.delete(delete_cursor).await.is_ok() {
+                                deletes += 1;
+                            }
+                        }
+                    }
                 }
                 let elapsed = started.elapsed();
 
@@ -232,6 +268,9 @@ macro_rules! vacuum_stress_backend {
                     backend: stringify!($module),
                     fragmentation_pct,
                     vacuum_running,
+                    trigger,
+                    churning,
+                    deletes,
                     inserts: insert_ns.len() as u64,
                     selects: select_ns.len() as u64,
                     insert_latency: LatencySummary::from_samples(insert_ns),
@@ -254,10 +293,12 @@ vacuum_stress_backend!(congee, congee);
 /// Every cell: three backends, two fragmentation levels, vacuum off then on.
 pub async fn run_all(config: &Config) {
     for pct in FRAGMENTATION {
-        for running in [false, true] {
-            wti::arm(config.seed_rows, pct, config.arm, running).await;
-            arctic::arm(config.seed_rows, pct, config.arm, running).await;
-            congee::arm(config.seed_rows, pct, config.arm, running).await;
+        for churning in [false, true] {
+            for trigger in ["off", "reactive"] {
+                wti::arm(config.seed_rows, pct, config.arm, trigger, churning).await;
+                arctic::arm(config.seed_rows, pct, config.arm, trigger, churning).await;
+                congee::arm(config.seed_rows, pct, config.arm, trigger, churning).await;
+            }
         }
     }
 }
