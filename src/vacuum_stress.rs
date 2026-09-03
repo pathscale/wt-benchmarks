@@ -86,6 +86,18 @@ pub struct VacuumArm {
     /// nothing until you know which.
     pub sweeps: u64,
     pub sweep_pages_freed: u64,
+    /// Bytes the table has allocated, at the start of the arm and at its end.
+    ///
+    /// This is the half that verifies the other half. Vacuum exists to give
+    /// memory back, so a cost number without it cannot be checked: a sweep
+    /// that never runs is indistinguishable from a sweep that is free. The
+    /// comparison that matters is `heap_end` against the same arm with vacuum
+    /// off, not against `heap_start`, because both arms grow as they insert.
+    pub pages_start: usize,
+    pub pages_end: usize,
+    /// Pages allocated but on the empty list at the end: reclaimed by a sweep
+    /// and reusable without going back to the allocator.
+    pub pages_reusable_end: usize,
     pub inserts: u64,
     pub selects: u64,
     pub insert_latency: LatencySummary,
@@ -240,6 +252,7 @@ macro_rules! vacuum_stress_backend {
                     None
                 };
 
+                let pages_start = table.0.data.allocated_pages();
                 let (stop, timer) = Stop::armed_for(duration);
                 let mut insert_ns: Vec<u64> = Vec::new();
                 let mut select_ns: Vec<u64> = Vec::new();
@@ -282,6 +295,8 @@ macro_rules! vacuum_stress_backend {
                 }
                 let elapsed = started.elapsed();
 
+                let pages_end = table.0.data.allocated_pages();
+                let pages_reusable_end = table.0.data.reusable_pages();
                 let (sweeps, sweep_pages_freed, _) = manager_handle
                     .as_ref()
                     .map(|m| m.stats.snapshot())
@@ -308,6 +323,9 @@ macro_rules! vacuum_stress_backend {
                     reclaimable_bytes_left,
                     sweeps,
                     sweep_pages_freed,
+                    pages_start,
+                    pages_end,
+                    pages_reusable_end,
                     inserts: insert_ns.len() as u64,
                     selects: select_ns.len() as u64,
                     insert_latency: LatencySummary::from_samples(insert_ns),
