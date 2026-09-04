@@ -1,0 +1,17 @@
+[package]
+name = "wt-multi-cluster-instance"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+derive_more = { version = "2", features = ["from", "into"] }
+eyre = "0.6"
+futures = "0.3"
+rkyv = { version = "0.8", features = ["uuid-1"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tempfile = "3"
+uuid = "1"
+worktable = "=1.0.0-beta.17"
