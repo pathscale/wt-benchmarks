@@ -13,9 +13,9 @@
 //! on a pure dereference and treated the surrounding figures as real.
 //!
 //! The axis this suite is really for is **WorkTable versions**, not backends:
-//! run it against the published crate and against the local checkout, and a
-//! local build that is slower than the published one is the regression worth
-//! chasing. `scripts/compare-worktable-versions.sh` drives both sides.
+//! run it against explicit local historical worktrees and the local candidate.
+//! `scripts/compare-worktable-versions.sh` drives both sides without resolving
+//! a WorkTable-family crate from crates.io.
 
 use std::time::Duration;
 

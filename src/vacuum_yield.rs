@@ -467,13 +467,17 @@ macro_rules! vacuum_yield_backend {
                 let drain_started = Instant::now();
                 let mut pages_after_drain = pages_after_load;
                 let mut settled = Instant::now();
+                let mut saw_sweep = sweeps_during_load != 0;
                 while drain_started.elapsed() < DRAIN_LIMIT {
                     tokio::time::sleep(Duration::from_millis(25)).await;
+                    saw_sweep |= manager_handle
+                        .as_ref()
+                        .is_some_and(|manager| manager.stats.snapshot().0 != 0);
                     let current = table.0.data.allocated_pages() - table.0.data.reusable_pages();
                     if current < pages_after_drain {
                         pages_after_drain = current;
                         settled = Instant::now();
-                    } else if settled.elapsed() >= DRAIN_SETTLED {
+                    } else if (!mode.is_running() || saw_sweep) && settled.elapsed() >= DRAIN_SETTLED {
                         break;
                     }
                 }

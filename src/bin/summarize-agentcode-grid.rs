@@ -6,6 +6,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct PhaseResult {
+    backend: String,
     mode: String,
     phase: String,
     nanos_per_row: f64,
@@ -32,42 +33,49 @@ fn main() -> Result<(), String> {
         for line in contents.lines().filter(|line| line.starts_with('{')) {
             let row: PhaseResult = serde_json::from_str(line)
                 .map_err(|error| format!("{path}: malformed JSONL row: {error}"))?;
-            run.insert(format!("{}/{}", row.mode, row.phase), row.nanos_per_row);
+            run.insert(
+                format!("{}/{}/{}", row.backend, row.mode, row.phase),
+                row.nanos_per_row,
+            );
             results
-                .entry(format!("{}/{}", row.mode, row.phase))
+                .entry(format!("{}/{}/{}", row.backend, row.mode, row.phase))
                 .or_default()
                 .entry(label.to_owned())
                 .or_default()
                 .push(row.nanos_per_row);
         }
-        for (name, first, second) in [
-            (
-                "disk/one_at_a_time_total",
-                "disk/put_symbols_one_at_a_time",
-                "disk/wait_for_ops_one_at_a_time",
-            ),
-            (
-                "disk/insert_many_total",
-                "disk/put_symbols_insert_many",
-                "disk/wait_for_ops_after_batch",
-            ),
-        ] {
-            let total = run
-                .get(first)
-                .zip(run.get(second))
-                .map(|(first, second)| first + second)
-                .ok_or_else(|| format!("{path}: missing phase for {name}"))?;
-            results
-                .entry(name.to_owned())
-                .or_default()
-                .entry(label.to_owned())
-                .or_default()
-                .push(total);
+        for backend in ["wti", "arctic", "congee"] {
+            for (name, first, second) in [
+                (
+                    "one_at_a_time_total",
+                    "put_symbols_one_at_a_time",
+                    "wait_for_ops_one_at_a_time",
+                ),
+                (
+                    "insert_many_total",
+                    "put_symbols_insert_many",
+                    "wait_for_ops_after_batch",
+                ),
+            ] {
+                let first = format!("{backend}/disk/{first}");
+                let second = format!("{backend}/disk/{second}");
+                let total = run
+                    .get(&first)
+                    .zip(run.get(&second))
+                    .map(|(first, second)| first + second)
+                    .ok_or_else(|| format!("{path}: missing phase for {backend}/{name}"))?;
+                results
+                    .entry(format!("{backend}/disk/{name}"))
+                    .or_default()
+                    .entry(label.to_owned())
+                    .or_default()
+                    .push(total);
+            }
         }
     }
 
     println!(
-        "| AgentCode phase | beta13 ns/row | beta15 ns/row | beta17 ns/row | b17 vs b13 | b17 vs b15 |"
+        "| AgentCode phase | beta13 ns/row | beta15 ns/row | beta18 ns/row | b18 vs b13 | b18 vs b15 |"
     );
     println!("|---|---:|---:|---:|---:|---:|");
     for (phase, versions) in results {
@@ -80,7 +88,7 @@ fn main() -> Result<(), String> {
         }
         let beta13 = summarized.get("beta13").ok_or("missing beta13")?;
         let beta15 = summarized.get("beta15").ok_or("missing beta15")?;
-        let beta17 = summarized.get("beta17").ok_or("missing beta17")?;
+        let beta18 = summarized.get("beta18").ok_or("missing beta18")?;
         println!(
             "| {phase} | {:.2} [{:.2}–{:.2}] | {:.2} [{:.2}–{:.2}] | {:.2} [{:.2}–{:.2}] | {:+.1}% | {:+.1}% |",
             beta13.1,
@@ -89,11 +97,11 @@ fn main() -> Result<(), String> {
             beta15.1,
             beta15.0,
             beta15.2,
-            beta17.1,
-            beta17.0,
-            beta17.2,
-            (beta17.1 / beta13.1 - 1.0) * 100.0,
-            (beta17.1 / beta15.1 - 1.0) * 100.0,
+            beta18.1,
+            beta18.0,
+            beta18.2,
+            (beta18.1 / beta13.1 - 1.0) * 100.0,
+            (beta18.1 / beta15.1 - 1.0) * 100.0,
         );
     }
     Ok(())

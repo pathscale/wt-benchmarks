@@ -1,7 +1,15 @@
 use std::alloc::{GlobalAlloc, Layout, System};
+use std::collections::HashMap;
 use std::process::Command;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
+use arctic::concurrent::smr::PsReclaim;
+use arctic::{ConcurrentMap, Key};
+use parking_lot::RwLock;
+use worktable::IndexMap;
+use worktable::data_bucket::Link;
+use worktable::prelude::OffsetEqLink;
 use worktable_vec::{ArcticTable, IndexedTable, LinearTable};
 use wt_benchmarks::moe_resident::{
     MoeResidentOriginCongeeRow, MoeResidentOriginCongeeWorkTable, MoeResidentOriginRow,
@@ -10,8 +18,9 @@ use wt_benchmarks::moe_resident::{
     query_worktable_congee, query_worktable_wti,
 };
 
-const ROWS: usize = 1_528;
+const ROW_COUNTS: [usize; 4] = [0, 1, 64, 1_528];
 const CHECK_QUERIES: usize = 10_000;
+const PUBLICATION_SHARDS: usize = 64;
 
 struct CountingAllocator;
 
@@ -75,7 +84,21 @@ fn record_alloc(bytes: usize) {
     }
 }
 
-fn measure<T>(name: &str, build: impl FnOnce() -> T, check: impl FnOnce(&T) -> u64) {
+fn measure<T>(
+    name: &str,
+    rows: usize,
+    paired: bool,
+    mut build: impl FnMut() -> T,
+    check: impl Fn(&T) -> u64,
+) {
+    // Keep the first table alive while measuring the second. This removes
+    // process-global/TLS first-use cost without letting its drop trigger
+    // deferred cleanup during the measured build.
+    let first = paired.then(|| build());
+    if let Some(table) = &first {
+        std::hint::black_box(check(table));
+    }
+
     let baseline = LIVE.load(Ordering::Relaxed);
     PEAK.store(baseline, Ordering::Relaxed);
     ALLOCATED.store(0, Ordering::Relaxed);
@@ -92,17 +115,21 @@ fn measure<T>(name: &str, build: impl FnOnce() -> T, check: impl FnOnce(&T) -> u
     let post_drop = LIVE.load(Ordering::Relaxed).saturating_sub(baseline);
 
     println!(
-        "{name}\tretained={retained}\tpeak={peak}\tallocated={allocated}\tallocations={allocations}\tpost_drop={post_drop}\tchecksum={checksum}"
+        "{name}\trows={rows}\tcycle={}\tretained={retained}\tpeak={peak}\tallocated={allocated}\tallocations={allocations}\tpost_drop={post_drop}\tchecksum={checksum}",
+        if paired { "paired" } else { "cold" }
     );
+    drop(first);
 }
 
-fn linear(keys: &[u64]) {
+fn linear(rows: usize, paired: bool, keys: &[u64]) {
     measure(
         "vec-linear",
+        rows,
+        paired,
         || {
-            let mut table = LinearTable::with_capacity(ROWS);
-            for index in 0..ROWS {
-                let (key, value) = logical_row(index, ROWS);
+            let mut table = LinearTable::with_capacity(rows);
+            for index in 0..rows {
+                let (key, value) = logical_row(index, rows);
                 table.insert(key, value).unwrap();
             }
             table
@@ -111,13 +138,15 @@ fn linear(keys: &[u64]) {
     );
 }
 
-fn btree(keys: &[u64]) {
+fn btree(rows: usize, paired: bool, keys: &[u64]) {
     measure(
         "vec-btree",
+        rows,
+        paired,
         || {
-            let mut table = IndexedTable::with_capacity(ROWS);
-            for index in 0..ROWS {
-                let (key, value) = logical_row(index, ROWS);
+            let mut table = IndexedTable::with_capacity(rows);
+            for index in 0..rows {
+                let (key, value) = logical_row(index, rows);
                 table.insert(key, value).unwrap();
             }
             table
@@ -126,13 +155,15 @@ fn btree(keys: &[u64]) {
     );
 }
 
-fn arctic_vec(keys: &[u64]) {
+fn arctic_vec(rows: usize, paired: bool, keys: &[u64]) {
     measure(
         "vec-arctic",
+        rows,
+        paired,
         || {
-            let mut table = ArcticTable::with_capacity(ROWS);
-            for index in 0..ROWS {
-                let (key, value) = logical_row(index, ROWS);
+            let mut table = ArcticTable::with_capacity(rows);
+            for index in 0..rows {
+                let (key, value) = logical_row(index, rows);
                 table.insert(key, value).unwrap();
             }
             table
@@ -141,13 +172,15 @@ fn arctic_vec(keys: &[u64]) {
     );
 }
 
-fn worktable_arctic(keys: &[u64]) {
+fn worktable_arctic(rows: usize, paired: bool, keys: &[u64]) {
     measure(
         "worktable-arctic",
+        rows,
+        paired,
         || {
             let table = MoeResidentOriginWorkTable::default();
-            for index in 0..ROWS {
-                let (key, value) = logical_row(index, ROWS);
+            for index in 0..rows {
+                let (key, value) = logical_row(index, rows);
                 futures::executor::block_on(table.insert(MoeResidentOriginRow {
                     origin_key: key,
                     source: value.source,
@@ -160,17 +193,26 @@ fn worktable_arctic(keys: &[u64]) {
             }
             table
         },
-        |table| query_worktable(table, keys).checksum,
+        |table| {
+            let info = table.system_info();
+            eprintln!(
+                "worktable-pages={}\tworktable-row-bytes={}\tworktable-secondary-index-bytes={}",
+                info.page_count, info.memory_usage_bytes, info.idx_size
+            );
+            query_worktable(table, keys).checksum
+        },
     );
 }
 
-fn worktable_wti(keys: &[u64]) {
+fn worktable_wti(rows: usize, paired: bool, keys: &[u64]) {
     measure(
         "worktable-wti",
+        rows,
+        paired,
         || {
             let table = MoeResidentOriginWtiWorkTable::default();
-            for index in 0..ROWS {
-                let (key, value) = logical_row(index, ROWS);
+            for index in 0..rows {
+                let (key, value) = logical_row(index, rows);
                 futures::executor::block_on(table.insert(MoeResidentOriginWtiRow {
                     origin_key: key,
                     source: value.source,
@@ -187,13 +229,15 @@ fn worktable_wti(keys: &[u64]) {
     );
 }
 
-fn worktable_congee(keys: &[u64]) {
+fn worktable_congee(rows: usize, paired: bool, keys: &[u64]) {
     measure(
         "worktable-congee",
+        rows,
+        paired,
         || {
             let table = MoeResidentOriginCongeeWorkTable::default();
-            for index in 0..ROWS {
-                let (key, value) = logical_row(index, ROWS);
+            for index in 0..rows {
+                let (key, value) = logical_row(index, rows);
                 futures::executor::block_on(table.insert(MoeResidentOriginCongeeRow {
                     origin_key: key,
                     source: value.source,
@@ -210,15 +254,149 @@ fn worktable_congee(keys: &[u64]) {
     );
 }
 
-fn child(arm: &str) {
-    let keys = query_keys(ROWS, CHECK_QUERIES);
+fn boxed_link_index(rows: usize, paired: bool, keys: &[u64]) {
+    measure(
+        "component-boxed-link-index",
+        rows,
+        paired,
+        || {
+            let map = ConcurrentMap::<u64, Box<Link>, PsReclaim>::new();
+            for index in 0..rows {
+                let (key, _) = logical_row(index, rows);
+                map.insert(
+                    key.as_insert(),
+                    Box::new(Link {
+                        page_id: (index as u32 / 512 + 1).into(),
+                        offset: (index as u32 % 512) * 32,
+                        length: 32,
+                    }),
+                )
+                .unwrap();
+            }
+            map
+        },
+        |map| {
+            keys.iter().fold(0, |checksum, key| {
+                checksum ^ u64::from(map.get(key).unwrap().offset)
+            })
+        },
+    );
+}
+
+fn reverse_index(rows: usize, paired: bool, keys: &[u64]) {
+    measure(
+        "component-reverse-index",
+        rows,
+        paired,
+        || {
+            let map = IndexMap::<OffsetEqLink<16_384>, u64>::default();
+            for index in 0..rows {
+                let (key, _) = logical_row(index, rows);
+                let link = Link {
+                    page_id: (index as u32 / 512 + 1).into(),
+                    offset: (index as u32 % 512) * 32,
+                    length: 32,
+                };
+                map.insert(OffsetEqLink(link), key);
+            }
+            map
+        },
+        |map| {
+            keys.iter().fold(0, |checksum, key| {
+                let index = *key as usize % rows.max(1);
+                let link = Link {
+                    page_id: (index as u32 / 512 + 1).into(),
+                    offset: (index as u32 % 512) * 32,
+                    length: 32,
+                };
+                map.get(&OffsetEqLink(link))
+                    .map_or(checksum, |entry| checksum ^ entry.get().value)
+            })
+        },
+    );
+}
+
+struct PublicationRow {
+    origin_key: u64,
+    value: wt_benchmarks::moe_resident::OriginValue,
+}
+
+struct PublicationVersion {
+    row: Arc<PublicationRow>,
+    flags: u8,
+}
+
+struct Publication {
+    version: RwLock<PublicationVersion>,
+}
+
+fn publication_map(rows: usize, paired: bool, keys: &[u64]) {
+    measure(
+        "component-publication-map",
+        rows,
+        paired,
+        || {
+            let mut shards: [RwLock<HashMap<Link, Arc<Publication>>>; PUBLICATION_SHARDS] =
+                std::array::from_fn(|_| RwLock::new(HashMap::new()));
+            for index in 0..rows {
+                let (origin_key, value) = logical_row(index, rows);
+                let link = Link {
+                    page_id: (index as u32 / 512 + 1).into(),
+                    offset: (index as u32 % 512) * 32,
+                    length: 32,
+                };
+                shards[index & (PUBLICATION_SHARDS - 1)].get_mut().insert(
+                    link,
+                    Arc::new(Publication {
+                        version: RwLock::new(PublicationVersion {
+                            row: Arc::new(PublicationRow { origin_key, value }),
+                            flags: 0,
+                        }),
+                    }),
+                );
+            }
+            shards
+        },
+        |shards| {
+            keys.iter().fold(0, |checksum, key| {
+                let index = *key as usize % rows.max(1);
+                let link = Link {
+                    page_id: (index as u32 / 512 + 1).into(),
+                    offset: (index as u32 % 512) * 32,
+                    length: 32,
+                };
+                let publication = shards[index & (PUBLICATION_SHARDS - 1)]
+                    .read()
+                    .get(&link)
+                    .cloned();
+                publication.map_or(checksum, |publication| {
+                    let version = publication.version.read();
+                    checksum
+                        ^ version.row.origin_key
+                        ^ u64::from(version.row.value.ordinal)
+                        ^ u64::from(version.flags)
+                })
+            })
+        },
+    );
+}
+
+fn child(arm: &str, rows: usize, paired: bool) {
+    let keys = if rows == 0 {
+        Vec::new()
+    } else {
+        query_keys(rows, CHECK_QUERIES)
+    };
     match arm {
-        "vec-linear" => linear(&keys),
-        "vec-btree" => btree(&keys),
-        "vec-arctic" => arctic_vec(&keys),
-        "worktable-arctic" => worktable_arctic(&keys),
-        "worktable-wti" => worktable_wti(&keys),
-        "worktable-congee" => worktable_congee(&keys),
+        "vec-linear" => linear(rows, paired, &keys),
+        "vec-btree" => btree(rows, paired, &keys),
+        "vec-arctic" => arctic_vec(rows, paired, &keys),
+        "worktable-arctic" => worktable_arctic(rows, paired, &keys),
+        "worktable-wti" => worktable_wti(rows, paired, &keys),
+        "worktable-congee" => worktable_congee(rows, paired, &keys),
+        "component-boxed-link-index" => boxed_link_index(rows, paired, &keys),
+        "component-reverse-index" => reverse_index(rows, paired, &keys),
+        "component-publication-map" => publication_map(rows, paired, &keys),
         _ => panic!("unknown memory arm {arm}"),
     }
 }
@@ -227,20 +405,26 @@ fn main() {
     let mut arguments = std::env::args();
     let executable = arguments.next().unwrap();
     if let Some(arm) = arguments.next() {
-        child(&arm);
+        let rows = arguments.next().unwrap().parse().unwrap();
+        let paired = match arguments.next().as_deref() {
+            Some("cold") => false,
+            Some("paired") => true,
+            cycle => panic!("unknown measurement cycle {cycle:?}"),
+        };
+        child(&arm, rows, paired);
         return;
     }
 
-    println!("rows={ROWS}; heap bytes from the process-global counting allocator");
-    for arm in [
-        "vec-linear",
-        "vec-btree",
-        "vec-arctic",
-        "worktable-arctic",
-        "worktable-wti",
-        "worktable-congee",
-    ] {
-        let status = Command::new(&executable).arg(arm).status().unwrap();
-        assert!(status.success(), "memory arm {arm} failed");
+    println!("heap bytes from the process-global counting allocator");
+    for rows in ROW_COUNTS {
+        for arm in ["vec-arctic", "worktable-arctic"] {
+            for cycle in ["cold", "paired"] {
+                let status = Command::new(&executable)
+                    .args([arm, &rows.to_string(), cycle])
+                    .status()
+                    .unwrap();
+                assert!(status.success(), "memory arm {arm}/{rows}/{cycle} failed");
+            }
+        }
     }
 }

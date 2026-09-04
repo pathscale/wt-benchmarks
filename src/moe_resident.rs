@@ -287,6 +287,102 @@ pub fn query_worktable(table: &MoeResidentOriginWorkTable, keys: &[u64]) -> Time
     }
 }
 
+pub fn worktable_arctic_links(table: &MoeResidentOriginWorkTable, keys: &[u64]) -> Vec<Link> {
+    keys.iter()
+        .map(|key| {
+            table
+                .0
+                .primary_index
+                .pk_map
+                .get_value(&MoeResidentOriginPrimaryKey::from(*key))
+                .expect("known origin")
+                .0
+        })
+        .collect()
+}
+
+/// WorkTable's Arctic primary-index lookup without page access.
+pub fn query_worktable_arctic_index(
+    table: &MoeResidentOriginWorkTable,
+    keys: &[u64],
+) -> TimedChecksum {
+    let start = Instant::now();
+    let mut total = 0_u64;
+    for key in keys {
+        let link = table
+            .0
+            .primary_index
+            .pk_map
+            .get_value(&MoeResidentOriginPrimaryKey::from(*key))
+            .expect("known origin")
+            .0;
+        total = total.wrapping_add(
+            (u32::from(link.page_id) as u64).rotate_left(11)
+                ^ u64::from(link.offset).rotate_left(23)
+                ^ u64::from(link.length),
+        );
+    }
+    TimedChecksum {
+        elapsed: start.elapsed(),
+        checksum: total,
+    }
+}
+
+/// Page resolution, exact-cell read lock, flags, and row deserialization with
+/// a pre-resolved link. The fixed fixture has no mutations, so omitting the
+/// outer link-reuse pin is safe and isolates its cost.
+pub fn query_worktable_data(table: &MoeResidentOriginWorkTable, links: &[Link]) -> TimedChecksum {
+    let start = Instant::now();
+    let mut total = 0_u64;
+    for link in links {
+        let row = table
+            .0
+            .data
+            .select_non_ghosted(*link)
+            .expect("known origin");
+        total = total.wrapping_add(checksum(OriginValue {
+            source: row.source,
+            ordinal: row.ordinal,
+            example: row.example,
+            path_count: row.path_count,
+            origin_count: row.origin_count,
+        }));
+    }
+    TimedChecksum {
+        elapsed: start.elapsed(),
+        checksum: total,
+    }
+}
+
+/// Same pre-resolved page access with the production outer grace-period pin
+/// acquired once per lookup.
+pub fn query_worktable_data_pinned(
+    table: &MoeResidentOriginWorkTable,
+    links: &[Link],
+) -> TimedChecksum {
+    let start = Instant::now();
+    let mut total = 0_u64;
+    for link in links {
+        let _guard = table.0.data.read_guard();
+        let row = table
+            .0
+            .data
+            .select_non_ghosted(*link)
+            .expect("known origin");
+        total = total.wrapping_add(checksum(OriginValue {
+            source: row.source,
+            ordinal: row.ordinal,
+            example: row.example,
+            path_count: row.path_count,
+            origin_count: row.origin_count,
+        }));
+    }
+    TimedChecksum {
+        elapsed: start.elapsed(),
+        checksum: total,
+    }
+}
+
 pub fn query_worktable_persisted(
     table: &MoeResidentOriginPersistedWorkTable,
     keys: &[u64],

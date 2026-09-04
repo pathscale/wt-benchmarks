@@ -32,87 +32,102 @@ use worktable::worktable;
 /// the thing that costs 74% of an update.
 pub const SYMBOLS_PER_GENERATION: u64 = 14_400;
 
-// `SymbolPostingRow`, as AgentCode declares it. Written out twice rather than
-// generated from a `macro_rules!`: substituted metavariables reach a proc macro
-// wrapped in invisible groups, and `worktable!` rejects them as not an
-// identifier. Two copies that differ in one word are clearer than that fight.
+macro_rules! posting_backend {
+    ($module:ident, $using:ident) => {
+        pub mod $module {
+            use super::*;
 
-pub mod memory {
-    use super::*;
+            pub mod memory {
+                use super::*;
 
-    worktable!(
-        name: MemPosting,
-        persist: false,
-        columns: {
-            id: u64 primary_key,
-            posting_hash: u64,
-            snapshot_id: String,
-            normalized_name: String,
-            records_blob: String,
-        },
-        indexes: {
-            posting_hash_idx: posting_hash unique,
-        },
-    );
+                worktable!(
+                    name: MemPosting,
+                    persist: false,
+                    columns: {
+                        id: u64 primary_key using $using,
+                        posting_hash: u64,
+                        snapshot_id: String,
+                        normalized_name: String,
+                        records_blob: String,
+                    },
+                    indexes: {
+                        posting_hash_idx: posting_hash unique using $using,
+                    },
+                );
 
-    pub fn row(i: u64, snapshot: u64) -> MemPostingRow {
-        MemPostingRow {
-            id: i,
-            posting_hash: snapshot * 1_000_000 + i,
-            snapshot_id: format!("snapshot-{snapshot}"),
-            normalized_name: format!("crate::module::symbol_name_{i}"),
-            records_blob: format!("blob-{:016x}", i.wrapping_mul(0x9E37_79B9_7F4A_7C15)),
+                pub fn row(i: u64, snapshot: u64) -> MemPostingRow {
+                    MemPostingRow {
+                        id: i,
+                        posting_hash: snapshot * 1_000_000 + i,
+                        snapshot_id: format!("snapshot-{snapshot}"),
+                        normalized_name: format!("crate::module::symbol_name_{i}"),
+                        records_blob: format!(
+                            "blob-{:016x}",
+                            i.wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                        ),
+                    }
+                }
+            }
+
+            pub mod disk {
+                use super::*;
+
+                worktable!(
+                    name: DiskPosting,
+                    persist: true,
+                    columns: {
+                        id: u64 primary_key using $using,
+                        posting_hash: u64,
+                        snapshot_id: String,
+                        normalized_name: String,
+                        records_blob: String,
+                    },
+                    indexes: {
+                        posting_hash_idx: posting_hash unique using $using,
+                    },
+                );
+
+                pub async fn table(dir: &str) -> DiskPostingWorkTable {
+                    let _ = std::fs::remove_dir_all(dir);
+                    let config = DiskConfig::new_with_table_name(
+                        dir,
+                        DiskPostingWorkTable::name_snake_case(),
+                        DiskPostingWorkTable::version(),
+                    );
+                    let engine = DiskPostingPersistenceEngine::new(config)
+                        .await
+                        .expect("engine");
+                    DiskPostingWorkTable::load(engine).await.expect("load")
+                }
+
+                pub fn row(i: u64, snapshot: u64) -> DiskPostingRow {
+                    DiskPostingRow {
+                        id: i,
+                        posting_hash: snapshot * 1_000_000 + i,
+                        snapshot_id: format!("snapshot-{snapshot}"),
+                        normalized_name: format!("crate::module::symbol_name_{i}"),
+                        records_blob: format!(
+                            "blob-{:016x}",
+                            i.wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                        ),
+                    }
+                }
+            }
         }
-    }
+    };
 }
 
-pub mod disk {
-    use super::*;
-
-    worktable!(
-        name: DiskPosting,
-        persist: true,
-        columns: {
-            id: u64 primary_key,
-            posting_hash: u64,
-            snapshot_id: String,
-            normalized_name: String,
-            records_blob: String,
-        },
-        indexes: {
-            posting_hash_idx: posting_hash unique,
-        },
-    );
-
-    pub async fn table(dir: &str) -> DiskPostingWorkTable {
-        let _ = std::fs::remove_dir_all(dir);
-        let config = DiskConfig::new_with_table_name(
-            dir,
-            DiskPostingWorkTable::name_snake_case(),
-            DiskPostingWorkTable::version(),
-        );
-        let engine = DiskPostingPersistenceEngine::new(config)
-            .await
-            .expect("engine");
-        DiskPostingWorkTable::load(engine).await.expect("load")
-    }
-
-    pub fn row(i: u64, snapshot: u64) -> DiskPostingRow {
-        DiskPostingRow {
-            id: i,
-            posting_hash: snapshot * 1_000_000 + i,
-            snapshot_id: format!("snapshot-{snapshot}"),
-            normalized_name: format!("crate::module::symbol_name_{i}"),
-            records_blob: format!("blob-{:016x}", i.wrapping_mul(0x9E37_79B9_7F4A_7C15)),
-        }
-    }
-}
+posting_backend!(wti, worktables_index);
+posting_backend!(arctic, arctic);
+posting_backend!(congee, congee);
 
 #[derive(Serialize)]
 pub struct PhaseResult {
     pub schema_version: u32,
     pub suite: &'static str,
     pub engine: &'static str,
+    /// Primary and secondary index backend used by this arm.
+    pub backend: &'static str,
     /// "memory" or "disk". The ratio between them is the headline.
     pub mode: &'static str,
     /// The AgentCode phase this stands for.
@@ -124,11 +139,18 @@ pub struct PhaseResult {
     pub target_os: &'static str,
 }
 
-pub fn emit(mode: &'static str, phase: &'static str, rows: u64, elapsed_ns: u128) {
+pub fn emit(
+    backend: &'static str,
+    mode: &'static str,
+    phase: &'static str,
+    rows: u64,
+    elapsed_ns: u128,
+) {
     let result = PhaseResult {
-        schema_version: 1,
+        schema_version: 2,
         suite: "agentcode",
         engine: "worktable",
+        backend,
         mode,
         phase,
         rows,
@@ -190,139 +212,190 @@ pub fn run(config: &Config) {
         .build()
         .expect("runtime");
 
-    // ---- in memory, the floor ----
+    macro_rules! run_backend {
+        ($backend:literal, $module:ident) => {{
+            use self::$module::{disk, memory};
 
-    // `put_symbols` as written today: a dedup lookup on the unique index, then
-    // a single insert, once per symbol.
-    {
-        let table = memory::MemPostingWorkTable::default();
-        let started = Instant::now();
-        for i in 0..rows {
-            if table.select_by_posting_hash(1_000_000 + i).is_none() {
-                futures::executor::block_on(table.insert(memory::row(i, 1))).expect("insert");
-            }
-        }
-        emit(
-            "memory",
-            "put_symbols_one_at_a_time",
-            rows,
-            started.elapsed().as_nanos(),
-        );
-    }
+            // ---- in memory, the floor ----
 
-    // The same work through `insert_many`, which is what Ask 1 asks for. Rows
-    // are built before the clock starts: AgentCode already has the complete
-    // set in hand, and building it is not the cost under discussion.
-    {
-        let table = memory::MemPostingWorkTable::default();
-        let batch: Vec<_> = (0..rows).map(|i| memory::row(i, 1)).collect();
-        let started = Instant::now();
-        futures::executor::block_on(table.insert_many(batch)).expect("insert_many");
-        emit(
-            "memory",
-            "put_symbols_insert_many",
-            rows,
-            started.elapsed().as_nanos(),
-        );
-    }
-
-    // `load base symbols`: the whole generation read back, which is 12% of an
-    // update on its own.
-    {
-        let table = memory::MemPostingWorkTable::default();
-        futures::executor::block_on(
-            table.insert_many((0..rows).map(|i| memory::row(i, 1)).collect()),
-        )
-        .expect("fixture");
-        let started = Instant::now();
-        let mut seen = 0u64;
-        for i in 0..rows {
-            if table.select(i).is_some() {
-                seen += 1;
-            }
-        }
-        let elapsed = started.elapsed();
-        assert_eq!(seen, rows, "the generation must read back whole");
-        emit("memory", "load_base_symbols", rows, elapsed.as_nanos());
-    }
-
-    // ---- persisted, which is what AgentCode actually runs ----
-
-    runtime.block_on(async {
-        {
-            let table = disk::table(&format!("{}/one-at-a-time", config.dir)).await;
-            let started = Instant::now();
-            for i in 0..rows {
-                if table.select_by_posting_hash(1_000_000 + i).is_none() {
-                    table.insert(disk::row(i, 1)).await.expect("insert");
+            // `put_symbols` as written today: a dedup lookup on the unique index, then
+            // a single insert, once per symbol.
+            {
+                let table = memory::MemPostingWorkTable::default();
+                let started = Instant::now();
+                for i in 0..rows {
+                    if table.select_by_posting_hash(1_000_000 + i).is_none() {
+                        #[cfg(feature = "historical-grid")]
+                        table.insert(memory::row(i, 1)).expect("insert");
+                        #[cfg(not(feature = "historical-grid"))]
+                        futures::executor::block_on(table.insert(memory::row(i, 1)))
+                            .expect("insert");
+                    }
                 }
+                emit(
+                    $backend,
+                    "memory",
+                    "put_symbols_one_at_a_time",
+                    rows,
+                    started.elapsed().as_nanos(),
+                );
             }
-            // Caller-visible cost, matching the memory arm.
-            emit(
-                "disk",
-                "put_symbols_one_at_a_time",
-                rows,
-                started.elapsed().as_nanos(),
-            );
-            // And the same arm drained, so it can be compared against the
-            // batch arm on equal terms. Timing one to acceptance and the other
-            // to durability would flatter whichever was drained.
-            let started = Instant::now();
-            table.wait_for_ops().await.expect("drain");
-            emit(
-                "disk",
-                "wait_for_ops_one_at_a_time",
-                rows,
-                started.elapsed().as_nanos(),
-            );
-            table.close().await.expect("close");
-        }
 
-        {
-            let table = disk::table(&format!("{}/insert-many", config.dir)).await;
-            let batch: Vec<_> = (0..rows).map(|i| disk::row(i, 1)).collect();
-            let started = Instant::now();
-            table.insert_many(batch).await.expect("insert_many");
-            emit(
-                "disk",
-                "put_symbols_insert_many",
-                rows,
-                started.elapsed().as_nanos(),
-            );
+            // The same work through `insert_many`, which is what Ask 1 asks for. Rows
+            // are built before the clock starts: AgentCode already has the complete
+            // set in hand, and building it is not the cost under discussion.
+            {
+                let table = memory::MemPostingWorkTable::default();
+                let batch: Vec<_> = (0..rows).map(|i| memory::row(i, 1)).collect();
+                let started = Instant::now();
+                #[cfg(feature = "historical-grid")]
+                table.insert_many(batch).expect("insert_many");
+                #[cfg(not(feature = "historical-grid"))]
+                futures::executor::block_on(table.insert_many(batch)).expect("insert_many");
+                emit(
+                    $backend,
+                    "memory",
+                    "put_symbols_insert_many",
+                    rows,
+                    started.elapsed().as_nanos(),
+                );
+            }
 
-            // And again including the drain, because "accepted by the queue" is
-            // not the number AgentCode feels at the end of a generation.
-            let started = Instant::now();
-            table.wait_for_ops().await.expect("drain");
-            emit(
-                "disk",
-                "wait_for_ops_after_batch",
-                rows,
-                started.elapsed().as_nanos(),
-            );
-            table.close().await.expect("close");
-        }
-
-        {
-            let table = disk::table(&format!("{}/load", config.dir)).await;
-            table
-                .insert_many((0..rows).map(|i| disk::row(i, 1)).collect())
-                .await
+            // `load base symbols`: the whole generation read back, which is 12% of an
+            // update on its own.
+            {
+                let table = memory::MemPostingWorkTable::default();
+                #[cfg(feature = "historical-grid")]
+                table
+                    .insert_many((0..rows).map(|i| memory::row(i, 1)).collect())
+                    .expect("fixture");
+                #[cfg(not(feature = "historical-grid"))]
+                futures::executor::block_on(
+                    table.insert_many((0..rows).map(|i| memory::row(i, 1)).collect()),
+                )
                 .expect("fixture");
-            table.wait_for_ops().await.expect("drain");
-            let started = Instant::now();
-            let mut seen = 0u64;
-            for i in 0..rows {
-                if table.select(i).is_some() {
-                    seen += 1;
+                let started = Instant::now();
+                let mut seen = 0u64;
+                for i in 0..rows {
+                    if table.select(i).is_some() {
+                        seen += 1;
+                    }
                 }
+                let elapsed = started.elapsed();
+                assert_eq!(seen, rows, "the generation must read back whole");
+                emit(
+                    $backend,
+                    "memory",
+                    "load_base_symbols",
+                    rows,
+                    elapsed.as_nanos(),
+                );
             }
-            let elapsed = started.elapsed();
-            assert_eq!(seen, rows, "the generation must read back whole");
-            emit("disk", "load_base_symbols", rows, elapsed.as_nanos());
-            table.close().await.expect("close");
-        }
-    });
+
+            // ---- persisted, which is what AgentCode actually runs ----
+
+            runtime.block_on(async {
+                {
+                    let table = disk::table(&format!("{}/one-at-a-time", config.dir)).await;
+                    let started = Instant::now();
+                    for i in 0..rows {
+                        if table.select_by_posting_hash(1_000_000 + i).is_none() {
+                            #[cfg(feature = "historical-grid")]
+                            table.insert(disk::row(i, 1)).expect("insert");
+                            #[cfg(not(feature = "historical-grid"))]
+                            table.insert(disk::row(i, 1)).await.expect("insert");
+                        }
+                    }
+                    // Caller-visible cost, matching the memory arm.
+                    emit(
+                        $backend,
+                        "disk",
+                        "put_symbols_one_at_a_time",
+                        rows,
+                        started.elapsed().as_nanos(),
+                    );
+                    // And the same arm drained, so it can be compared against the
+                    // batch arm on equal terms. Timing one to acceptance and the other
+                    // to durability would flatter whichever was drained.
+                    let started = Instant::now();
+                    table.wait_for_ops().await.expect("drain");
+                    emit(
+                        $backend,
+                        "disk",
+                        "wait_for_ops_one_at_a_time",
+                        rows,
+                        started.elapsed().as_nanos(),
+                    );
+                    table.close().await.expect("close");
+                }
+
+                {
+                    let table = disk::table(&format!("{}/insert-many", config.dir)).await;
+                    let batch: Vec<_> = (0..rows).map(|i| disk::row(i, 1)).collect();
+                    let started = Instant::now();
+                    #[cfg(feature = "historical-grid")]
+                    table.insert_many(batch).expect("insert_many");
+                    #[cfg(not(feature = "historical-grid"))]
+                    table.insert_many(batch).await.expect("insert_many");
+                    emit(
+                        $backend,
+                        "disk",
+                        "put_symbols_insert_many",
+                        rows,
+                        started.elapsed().as_nanos(),
+                    );
+
+                    // And again including the drain, because "accepted by the queue" is
+                    // not the number AgentCode feels at the end of a generation.
+                    let started = Instant::now();
+                    table.wait_for_ops().await.expect("drain");
+                    emit(
+                        $backend,
+                        "disk",
+                        "wait_for_ops_after_batch",
+                        rows,
+                        started.elapsed().as_nanos(),
+                    );
+                    table.close().await.expect("close");
+                }
+
+                {
+                    let table = disk::table(&format!("{}/load", config.dir)).await;
+                    #[cfg(feature = "historical-grid")]
+                    table
+                        .insert_many((0..rows).map(|i| disk::row(i, 1)).collect())
+                        .expect("fixture");
+                    #[cfg(not(feature = "historical-grid"))]
+                    table
+                        .insert_many((0..rows).map(|i| disk::row(i, 1)).collect())
+                        .await
+                        .expect("fixture");
+                    table.wait_for_ops().await.expect("drain");
+                    let started = Instant::now();
+                    let mut seen = 0u64;
+                    for i in 0..rows {
+                        if table.select(i).is_some() {
+                            seen += 1;
+                        }
+                    }
+                    let elapsed = started.elapsed();
+                    assert_eq!(seen, rows, "the generation must read back whole");
+                    emit(
+                        $backend,
+                        "disk",
+                        "load_base_symbols",
+                        rows,
+                        elapsed.as_nanos(),
+                    );
+                    table.close().await.expect("close");
+                }
+            });
+        }};
+    }
+
+    run_backend!("wti", wti);
+    run_backend!("arctic", arctic);
+    run_backend!("congee", congee);
 
     let _ = std::fs::remove_dir_all(&config.dir);
 }

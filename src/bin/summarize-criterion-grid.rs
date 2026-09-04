@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
         }
     }
 
-    println!("| benchmark | beta13 ns | beta15 ns | beta17 ns | b17 vs b13 | b17 vs b15 |");
+    println!("| benchmark | beta13 ns | beta15 ns | beta18 ns | b18 vs b13 | b18 vs b15 |");
     println!("|---|---:|---:|---:|---:|---:|");
     for (benchmark, versions) in results {
         let mut summarized = BTreeMap::new();
@@ -113,7 +113,7 @@ fn main() -> Result<(), String> {
         }
         let beta13 = summarized.get("beta13").ok_or("missing beta13")?;
         let beta15 = summarized.get("beta15").ok_or("missing beta15")?;
-        let beta17 = summarized.get("beta17").ok_or("missing beta17")?;
+        let beta18 = summarized.get("beta18").ok_or("missing beta18")?;
         println!(
             "| {benchmark} | {:.3} [{:.3}–{:.3}] | {:.3} [{:.3}–{:.3}] | {:.3} [{:.3}–{:.3}] | {:+.1}% | {:+.1}% |",
             beta13.1,
@@ -122,11 +122,11 @@ fn main() -> Result<(), String> {
             beta15.1,
             beta15.0,
             beta15.2,
-            beta17.1,
-            beta17.0,
-            beta17.2,
-            (beta17.1 / beta13.1 - 1.0) * 100.0,
-            (beta17.1 / beta15.1 - 1.0) * 100.0,
+            beta18.1,
+            beta18.0,
+            beta18.2,
+            (beta18.1 / beta13.1 - 1.0) * 100.0,
+            (beta18.1 / beta15.1 - 1.0) * 100.0,
         );
     }
     Ok(())
