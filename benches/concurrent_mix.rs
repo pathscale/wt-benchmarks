@@ -21,7 +21,9 @@
 use std::time::Duration;
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
-use wt_benchmarks::concurrent_mix::{self, OPS_PER_THREAD, READERS, WRITE_RATIOS, WRITERS};
+use wt_benchmarks::concurrent_mix::{
+    self, OPS_PER_THREAD, READERS, SCALE_THREADS, SCALE_WRITE_RATIO, WRITE_RATIOS, WRITERS,
+};
 
 // Bounded on purpose. Every sample rebuilds the table and spawns the full
 // thread set, so the budget is the fixture size times the sample count and
@@ -71,9 +73,83 @@ macro_rules! axis {
     };
 }
 
+macro_rules! scale_axis {
+    ($fn_name:ident, $module:ident, $label:literal, $group:literal, $write_ratio:expr) => {
+        fn $fn_name(c: &mut Criterion) {
+            use wt_benchmarks::concurrent_mix::$module;
+
+            let mut group = c.benchmark_group(concat!($group, "/", $label));
+            group.sample_size(SAMPLES);
+            group.measurement_time(MEASURE);
+            group.warm_up_time(WARM_UP);
+
+            for &threads in &SCALE_THREADS {
+                group.throughput(Throughput::Elements(OPS_PER_THREAD * threads as u64));
+                group.bench_with_input(
+                    BenchmarkId::new("threads", threads),
+                    &threads,
+                    |b, &threads| {
+                        let scripts = concurrent_mix::scripts_for(threads, 0, $write_ratio);
+                        b.iter_batched(
+                            $module::populated,
+                            |table| {
+                                let counts = $module::run(&table, &scripts);
+                                (counts, table)
+                            },
+                            criterion::BatchSize::PerIteration,
+                        );
+                    },
+                );
+            }
+            group.finish();
+        }
+    };
+}
+
 axis!(wti, wti, "wti");
 axis!(arctic, arctic, "arctic");
 axis!(congee, congee, "congee");
+scale_axis!(scale_wti, wti, "wti", "concurrent_scale", SCALE_WRITE_RATIO);
+scale_axis!(
+    scale_arctic,
+    arctic,
+    "arctic",
+    "concurrent_scale",
+    SCALE_WRITE_RATIO
+);
+scale_axis!(
+    scale_congee,
+    congee,
+    "congee",
+    "concurrent_scale",
+    SCALE_WRITE_RATIO
+);
+scale_axis!(read_scale_wti, wti, "wti", "concurrent_read_scale", 0);
+scale_axis!(
+    read_scale_arctic,
+    arctic,
+    "arctic",
+    "concurrent_read_scale",
+    0
+);
+scale_axis!(
+    read_scale_congee,
+    congee,
+    "congee",
+    "concurrent_read_scale",
+    0
+);
 
-criterion_group!(benches, wti, arctic, congee);
+criterion_group!(
+    benches,
+    wti,
+    arctic,
+    congee,
+    scale_wti,
+    scale_arctic,
+    scale_congee,
+    read_scale_wti,
+    read_scale_arctic,
+    read_scale_congee
+);
 criterion_main!(benches);

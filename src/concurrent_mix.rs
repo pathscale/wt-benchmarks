@@ -44,6 +44,14 @@ pub const WRITERS: usize = 8;
 /// reader; the writer threads always write.
 pub const WRITE_RATIOS: [u32; 3] = [0, 10, 50];
 
+/// Thread counts used by the bounded scalability axis.
+pub const SCALE_THREADS: [usize; 6] = [1, 2, 4, 8, 16, 32];
+
+/// The scalability axis uses one fixed mixed workload. Keeping this separate
+/// from the ratio axis prevents a Cartesian product large enough to turn a
+/// release check into an overnight benchmark.
+pub const SCALE_WRITE_RATIO: u32 = 10;
+
 /// One thread's script, generated before timing starts.
 #[derive(Clone, Copy)]
 pub enum Op {
@@ -58,7 +66,17 @@ pub enum Op {
 /// is a plain LCG rather than `rand`, to keep the fixture reproducible without
 /// pinning a dependency's RNG behaviour across versions.
 pub fn scripts(write_ratio: u32) -> Vec<Vec<Op>> {
-    let threads = READERS + WRITERS;
+    scripts_for(READERS + WRITERS, WRITERS, write_ratio)
+}
+
+/// Deterministic scripts for a caller-selected concurrency level.
+///
+/// `dedicated_writers` is used by the fixed 32-thread ratio benchmark. The
+/// scalability grid passes zero and applies `write_ratio` uniformly, so a
+/// one-thread cell still contains both reads and writes.
+pub fn scripts_for(threads: usize, dedicated_writers: usize, write_ratio: u32) -> Vec<Vec<Op>> {
+    assert!(threads > 0);
+    assert!(dedicated_writers <= threads);
     let span = TABLE_ROWS / threads as u64;
     (0..threads)
         .map(|thread| {
@@ -71,7 +89,8 @@ pub fn scripts(write_ratio: u32) -> Vec<Vec<Op>> {
                         .wrapping_mul(6364136223846793005)
                         .wrapping_add(1442695040888963407);
                     let key = start + (state >> 33) % span.max(1);
-                    let writes = thread < WRITERS || (state >> 11) % 100 < write_ratio as u64;
+                    let writes =
+                        thread < dedicated_writers || (state >> 11) % 100 < write_ratio as u64;
                     if writes {
                         Op::Write(key)
                     } else {
@@ -113,6 +132,9 @@ macro_rules! concurrent_backend {
                 let rows: Vec<_> = (0..TABLE_ROWS)
                     .map(|id| MixRow { id, payload: 1_000_000 + id, bucket: (id % 16) as u32 })
                     .collect();
+                #[cfg(feature = "historical-grid")]
+                table.insert_many(rows).expect("fixture inserts");
+                #[cfg(not(feature = "historical-grid"))]
                 futures::executor::block_on(table.insert_many(rows)).expect("fixture inserts");
                 Arc::new(table)
             }

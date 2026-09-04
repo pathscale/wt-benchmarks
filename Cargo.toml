@@ -14,6 +14,9 @@ versioned-row-publication = ["worktable-adapter", "worktable/versioned-row-publi
 # this crate still builds against the published release; the partition_ticks
 # bench simply offers two routing strategies instead of three without it.
 partition-pinned = ["worktable-adapter"]
+# Builds only the version-stable PGO grid and adapts pre-beta17 synchronous
+# inserts. Used exclusively with an explicit local WorkTable patch path.
+historical-grid = ["worktable-adapter"]
 redb-adapter = ["dep:redb", "dep:tempfile"]
 sqlite-adapter = ["dep:rusqlite"]
 lmdb-adapter = ["dep:heed", "dep:tempfile"]
@@ -21,6 +24,7 @@ duckdb-adapter = ["dep:duckdb", "dep:tempfile"]
 external-adapters = ["redb-adapter", "sqlite-adapter", "lmdb-adapter", "duckdb-adapter"]
 
 [dependencies]
+arctic = { package = "arctic-wt", version = "0.1" }
 dashmap = "6"
 derive_more = { version = "2", features = ["from", "error", "display", "debug", "into"] }
 eyre = "0.6"
@@ -38,7 +42,10 @@ serde_json = "1"
 tempfile = { version = "3", optional = true }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 uuid = "1"
-worktable = { version = "=1.0.0-beta.17", optional = true }
+# Deliberately spans the local historical worktrees used by the version grid.
+# `.cargo/config.toml` selects the beta18 checkout for normal work; the local
+# comparison script overrides that patch with a beta13 or beta15 worktree.
+worktable = { version = ">=1.0.0-beta.13, <1.0.0-beta.19", optional = true }
 worktable-vec = { path = "crates/worktable-vec" }
 
 [dev-dependencies]
@@ -106,8 +113,18 @@ path = "src/bin/moe-resident-index-ab.rs"
 required-features = ["worktable-adapter"]
 
 [[bin]]
+name = "moe-resident-build-ab"
+path = "src/bin/moe-resident-build-ab.rs"
+required-features = ["worktable-adapter"]
+
+[[bin]]
 name = "moe-resident-memory-ab"
 path = "src/bin/moe-resident-memory-ab.rs"
+required-features = ["worktable-adapter"]
+
+[[bin]]
+name = "moe-resident-hot-page-ab"
+path = "src/bin/moe-resident-hot-page-ab.rs"
 required-features = ["worktable-adapter"]
 
 [[bin]]

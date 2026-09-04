@@ -1,107 +1,129 @@
 # MoE resident provenance index A/B
 
-This experiment isolates the homegrown resident lookup used by MoE-PGO and
-compares it with generated WorkTable tables using Arctic, WorkTablesIndex, and
-Congee. All WorkTable results below use the published crates.io
-`worktable = 1.0.0-beta.17`.
+This experiment compares the resident lookup shape used by MoE-PGO with
+generated WorkTable tables using Arctic, WorkTablesIndex, and Congee. It uses
+1,528 `(source, ordinal)` origin keys and a fixed five-field payload.
 
-The logical relation has 1,528 `(source, ordinal)` origin keys and a fixed
-five-field payload. The benchmark issues one million deterministic successful
-point queries per sample for nine samples. The same query stream is used for
-all arms, and execution stops if any checksum differs.
+## Provenance
 
-## Results
+These results use the local beta18 candidate working tree, not crates.io. The
+candidate is based on WorkTable commit `a046217` plus the beta18 working tree;
+its local Cargo package version is `1.0.0-beta.18`.
 
-Two consecutive release runs on 2026-09-04:
+`cargo tree --workspace --all-features` resolved every WorkTable-family crate
+to a local path:
 
-| arm | run 1 ns/query | run 2 ns/query |
+| package | local source |
+|---|---|
+| WorkTable, codegen, DSL | `/Users/revenge/code/WorkTable` |
+| Arctic | `/Users/revenge/code/arctic-wt` |
+| ps-reclaim | `/Users/revenge/code/ps-reclaim` |
+| WorkTablesIndex | `/Users/revenge/code/WorkTablesIndex` |
+| DataBucket | `/Users/revenge/code/DataBucket` |
+| Congee | `/Users/revenge/code/congee-wt` |
+
+The stripped Vec controls live in the local `worktable-vec` crate in this
+repository. Its Arctic dependency resolves to the same local Arctic checkout.
+
+## Random successful point lookup
+
+Each sample performs eight million deterministic, uniformly distributed,
+successful lookups. Nine samples are collected in rotated arm order. Every arm
+must produce the same checksum or the benchmark stops.
+
+The audited post-fix release run on 2026-09-05:
+
+| arm | median ns/query | p25–p75 ns/query |
 |---|---:|---:|
-| application-style linear Vec scan | 208.17 | 208.49 |
-| WorkTable-vec rows + BTreeMap index | 32.34 | 32.18 |
-| WorkTable-vec rows + Arctic index | 5.25 | 5.55 |
-| generated WorkTable + Arctic | 26.07 | 26.37 |
+| Vec linear scan | 205.44 | 204.14–207.17 |
+| Vec + BTreeMap | 33.53 | 33.23–33.92 |
+| Vec + Arctic | 9.25 | 9.10–9.32 |
+| WorkTable + Arctic | 15.65 | 15.41–15.80 |
+| WorkTable + WTI | 58.05 | 56.96–58.26 |
+| WorkTable + Congee | 24.77 | 24.43–24.82 |
 
-A later six-arm run measured 206.49 ns/query for linear Vec, 31.80 for
-Vec+BTreeMap, 5.28 for Vec+Arctic, 26.14 for WorkTable+Arctic, 63.91 for
-WorkTable+WTI, and 33.65 for WorkTable+Congee. Arctic is therefore the fastest
-full WorkTable backend for this point-lookup shape.
+Arctic now defaults to ps-reclaim, so both Arctic arms use the release
+reclamation backend. WorkTable+Arctic is 53.3% faster than Vec+BTreeMap and
+costs 1.69x the stripped Vec+Arctic control.
 
-At this population, replacing BTreeMap with Arctic while keeping the same Vec
-rows is 5.80–6.16x faster. Full WorkTable+Arctic is 7.91–7.98x faster than the
-linear scan and 1.22–1.24x faster than Vec+BTreeMap. The full table costs
-4.75–4.96x over the minimal Vec+Arctic row-offset index; that delta is the
-measured price of the generated table path rather than an index-backend delta.
+ps-reclaim originally treated a second live domain pin as an out-of-line cold
+path that scanned atomic participant slots. WorkTable holds its page-domain pin
+while entering Arctic's index domain, making that path hot on every select.
+The beta18 fix uses an exact per-thread four-bit occupancy mask, preserving
+out-of-order-drop and overflow safety while avoiding the scan. The resulting
+15.65 ns restores the earlier 15.57 ns WorkTable+Arctic baseline. The
+single-thread Seize comparison is intentionally not a release arm;
+application-level and scaling results decide the backend.
 
-One-population construction in the two runs was:
+This benchmark currently covers successful point lookups only. Misses and
+range scans require separate validation.
 
-| arm | run 1 ms | run 2 ms |
+## Construction
+
+Construction is measured separately from lookup. The old lookup runner printed
+one cold-ish observation per arm; those values were too noisy to support a
+regression claim and have been removed from that runner.
+
+The focused construction runner uses prebuilt logical input, rotated arm order,
+31 samples, and eight complete 1,528-row populations per in-process sample:
+
+| arm | median ms/population | p25–p75 ms |
 |---|---:|---:|
-| linear Vec | 0.312 | 0.312 |
-| Vec+BTreeMap | 0.115 | 0.116 |
-| Vec+Arctic | 0.083 | 0.184 |
-| WorkTable+Arctic | 0.497 | 0.524 |
+| Vec + BTreeMap | 0.046 | 0.046–0.047 |
+| WorkTable, `block_on` per row | 0.160 | 0.157–0.167 |
+| WorkTable, one executor around row loop | 0.160 | 0.157–0.167 |
+| WorkTable `insert_many` | 0.168 | 0.164–0.176 |
 
-Construction numbers are single observations and are not treated as a stable
-benchmark.
+The same executable also launches a new process for each first-population
+sample, avoiding allocator and SMR reuse across samples:
 
-## Memory result
+| arm | median ms/population | p25–p75 ms |
+|---|---:|---:|
+| Vec + BTreeMap | 0.135 | 0.134–0.139 |
+| WorkTable, `block_on` per row | 0.209 | 0.207–0.213 |
+| WorkTable, one executor around row loop | 0.207 | 0.205–0.214 |
+| WorkTable `insert_many` | 0.229 | 0.225–0.245 |
 
-An isolated-process counting allocator measured the same 1,528 rows with
-`persist:false`:
+The cold first-population gap is therefore 1.53–1.55x for a WorkTable row loop
+versus the stripped Vec+BTreeMap control. The async API wrapper is not the
+cause: one executor and per-row `block_on` are within 1% here.
 
-| arm | retained bytes | peak bytes | bytes after drop |
-|---|---:|---:|---:|
-| linear Vec | 36,672 | 36,672 | 0 |
-| Vec+BTreeMap | 77,088 | 77,088 | 0 |
-| Vec+Arctic | 105,824 | 105,824 | 64 |
-| WorkTable+Arctic | 396,548 | 396,588 | 73,004 |
-| WorkTable+WTI | 359,460 | 359,500 | 67,868 |
-| WorkTable+Congee | 378,700 | 378,740 | 44,212 |
+Equivalent local historical in-process runs were:
 
-The focused beta.17 regression is WorkTable+Arctic retaining 3.75x the bytes
-of the stripped Vec+Arctic control, with 73,004 bytes still allocated after
-drop. This reproduced identically against the local checkout and the published
-crate; the catalogued result is the published-crate run.
+| version | WorkTable row-loop median ms | WorkTable `insert_many` median ms |
+|---|---:|---:|
+| beta13 | 0.698 | 0.645 |
+| beta15 | 0.662 | 0.618 |
+| beta18 candidate | 0.160 | 0.168 |
 
-## Persisted Arctic result
+The candidate does not reproduce a release-to-release construction regression;
+it is about 3.9x faster than beta15 on the row-loop construction shape. It
+remains slower than the stripped BTree control, which does not serialize rows,
+provide table mutation coordination, or provide batch atomicity.
 
-The `persist:true` runner uses the same relation and published beta.17, closes
-it, reopens it, validates all 1,528 rows and the checksum, and then compares
-warm point lookup to the `persist:false` generated WorkTable+Arctic arm:
+## Memory
 
-| measurement | result |
-|---|---:|
-| complete persisted artifact | 128,055 B |
-| empty create/load | 0.649 ms |
-| insert visible | 1.532 ms |
-| insert durable (`wait_for_ops`) | 9.725 ms |
-| reopen | 0.646 ms |
-| first reopened query | 584 ns |
-| warm in-memory | 25.93 ns/query |
-| warm reopened persisted | 25.92 ns/query |
+The isolated-process counting allocator reproduced the paired 1,528-row result:
 
-Persistence did not degrade the warm lookup path in this run (0.999x). This is
-not a durability-parity claim: startup, background drain, and steady-state
-lookup are reported as separate operations.
+| arm | retained bytes | bytes after drop |
+|---|---:|---:|
+| Vec + Arctic | 105,760 | 0 |
+| WorkTable + Arctic | 105,976 | 0 |
 
-## Control result: dense counters are different
-
-The existing dense profiling-counter test reported 605.4 million updates/s
-for a raw atomic array, 544.1 million/s with a ready `.await`, and 2.3
-million/s for WorkTable+Arctic. That roughly 263x array advantage is real for a
-dense integer address with no query or persistence need. It must not be used to
-reject WorkTable for provenance point lookup, where the current baseline is a
-search or separately maintained index.
+The WorkTable delta is 216 bytes, 0.14 bytes per live row, or 1.002x the
+stripped Vec+Arctic control. Both arms produced the same checksum.
 
 ## Reproduction
 
 ```sh
-env CARGO_BUILD_JOBS=2 RAYON_NUM_THREADS=2 nice -n 15 \
+env CARGO_BUILD_JOBS=2 RAYON_NUM_THREADS=2 \
   cargo run --release --bin moe-resident-index-ab
 
-env CARGO_BUILD_JOBS=2 RAYON_NUM_THREADS=2 nice -n 15 \
-  cargo run --release --bin moe-resident-memory-ab
+env CARGO_BUILD_JOBS=2 RAYON_NUM_THREADS=2 \
+  cargo run --release --bin moe-resident-build-ab
 
-env CARGO_BUILD_JOBS=2 RAYON_NUM_THREADS=2 nice -n 15 \
-  cargo run --release --bin moe-resident-persist-ab
+env CARGO_BUILD_JOBS=2 RAYON_NUM_THREADS=2 \
+  cargo run --release --bin moe-resident-memory-ab -- worktable-arctic 1528 paired
+
+target/release/moe-resident-memory-ab vec-arctic 1528 paired
 ```

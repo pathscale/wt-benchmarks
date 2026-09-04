@@ -1,62 +1,60 @@
 #!/bin/sh
-# Run one benchmark against a published WorkTable and against the local
-# checkout, and compare them.
+# Compare one local WorkTable checkout with the local beta18 checkout.
+# Registry packages are never substituted for either side.
 #
 # This is the axis the moe_pgo suite exists for. Backends are a choice made
-# once; a local build that is slower than the published crate is a regression,
-# and it will not show up in a run that only ever builds one of them.
+# once; a local build that is slower than a historical local checkout is a
+# regression, and it will not show up in a run that only builds one of them.
 #
 # Both sides share a CRITERION_HOME, so the second run compares against the
 # first through Criterion's own baseline machinery rather than by eye.
 #
 # Usage:
-#   scripts/compare-worktable-versions.sh 1.0.0-beta.16
-#   scripts/compare-worktable-versions.sh 1.0.0-beta.16 moe_pgo
+#   scripts/compare-worktable-versions.sh LABEL WORKTABLE DATABUCKET WTI
 #
 # POSIX sh: no arrays, no [[ ]], no pipefail.
 set -eu
 
-VERSION="${1:-}"
-BENCH="${2:-moe_pgo}"
+LABEL="${1:-}"
+WORKTABLE_PATH="${2:-}"
+DATABUCKET_PATH="${3:-}"
+WTI_PATH="${4:-}"
 
-if [ -z "$VERSION" ]; then
-    echo "usage: $0 <published-worktable-version> [bench-name]" >&2
-    echo "example: $0 1.0.0-beta.16 moe_pgo" >&2
+if [ -z "$LABEL" ] || [ -z "$WORKTABLE_PATH" ] || [ -z "$DATABUCKET_PATH" ] || [ -z "$WTI_PATH" ]; then
+    echo "usage: $0 <label> <local-WorkTable> <local-DataBucket> <local-WorkTablesIndex>" >&2
     exit 2
 fi
+for path in "$WORKTABLE_PATH" "$DATABUCKET_PATH" "$WTI_PATH"; do
+    if [ ! -f "$path/Cargo.toml" ]; then
+        echo "not a local crate checkout: $path" >&2
+        exit 2
+    fi
+done
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-WORK=$(mktemp -d)
 export CRITERION_HOME="$ROOT/target/criterion-compare"
 mkdir -p "$CRITERION_HOME"
+MANIFEST="$ROOT/tools/version-grid/Cargo.toml"
+FILTER='12288|fixed_work'
 
-cleanup() { rm -rf "$WORK"; }
-trap cleanup EXIT
-
-echo "=== published worktable $VERSION ==="
-# A copy, so the published build never touches the working tree. The path
-# dependency is rewritten to a registry one; everything else is identical, so
-# the only difference between the two runs is WorkTable itself.
-mkdir -p "$WORK/published"
-# Only what the build needs. Copying the whole root drags `target` along, which
-# is 27 GB here and pointless: the published side rebuilds from scratch anyway.
-for item in Cargo.toml src benches; do
-    cp -R "$ROOT/$item" "$WORK/published/"
-done
-sed -i.bak -E "s|^worktable = \{ path = \"[^\"]*\"(.*)\}|worktable = { version = \"=$VERSION\"\1}|" \
-    "$WORK/published/Cargo.toml"
-rm -f "$WORK/published/Cargo.toml.bak"
-
-if ! grep -q "version = \"=$VERSION\"" "$WORK/published/Cargo.toml"; then
-    echo "could not rewrite the worktable dependency; check Cargo.toml's format" >&2
-    exit 1
-fi
-
-( cd "$WORK/published" && cargo bench --bench "$BENCH" -- --save-baseline published )
+echo "=== local $LABEL: $WORKTABLE_PATH ==="
+(
+    cd "$ROOT"
+    cargo --offline \
+        --config "patch.crates-io.worktable.path='$WORKTABLE_PATH'" \
+        --config "patch.crates-io.data_bucket.path='$DATABUCKET_PATH'" \
+        --config "patch.crates-io.WorkTablesIndex.path='$WTI_PATH'" \
+        bench --manifest-path "$MANIFEST" --bench moe_pgo \
+        --features historical-grid -- "$FILTER" --save-baseline "$LABEL"
+)
 
 echo
-echo "=== local checkout ==="
-( cd "$ROOT" && cargo bench --bench "$BENCH" -- --baseline published )
+echo "=== local beta18: $ROOT/../WorkTable ==="
+(
+    cd "$ROOT"
+    cargo --offline bench --manifest-path "$MANIFEST" --bench moe_pgo \
+        -- "$FILTER" --baseline "$LABEL"
+)
 
 echo
 echo "Read moe_pgo/control first. It contains no WorkTable, so if it moved"

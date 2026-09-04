@@ -14,4 +14,4 @@ rkyv = { version = "0.8", features = ["uuid-1"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tempfile = "3"
 uuid = "1"
-worktable = "=1.0.0-beta.17"
+worktable = "^1.0.0-beta.17"

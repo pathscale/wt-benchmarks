@@ -96,12 +96,15 @@ macro_rules! moe_backend {
                     .partition_or_create(version)
                     .expect("under the partition limit");
                 for neuron in 0..width {
-                    futures::executor::block_on(partition.insert($row {
+                    let row = $row {
                         neuron,
                         expert: (neuron % 64) as u16,
                         fires: 0,
-                    }))
-                    .expect("unique neuron ids");
+                    };
+                    #[cfg(feature = "historical-grid")]
+                    partition.insert(row).expect("unique neuron ids");
+                    #[cfg(not(feature = "historical-grid"))]
+                    futures::executor::block_on(partition.insert(row)).expect("unique neuron ids");
                 }
             }
 
