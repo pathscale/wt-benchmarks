@@ -183,11 +183,15 @@ path = "src/bin/linkbench-worktable.rs"
 name = "partition_ticks"
 harness = false
 
-# The MoE-PGO phase profile: bulk corpus ingest, a read-modify-write storm with
-# no locality over the whole neuron key set, read-only routing lookups at
-# serving rate partitioned by layer, and a per-layer scan. Encodes what that
-# project's pipeline will ask of WorkTable, so a regression it would be
-# sensitive to fails here rather than there.
+# The MoE-PGO phase profile: a read-modify-write storm with no locality over
+# the whole neuron key set, plus versioned map publication and retirement while
+# readers continuously resolve the current map.
 [[bench]]
 name = "moe_pgo"
+harness = false
+
+# The MoE-PGO bulk companion: build one dense map with per-row insert versus
+# insert_many, then retire it with per-row delete, delete_many, or delete_range.
+[[bench]]
+name = "moe_pgo2"
 harness = false

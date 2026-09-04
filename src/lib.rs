@@ -17,6 +17,8 @@ pub mod kv_table;
 #[cfg(feature = "worktable-adapter")]
 pub mod moe_pgo;
 #[cfg(feature = "worktable-adapter")]
+pub mod moe_pgo2;
+#[cfg(feature = "worktable-adapter")]
 pub mod nonunique;
 #[cfg(feature = "worktable-adapter")]
 pub mod op_latency;

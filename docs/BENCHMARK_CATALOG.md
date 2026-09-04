@@ -130,6 +130,16 @@ Published beta.16 measured no slower than local beta.17, with beta.17's first
 pass elevated and its later passes matching. That is **unresolved, not
 absent**, and it is exactly the comparison the script above exists to settle.
 
+`moe_pgo2` is the bulk-mutation companion. It builds the same dense map with a
+loop of generated `insert` calls and with one `insert_many`, then clears it
+with a loop of `delete`, one `delete_many`, or one `delete_range`. Batch widths
+are 1, 64, 1,024, and 12,288 rows, and every case runs against WorkTablesIndex,
+Congee, and Arctic. Fixture construction and row/key allocation happen outside
+the measured interval. WorkTable does not currently expose `update_many`, so
+the benchmark does not claim to measure one. Delete timing ends when the
+generated API returns; this is an operation-latency benchmark, not proof that
+vacuum has subsequently reclaimed every byte.
+
 **Deliberately not measured.** Per-token neuron routing: the partition is drawn
 so a request's needs are known before compute starts, and if per-token routing
 were needed that would be evidence the partition failed. Weight paging:
