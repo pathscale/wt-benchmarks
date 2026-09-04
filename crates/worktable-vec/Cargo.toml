@@ -1,0 +1,10 @@
+[package]
+name = "worktable-vec"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Explicit Vec-backed baselines for WorkTable workloads"
+publish = false
+
+[dependencies]
+arctic = { package = "arctic-wt", version = "0.1" }

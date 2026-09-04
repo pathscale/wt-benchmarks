@@ -46,9 +46,10 @@ cargo run --release --features versioned-row-publication \
 ```
 
 Results are emitted as JSON Lines, one record per repetition. Run `--help` for
-all parameters. The path dependency in `Cargo.toml` intentionally targets the
-local sibling WorkTable checkout while the benchmark APIs are still changing;
-replace it with a released version or pinned Git revision before publishing.
+all parameters. The default adapter is pinned to the published crates.io
+`worktable = 1.0.0-beta.17`. Experimental local-versus-published comparisons
+must use an explicit comparison script or branch; result labels must never
+infer which source was linked.
 
 The same A-F streams can run through SQLite `:memory:`:
 

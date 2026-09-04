@@ -38,7 +38,8 @@ serde_json = "1"
 tempfile = { version = "3", optional = true }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 uuid = "1"
-worktable = { path = "../WorkTable", optional = true }
+worktable = { version = "=1.0.0-beta.17", optional = true }
+worktable-vec = { path = "crates/worktable-vec" }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["async_tokio"] }
@@ -97,6 +98,21 @@ required-features = ["worktable-adapter"]
 [[bin]]
 name = "agentcode-worktable"
 path = "src/bin/agentcode-worktable.rs"
+required-features = ["worktable-adapter"]
+
+[[bin]]
+name = "moe-resident-index-ab"
+path = "src/bin/moe-resident-index-ab.rs"
+required-features = ["worktable-adapter"]
+
+[[bin]]
+name = "moe-resident-memory-ab"
+path = "src/bin/moe-resident-memory-ab.rs"
+required-features = ["worktable-adapter"]
+
+[[bin]]
+name = "moe-resident-persist-ab"
+path = "src/bin/moe-resident-persist-ab.rs"
 required-features = ["worktable-adapter"]
 
 # What vacuum costs the foreground while it runs. Each cell measured twice,
