@@ -1,5 +1,5 @@
 #!/bin/sh
-# Compare one local WorkTable checkout with the local beta18 checkout.
+# Compare one historical WorkTable checkout with the current local checkout.
 # Registry packages are never substituted for either side.
 #
 # This is the axis the moe_pgo suite exists for. Backends are a choice made
@@ -49,7 +49,7 @@ echo "=== local $LABEL: $WORKTABLE_PATH ==="
 )
 
 echo
-echo "=== local beta18: $ROOT/../WorkTable ==="
+echo "=== local candidate: $ROOT/../WorkTable ==="
 (
     cd "$ROOT"
     cargo --offline bench --manifest-path "$MANIFEST" --bench moe_pgo \
