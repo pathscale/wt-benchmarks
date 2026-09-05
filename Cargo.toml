@@ -24,7 +24,7 @@ duckdb-adapter = ["dep:duckdb", "dep:tempfile"]
 external-adapters = ["redb-adapter", "sqlite-adapter", "lmdb-adapter", "duckdb-adapter"]
 
 [dependencies]
-arctic = { package = "arctic-wt", version = "0.1" }
+arctic = { package = "arctic-wt", version = "^0.1" }
 dashmap = "6"
 derive_more = { version = "2", features = ["from", "error", "display", "debug", "into"] }
 eyre = "0.6"
@@ -43,8 +43,9 @@ tempfile = { version = "3", optional = true }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 uuid = "1"
 # Deliberately spans the local historical worktrees used by the version grid.
-# `.cargo/config.toml` selects the beta18 checkout for normal work; the local
-# comparison script overrides that patch with a beta13 or beta15 worktree.
+# Validation selects the beta18 checkout with command-line Cargo `--config`
+# patches; the comparison script substitutes beta13 or beta15 worktrees. No
+# repository-local patch configuration is committed.
 worktable = { version = ">=1.0.0-beta.13, <1.0.0-beta.19", optional = true }
 worktable-vec = { path = "crates/worktable-vec" }
 

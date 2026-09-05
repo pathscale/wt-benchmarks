@@ -101,8 +101,19 @@ pub struct YieldArm {
     /// Sweeps that ran *during* the load. Should be none: there is pressure
     /// the entire time and vacuum is supposed to defer under it.
     pub sweeps_during_load: u64,
+    /// Live vacuum work observed before the foreground load stopped. Requests
+    /// may be non-zero while these remain zero: that means the reactive gate
+    /// woke and waited without entering a work batch.
+    pub vacuum_requests_during_load: u64,
+    pub vacuum_work_batches_during_load: u64,
+    pub vacuum_pages_examined_during_load: u64,
+    pub vacuum_pages_reclaimed_during_load: u64,
+    pub vacuum_completions_during_load: u64,
     /// Sweeps that ran once the table went quiet, which is when it should.
     pub sweeps_after_load: u64,
+    pub vacuum_work_batches_after_load: u64,
+    pub vacuum_pages_examined_after_load: u64,
+    pub vacuum_pages_reclaimed_after_load: u64,
     pub pages_after_load: usize,
     pub pages_after_drain: usize,
     /// Pages a packed table holding `rows_left` would need. Equal to
@@ -138,6 +149,8 @@ struct YieldModeSummary {
     exact_reclamation_runs: usize,
     max_excess_pages: usize,
     sweeps_during_load: u64,
+    vacuum_work_batches_during_load: u64,
+    vacuum_pages_examined_during_load: u64,
 }
 
 #[derive(Serialize)]
@@ -214,6 +227,14 @@ fn summarize_mode(arms: &[&YieldArm], mode: VacuumMode) -> YieldModeSummary {
             .max()
             .unwrap_or(0),
         sweeps_during_load: matching.iter().map(|arm| arm.sweeps_during_load).sum(),
+        vacuum_work_batches_during_load: matching
+            .iter()
+            .map(|arm| arm.vacuum_work_batches_during_load)
+            .sum(),
+        vacuum_pages_examined_during_load: matching
+            .iter()
+            .map(|arm| arm.vacuum_pages_examined_during_load)
+            .sum(),
     }
 }
 
@@ -324,7 +345,9 @@ macro_rules! vacuum_yield_backend {
         pub mod $module {
             use super::*;
             use worktable::prelude::*;
-            use worktable::vacuum::{EmptyDataVacuum, VacuumManager, VacuumManagerConfig, VacuumPacing};
+            use worktable::vacuum::{
+                EmptyDataVacuum, VacuumDiagnosticsSnapshot, VacuumManager, VacuumManagerConfig, VacuumPacing,
+            };
             use worktable::worktable;
 
             worktable!(
@@ -456,6 +479,10 @@ macro_rules! vacuum_yield_backend {
                 timer.join().expect("timer");
 
                 let sweeps_during_load = manager_handle.as_ref().map(|m| m.stats.snapshot().0).unwrap_or(0);
+                let diagnostics_during_load = manager_handle
+                    .as_ref()
+                    .map(|manager| manager.diagnostic_snapshot())
+                    .unwrap_or_else(VacuumDiagnosticsSnapshot::default);
                 // Pages *in use*: a reclaimed page stays in the allocation vec
                 // and moves to the reusable free list, so counting allocations
                 // alone reports a sweep that worked perfectly as having freed
@@ -484,6 +511,10 @@ macro_rules! vacuum_yield_backend {
                 let drain_ns = drain_started.elapsed().as_nanos();
                 let sweeps_after_load =
                     manager_handle.as_ref().map(|m| m.stats.snapshot().0).unwrap_or(0) - sweeps_during_load;
+                let diagnostics_after_load = manager_handle
+                    .as_ref()
+                    .map(|manager| manager.diagnostic_snapshot())
+                    .unwrap_or_else(VacuumDiagnosticsSnapshot::default);
 
                 let rows_left = table.count() as u64;
 
@@ -492,7 +523,7 @@ macro_rules! vacuum_yield_backend {
                 }
 
                 YieldArm {
-                    schema_version: 3,
+                    schema_version: 4,
                     suite: "vacuum-yield",
                     engine: "worktable",
                     backend: stringify!($module),
@@ -507,7 +538,21 @@ macro_rules! vacuum_yield_backend {
                     delete_latency: LatencySummary::from_samples(delete_ns),
                     load_elapsed_ns: load_elapsed.as_nanos(),
                     sweeps_during_load,
+                    vacuum_requests_during_load: diagnostics_during_load.requests,
+                    vacuum_work_batches_during_load: diagnostics_during_load.work_batches,
+                    vacuum_pages_examined_during_load: diagnostics_during_load.pages_examined,
+                    vacuum_pages_reclaimed_during_load: diagnostics_during_load.pages_reclaimed,
+                    vacuum_completions_during_load: diagnostics_during_load.completions,
                     sweeps_after_load,
+                    vacuum_work_batches_after_load: diagnostics_after_load
+                        .work_batches
+                        .saturating_sub(diagnostics_during_load.work_batches),
+                    vacuum_pages_examined_after_load: diagnostics_after_load
+                        .pages_examined
+                        .saturating_sub(diagnostics_during_load.pages_examined),
+                    vacuum_pages_reclaimed_after_load: diagnostics_after_load
+                        .pages_reclaimed
+                        .saturating_sub(diagnostics_during_load.pages_reclaimed),
                     pages_after_load,
                     pages_after_drain,
                     ideal_pages,
