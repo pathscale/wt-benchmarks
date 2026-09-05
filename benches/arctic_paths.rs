@@ -129,6 +129,14 @@ fn bench(c: &mut Criterion) {
             .range(p.as_str()..)
             .take_while(|(k, _)| k.starts_with(p.as_str()))
             .count();
+        // The pin on the defect. When Arctic fixes the validated-key prefix path this
+        // fails, which is the signal to drop the bare-&str workaround above and re-measure.
+        // A benchmark that quietly kept passing would leave the workaround in place forever.
+        assert_eq!(
+            validated_hits, 0,
+            "n={n}: prefix() with a validated Str now returns {validated_hits} rather than 0, \
+             so the defect is fixed - use the validated form in the timed arms and re-measure",
+        );
         assert!(
             arctic_hits > 0 && arctic_hits == btree_hits,
             "n={n}: the two arms must scan the same population before either is timed - \
