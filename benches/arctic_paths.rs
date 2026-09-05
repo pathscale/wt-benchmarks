@@ -136,6 +136,10 @@ fn bench(c: &mut Criterion) {
         for (i, k) in paths.iter().enumerate() {
             wti_path.insert(k.as_str(), i as u64);
         }
+        let mut wti_int = WtiMap::<u128, u64>::new();
+        for (i, key) in ints.iter().enumerate() {
+            wti_int.insert(*key, i as u64);
+        }
 
         let p = scan_prefix((n / 3) / 2);
         let probe_int = ints[n / 2];
@@ -274,6 +278,9 @@ fn bench(c: &mut Criterion) {
         });
         group.bench_with_input(BenchmarkId::new("btree_int_get", n), &n, |b, _| {
             b.iter(|| black_box(btree_int.get(&probe_int).copied()))
+        });
+        group.bench_with_input(BenchmarkId::new("wti_int_get", n), &n, |b, _| {
+            b.iter(|| black_box(wti_int.get(&probe_int).copied()))
         });
     }
 

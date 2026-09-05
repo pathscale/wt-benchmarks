@@ -223,6 +223,7 @@ fn bench(c: &mut Criterion) {
             n,
             "n={n}: Arctic get arm lost rows",
         );
+        let std_locked = RwLock::new(std_map.clone());
 
         for &threads in THREADS {
             get_group.throughput(Throughput::Elements(threads as u64));
@@ -241,6 +242,14 @@ fn bench(c: &mut Criterion) {
                     scaled(threads, iters, |thread, operation| {
                         let index = probe_index(thread, operation, threads, probes.len());
                         std_map.get(probes[index]).copied().unwrap_or(0)
+                    })
+                })
+            });
+            get_group.bench_function(BenchmarkId::new("std_rwlock", &id), |b| {
+                b.iter_custom(|iters| {
+                    scaled(threads, iters, |thread, operation| {
+                        let index = probe_index(thread, operation, threads, probes.len());
+                        std_locked.read().get(probes[index]).copied().unwrap_or(0)
                     })
                 })
             });
