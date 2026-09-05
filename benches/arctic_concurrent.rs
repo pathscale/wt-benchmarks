@@ -56,7 +56,7 @@
 use std::collections::BTreeMap;
 use std::hint::black_box;
 use std::sync::Barrier;
-use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering as AtomicOrdering};
 use std::time::{Duration, Instant};
 
 use arctic::concurrent::smr::NoOp;
@@ -89,7 +89,9 @@ const WARM_UP: Duration = Duration::from_millis(300);
 
 /// The key shape from the compiler this came from, identical to the sibling benches.
 fn path_keys(n: usize) -> Vec<String> {
-    (0..n).map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3)).collect()
+    (0..n)
+        .map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3))
+        .collect()
 }
 
 /// The shared seeded shuffle. Probe order is the largest single effect in this comparison
@@ -114,9 +116,11 @@ where
     F: Fn(usize, u64) -> u64 + Sync,
 {
     let barrier = Barrier::new(threads + 1);
+    let start_gate = AtomicBool::new(false);
     let sink = AtomicU64::new(0);
     let body = &body;
     let barrier = &barrier;
+    let start_gate = &start_gate;
     let sink = &sink;
 
     std::thread::scope(|scope| {
@@ -124,6 +128,9 @@ where
             .map(|thread| {
                 scope.spawn(move || {
                     barrier.wait();
+                    while !start_gate.load(AtomicOrdering::Acquire) {
+                        std::hint::spin_loop();
+                    }
                     let mut total = 0u64;
                     for operation in 0..iters {
                         total = total.wrapping_add(body(thread, operation));
@@ -135,6 +142,7 @@ where
 
         barrier.wait();
         let start = Instant::now();
+        start_gate.store(true, AtomicOrdering::Release);
         // Joined explicitly rather than by leaving the scope, so the clock stops after the
         // last worker and not after the scope's own bookkeeping.
         for worker in workers {
@@ -159,7 +167,7 @@ fn probe_index(thread: usize, operation: u64, threads: usize, len: usize) -> usi
 
 #[inline]
 fn is_write(operation: u64) -> bool {
-    operation % WRITE_EVERY as u64 == 0
+    operation.is_multiple_of(WRITE_EVERY as u64)
 }
 
 fn bench(c: &mut Criterion) {
@@ -173,7 +181,85 @@ fn bench(c: &mut Criterion) {
         env!("CARGO_PKG_VERSION"),
     );
 
-    let mut group = c.benchmark_group("arctic_concurrent");
+    // Pure point gets are the concurrency dimension of `arctic_paths/path_get`: the
+    // sequential table's single worker is concurrency=1, and these cells show whether
+    // each backend turns additional readers into aggregate throughput. `std` is shared
+    // immutably here and therefore needs no lock; adding one would charge it for writes
+    // that this group does not perform.
+    let mut get_group = c.benchmark_group("arctic_concurrent_get");
+    get_group.sample_size(SAMPLES);
+    get_group.measurement_time(MEASURE);
+    get_group.warm_up_time(WARM_UP);
+
+    for &n in SIZES {
+        let paths = path_keys(n);
+        let probes = shuffled_probes(&paths);
+        let arctic_probes: Vec<&Str<NonNull>> = probes
+            .iter()
+            .map(|s| Str::<NonNull>::new(s).expect("no null byte"))
+            .collect();
+
+        let arctic = ConcurrentMap::<BoxedStr<NonNull>, u64>::new();
+        let mut std_map = BTreeMap::<&str, u64>::new();
+        let wti = WtiConcurrentMap::<String, u64>::new();
+
+        for (index, key) in arctic_probes.iter().enumerate() {
+            arctic
+                .insert(*key, index as u64)
+                .expect("unique Arctic key");
+        }
+        for (index, key) in probes.iter().enumerate() {
+            std_map.insert(key, index as u64);
+            assert_eq!(wti.insert((*key).to_owned(), index as u64), None);
+        }
+
+        assert_eq!(std_map.len(), n, "n={n}: std get arm lost rows");
+        assert_eq!(wti.len(), n, "n={n}: WTI get arm lost rows");
+        assert_eq!(
+            arctic_probes
+                .iter()
+                .filter(|key| arctic.get(key).is_some())
+                .count(),
+            n,
+            "n={n}: Arctic get arm lost rows",
+        );
+
+        for &threads in THREADS {
+            get_group.throughput(Throughput::Elements(threads as u64));
+            let id = format!("{n}/t{threads}");
+
+            get_group.bench_function(BenchmarkId::new("arctic", &id), |b| {
+                b.iter_custom(|iters| {
+                    scaled(threads, iters, |thread, operation| {
+                        let index = probe_index(thread, operation, threads, arctic_probes.len());
+                        arctic.get(arctic_probes[index]).map_or(0, |value| *value)
+                    })
+                })
+            });
+            get_group.bench_function(BenchmarkId::new("std", &id), |b| {
+                b.iter_custom(|iters| {
+                    scaled(threads, iters, |thread, operation| {
+                        let index = probe_index(thread, operation, threads, probes.len());
+                        std_map.get(probes[index]).copied().unwrap_or(0)
+                    })
+                })
+            });
+            get_group.bench_function(BenchmarkId::new("wti", &id), |b| {
+                b.iter_custom(|iters| {
+                    scaled(threads, iters, |thread, operation| {
+                        let index = probe_index(thread, operation, threads, probes.len());
+                        wti.lookup_for_select(probes[index]).unwrap_or(0)
+                    })
+                })
+            });
+        }
+    }
+
+    get_group.finish();
+
+    // The mixed group answers the separate reader/writer-interference question. Keeping
+    // it separate prevents a 5% update rate from being mistaken for point-get scaling.
+    let mut group = c.benchmark_group("arctic_concurrent_mixed");
     group.sample_size(SAMPLES);
     group.measurement_time(MEASURE);
     group.warm_up_time(WARM_UP);
@@ -190,7 +276,7 @@ fn bench(c: &mut Criterion) {
         let arctic_noop = ConcurrentMap::<BoxedStr<NonNull>, u64, NoOp>::new();
         let mut arctic_seq = SequentialMap::<BoxedStr<NonNull>, u64>::new();
         let mut std_map = BTreeMap::<&str, u64>::new();
-        let wti = WtiConcurrentMap::<&str, u64>::new();
+        let wti = WtiConcurrentMap::<String, u64>::new();
 
         for (index, key) in arctic_probes.iter().enumerate() {
             let value = index as u64;
@@ -200,7 +286,7 @@ fn bench(c: &mut Criterion) {
         }
         for (index, key) in probes.iter().enumerate() {
             std_map.insert(key, index as u64);
-            wti.insert(key, index as u64);
+            wti.insert((*key).to_owned(), index as u64);
         }
 
         // Every arm must hold the same population before any of it is timed. Five
@@ -209,17 +295,26 @@ fn bench(c: &mut Criterion) {
         assert_eq!(std_map.len(), n, "n={n}: std arm lost rows");
         assert_eq!(wti.len(), n, "n={n}: wti arm lost rows");
         assert_eq!(
-            arctic_probes.iter().filter(|k| arctic_lockfree.get(k).is_some()).count(),
+            arctic_probes
+                .iter()
+                .filter(|k| arctic_lockfree.get(k).is_some())
+                .count(),
             n,
             "n={n}: arctic lock-free arm lost rows",
         );
         assert_eq!(
-            arctic_probes.iter().filter(|k| arctic_noop.get(k).is_some()).count(),
+            arctic_probes
+                .iter()
+                .filter(|k| arctic_noop.get(k).is_some())
+                .count(),
             n,
             "n={n}: arctic no-op-SMR arm lost rows",
         );
         assert_eq!(
-            arctic_probes.iter().filter(|k| arctic_seq.get(k).is_some()).count(),
+            arctic_probes
+                .iter()
+                .filter(|k| arctic_seq.get(k).is_some())
+                .count(),
             n,
             "n={n}: arctic sequential arm lost rows",
         );
@@ -269,7 +364,7 @@ fn bench(c: &mut Criterion) {
                         let index = probe_index(thread, operation, threads, arctic_probes.len());
                         let key = arctic_probes[index];
                         if is_write(operation) {
-                            arctic_seq.write().upsert(key, operation);
+                            let _ = arctic_seq.write().upsert(key, operation);
                             operation
                         } else {
                             arctic_seq.read().get(key).copied().unwrap_or(0)
@@ -319,10 +414,10 @@ fn bench(c: &mut Criterion) {
                         let index = probe_index(thread, operation, threads, probes.len());
                         let key = probes[index];
                         if is_write(operation) {
-                            wti.insert(key, operation);
+                            wti.insert(key.to_owned(), operation);
                             operation
                         } else {
-                            wti.lookup_for_select(&key).unwrap_or(0)
+                            wti.lookup_for_select(key).unwrap_or(0)
                         }
                     })
                 })

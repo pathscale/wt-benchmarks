@@ -54,7 +54,7 @@ uuid = "1"
 # patches; the comparison script substitutes beta13 or beta15 worktrees. No
 # repository-local patch configuration is committed.
 worktable = { version = ">=1.0.0-beta.13, <1.0.0-beta.19", optional = true }
-worktable-vec = { version = "^0.1" }
+worktable-vec = { version = "^0.1", features = ["arctic"] }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["async_tokio"] }

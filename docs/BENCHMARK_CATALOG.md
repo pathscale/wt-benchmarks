@@ -84,6 +84,24 @@ Not covered by either, and tracked elsewhere: eviction and vacuum reclaim
 (`campaigns/footprint`), and concurrency, which this consumer does not yet
 exercise.
 
+### EKOPathRS
+
+A resident compiler session resolves structural paths shaped like
+`fn:unit000042/loop:1`. The measured working set is 163 distinct regions and
+is capped at 512, while 8,192 and 131,072 show where cache and structure
+crossovers occur. String prefix scans and point gets are separate questions.
+
+| Benchmark | Files | What it guards |
+|---|---|---|
+| Structural paths | `benches/arctic_paths.rs` | Prefix scans and shuffled point gets on the identical string population across Arctic, `std::BTreeMap`, and WorkTablesIndex. Prefix arms assert equal, non-zero results so an empty scan cannot masquerade as speed. Integer-key controls isolate key handling. |
+| Probe order | `benches/probe_order.rs`, `src/rng.rs`, `src/ycsb/generator.rs` | Ordered, seeded-shuffled, fixed-hot, and YCSB Zipf probes across the three backends. This guards against reporting an ordered cache walk or one permanently hot key as general random lookup performance. |
+| Concurrent structural paths | `benches/arctic_concurrent.rs` | Pure point-get aggregate throughput at 1/2/4/8 readers, plus a separately named 95% read/5% in-place-update interference group. Worker creation is outside the timed window and a start gate prevents workers from running before the clock. Congee is absent because its public key API cannot represent variable-width structural strings. |
+
+All groups are bounded. The concurrency suite uses 10 samples, a 300 ms warmup,
+and a 1 s measurement window per cell; filter by population when a full grid is
+not needed, for example `cargo bench --bench arctic_concurrent --
+arctic_concurrent_get/.*/131072`.
+
 ### MoE-PGO
 
 Profile-guided re-partitioning of mixture-of-experts boundaries. This is
