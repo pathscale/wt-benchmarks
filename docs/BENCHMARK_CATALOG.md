@@ -95,12 +95,37 @@ crossovers occur. String prefix scans and point gets are separate questions.
 |---|---|---|
 | Structural paths | `benches/arctic_paths.rs` | Prefix scans and shuffled point gets on the identical string population across Arctic, `std::BTreeMap`, and WorkTablesIndex. Prefix arms assert equal, non-zero results so an empty scan cannot masquerade as speed. Integer-key controls isolate key handling. |
 | Probe order | `benches/probe_order.rs`, `src/rng.rs`, `src/ycsb/generator.rs` | Ordered, seeded-shuffled, fixed-hot, and YCSB Zipf probes across the three backends. This guards against reporting an ordered cache walk or one permanently hot key as general random lookup performance. |
-| Concurrent structural paths | `benches/arctic_concurrent.rs` | Pure point-get aggregate throughput at 1/2/4/8 readers, plus a separately named 95% read/5% in-place-update interference group. Worker creation is outside the timed window and a start gate prevents workers from running before the clock. Congee is absent because its public key API cannot represent variable-width structural strings. |
+| Concurrent structural paths | `benches/arctic_concurrent.rs` | Pure point-get aggregate throughput at 1/2/4/8 readers, including unlocked and shared-`RwLock` `std::BTreeMap` controls, plus a separately named 95% read/5% in-place-update interference group. Worker creation is outside the timed window and a start gate prevents workers from running before the clock. Congee is absent because its public key API cannot represent variable-width structural strings. |
 
 All groups are bounded. The concurrency suite uses 10 samples, a 300 ms warmup,
 and a 1 s measurement window per cell; filter by population when a full grid is
 not needed, for example `cargo bench --bench arctic_concurrent --
 arctic_concurrent_get/.*/131072`.
+
+**Findings, 5 September 2026.** At 131,072 structural-string keys, two
+back-to-back pure-read passes produced the following median aggregate
+throughput. Parentheses are scaling over the backend's own one-reader cell.
+
+| Readers | Arctic pass 1 | Arctic pass 2 | std pass 1 | std pass 2 | WTI pass 1 | WTI pass 2 |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 11.145 (1.00x) | 10.119 (1.00x) | 6.206 (1.00x) | 5.754 (1.00x) | 4.088 (1.00x) | 3.727 (1.00x) |
+| 2 | 22.745 (2.04x) | 22.223 (2.20x) | 13.158 (2.12x) | 12.725 (2.21x) | 6.536 (1.60x) | 6.072 (1.63x) |
+| 4 | 50.667 (4.55x) | 47.814 (4.73x) | 26.550 (4.28x) | 25.538 (4.44x) | 6.194 (1.52x) | 6.007 (1.61x) |
+| 8 | 98.609 (8.85x) | 94.924 (9.38x) | 52.646 (8.48x) | 50.986 (8.86x) | 4.576 (1.12x) | 4.430 (1.19x) |
+
+Values are millions of gets per second. Arctic and immutable `std::BTreeMap`
+scale through eight readers. WTI peaks at two, remains flat at four, and falls
+at eight. The shared-`parking_lot::RwLock<std::BTreeMap>` control produced
+3.125 / 4.655 / 6.083 / 9.022 Mgets/s: the shared reader-count cache line is
+the first ceiling, while WTI's additional Arc refcount and per-node mutex make
+the eight-reader result worse.
+
+The single-thread string result was Arctic 69.8 ns, std 152.7 ns, and WTI
+348.8 ns. The fixed-width integer control on the same 131,072-row population
+was 12.866 / 18.152 / 20.413 ns. WTI's sequential structure is therefore only
+1.59x Arctic and 1.12x std on integers; its string gap comes primarily from
+repeating long shared-prefix comparisons across the outer node-maxima search,
+the inner up-to-1,024-entry node search, and final equality check.
 
 ### MoE-PGO
 
