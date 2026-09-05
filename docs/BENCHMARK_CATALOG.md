@@ -167,9 +167,55 @@ against a structural-path key like `fn:unit000042/loop:1`. Not a point lookup, a
 nowhere near the sizes the portable families above exercise. A backend chosen on
 YCSB numbers is chosen on the wrong workload for this consumer.
 
+**All three benches share one fixture and one probe order**, deliberately: the same
+`fn:unit%06d/loop:%d` keys, the same 163/512/8K/131K sizes, and one seeded shuffle
+that lives in `wt_benchmarks::rng` rather than being written out three times. Probe
+order turned out to be the largest single effect in this comparison - larger than
+the choice of index - so a private shuffle per file would make the three sets of
+numbers unreadable against each other.
+
 | Benchmark | Files | What it guards |
 |---|---|---|
 | Path prefix scan | `benches/arctic_paths.rs` | Arctic against `BTreeMap` on structural-path keys at 163/512/8K/131K, prefix scan and point get, string keys and the same population as `u128`. Arctic wins the prefix scan at every size measured - 40.9 vs 61.0 ns at 163, 51.1 vs 61.2 at 512, 54.2 vs 68.5 at 8,192 - and loses point get, which is the ordinary radix-versus-comparison trade. Carries a null arm: two identical `BTreeMap` arms differ by 0.6 ns, so that is the floor a result must clear. |
+| Probe order | `benches/probe_order.rs` | Probe order as the independent variable across std, Arctic and WorkTablesIndex, at all four sizes, in four orders: key order, seeded shuffle, one fixed key, YCSB Zipf 0.99. Reported as a ratio to each backend's own in-order arm. Shuffling costs std 2.27x at 131,072 against Arctic's 1.70x; a fixed probe *pays back* 0.57x for std, which is the bias an earlier review took to its limit. Null twin per order, floor 0.1 to 3.6% on a quiet machine and 11.5% on a busy one, which is when a row is not trustworthy. |
+| Concurrent read-mostly | `benches/arctic_concurrent.rs` | Arctic's `ConcurrentMap` against `SequentialMap` and `std::BTreeMap` behind a `parking_lot::RwLock`, plus WorkTablesIndex's own concurrent map and a `NoOp`-SMR floor, at 1/2/4/8 threads and two write mixes. The only benchmark here that touches Arctic's headline property; both path benches use `SequentialMap`, which gives it up. `ConcurrentMap` scales 6.2x to 8.2x from 1 to 8 threads while every locked arm *loses* throughput from 2 threads on, ending 20x to 26x behind at 8. Does **not** measure the `ps-reclaim`-over-`seize` guarantee, and says so: that is a reclamation-latency claim and needs the `moe_pgo` Retire shape, not a throughput sweep. |
+
+**What the two write mixes bought.** Reading `w0` and `w20` together says which half
+of the lock's loss is which, and the answer is not the obvious one. With **zero
+writers** `std::BTreeMap` behind an `RwLock` still falls from 54.3 to 9.1 Melem/s
+between 1 and 8 threads at 163 keys; adding a 5% write mix moves that to 53.1 and
+8.8, which is inside the null floor. So essentially none of the collapse is writer
+exclusion. It is the atomic read-modify-write that taking the *read* lock requires,
+bouncing one cache line between cores. A read/write lock does not stop being a
+contention point when there is nothing to write.
+
+**The point-get gap is real, explained, and not a defect.** `benches/arctic_paths.rs`
+had WorkTablesIndex 2.3x to 3.4x behind `std` on shuffled point get while winning
+the prefix scan, which looked like a bug in the house index.
+`crates/wti-point-get-case` settled it against a 0.1 to 4.0% null floor:
+
+- Not the harness. `get`, `contains_key` and a `String`-keyed map agree within a few
+  percent; `range(k..).next()` is slower; nothing is constructed inside the timing.
+- Not the structure. On `u64` keys drawn from the same population WorkTablesIndex
+  **beats** `std` at every size above 512, by 1.8x at 8,192 and 131,072.
+- Not the node capacity. Sweeping 16/64/256/1024 leaves the 1024 default best or tied.
+- It is the node *shape*, on string keys only. A plain sorted `Vec<(&str, u64)>`
+  searched with `slice::partition_point` costs 90 to 94% of `get` at every size, so
+  `get` costs what that search costs and holds nothing else. A flat array of up to
+  1024 pairs makes each of ~10 binary-search probes a separate cache line plus a
+  dependent load through the `&str` to string data elsewhere; `std`'s 11-key inline
+  node brings several candidates in at once. With a `u64` key the second dereference
+  disappears and the same structure wins.
+
+**One recoverable slice, and it is worth filing.** The same array searched with
+`slice::binary_search_by`, which exits on `Equal`, is 8 to 17% cheaper than
+`partition_point` at every size. The crate already ships that search, tuned, behind
+three feature-selected backends in `core/node.rs` - and the sequential
+`BTreeMap::get` path never reaches it. `get_key_value` goes through
+`locate_value_cmp`, which calls `slice::partition_point` directly;
+`NodeLike::try_select` and `NodeLike::contains`, which do call `search_backend`, are
+used only by the concurrent map. That is single-digit-percent work available for a
+routing change, not a rewrite.
 
 **It also pins a live defect, and that is half its value.** `SequentialMap::prefix`
 returns **zero hits for a validated `Str<NonNull>` key** and the correct count for a

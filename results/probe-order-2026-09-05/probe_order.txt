@@ -1,0 +1,776 @@
+warning: unused import: `Formatter`
+ --> /Users/revenge/code/WorkTablesIndex/src/concurrent/map.rs:1:32
+  |
+1 | use std::fmt::{Debug, Display, Formatter};
+  |                                ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::sync::Arc`
+ --> /Users/revenge/code/WorkTablesIndex/src/concurrent/map.rs:2:5
+  |
+2 | use std::sync::Arc;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused import: `parking_lot::Mutex`
+ --> /Users/revenge/code/WorkTablesIndex/src/concurrent/map.rs:5:5
+  |
+5 | use parking_lot::Mutex;
+  |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Display`
+ --> /Users/revenge/code/WorkTablesIndex/src/concurrent/map.rs:1:23
+  |
+1 | use std::fmt::{Debug, Display, Formatter};
+  |                       ^^^^^^^
+
+warning: variable does not need to be mutable
+  --> /Users/revenge/code/WorkTablesIndex/src/concurrent/operation.rs:48:29
+   |
+48 |                         let mut cdc = vec![];
+   |                             ----^^^
+   |                             |
+   |                             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/operation.rs:149:29
+    |
+149 |                         let mut cdc = vec![];
+    |                             ----^^^
+    |                             |
+    |                             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/operation.rs:197:37
+    |
+197 | ...                   let mut cdc = vec![];
+    |                           ----^^^
+    |                           |
+    |                           help: remove this `mut`
+
+warning: unused variable: `old_max`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/operation.rs:103:37
+    |
+103 | ...                   let old_max = max.clone();
+    |                           ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_old_max`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:235:17
+    |
+235 |             let mut cdc = vec![];
+    |                 ----^^^
+    |                 |
+    |                 help: remove this `mut`
+
+warning: unused variable: `value_cdc`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:344:39
+    |
+344 |                     if let Ok((value, value_cdc)) = op.commit::<EMIT_CDC>(&mut index, adopt) {
+    |                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_value_cdc`
+
+warning: unused variable: `value_cdc`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:358:46
+    |
+358 |                     return if let Ok((value, value_cdc)) = op.commit::<EMIT_CDC>(&mut index, adopt) {
+    |                                              ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_value_cdc`
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:386:21
+    |
+386 |                 let mut cdc = vec![];
+    |                     ----^^^
+    |                     |
+    |                     help: remove this `mut`
+
+warning: unused variable: `max`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:378:39
+    |
+378 |             Err((mut node_guard, idx, max)) => {
+    |                                       ^^^ help: if this is intentional, prefix it with an underscore: `_max`
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:516:13
+    |
+516 |         let mut cdc = vec![];
+    |             ----^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `idx`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:534:27
+    |
+534 |             let (deleted, idx) = deleted.expect("should be ok as checked before");
+    |                           ^^^ help: if this is intentional, prefix it with an underscore: `_idx`
+
+warning: unused variable: `value_cdc`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:574:34
+    |
+574 |             return if let Ok((_, value_cdc)) = operation.unwrap().commit::<EMIT_CDC>(&mut index, no_identity_adoption) {
+    |                                  ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_value_cdc`
+
+warning: method `with_grouped_borrow_routing` is never used
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:204:19
+    |
+178 | / impl<T, Node> BTreeSet<T, Node>
+179 | | where
+180 | |     T: Debug + Ord + Clone + Send,
+181 | |     Node: NodeLike<T> + Send + 'static,
+    | |_______________________________________- method in this implementation
+...
+204 |       pub(crate) fn with_grouped_borrow_routing(mut self) -> Self {
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `WorkTablesIndex` (lib) generated 17 warnings (run `cargo fix --lib -p WorkTablesIndex` to apply 15 suggestions)
+   Compiling wt-benchmarks v0.1.0 (/Users/revenge/code/wt-benchmarks)
+    Finished `bench` profile [optimized + debuginfo] target(s) in 17.49s
+     Running benches/probe_order.rs (target/release/deps/probe_order-bc2e785cae3c0373)
+Gnuplot not found, using plotters backend
+conditions: debug_assertions=false arch=aarch64 os=macos threads=1 arctic_default_features=on wti_default_features=on suite=0.1.0
+Benchmarking probe_order/std/in_order/163
+Benchmarking probe_order/std/in_order/163: Warming up for 400.00 ms
+Benchmarking probe_order/std/in_order/163: Collecting 50 samples in estimated 1.5000 s (80M iterations)
+Benchmarking probe_order/std/in_order/163: Analyzing
+probe_order/std/in_order/163
+                        time:   [18.885 ns 18.976 ns 19.067 ns]
+                        change: [+0.5013% +0.9930% +1.4696%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high mild
+Benchmarking probe_order/std_null/in_order/163
+Benchmarking probe_order/std_null/in_order/163: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/in_order/163: Collecting 50 samples in estimated 1.5000 s (77M iterations)
+Benchmarking probe_order/std_null/in_order/163: Analyzing
+probe_order/std_null/in_order/163
+                        time:   [19.459 ns 19.652 ns 19.815 ns]
+                        change: [+2.6435% +3.3825% +4.2442%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Benchmarking probe_order/arctic/in_order/163
+Benchmarking probe_order/arctic/in_order/163: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/in_order/163: Collecting 50 samples in estimated 1.5000 s (65M iterations)
+Benchmarking probe_order/arctic/in_order/163: Analyzing
+probe_order/arctic/in_order/163
+                        time:   [22.987 ns 23.017 ns 23.046 ns]
+                        change: [−1.2483% −0.9405% −0.6636%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) low severe
+  1 (2.00%) low mild
+Benchmarking probe_order/wti/in_order/163
+Benchmarking probe_order/wti/in_order/163: Warming up for 400.00 ms
+Benchmarking probe_order/wti/in_order/163: Collecting 50 samples in estimated 1.5000 s (26M iterations)
+Benchmarking probe_order/wti/in_order/163: Analyzing
+probe_order/wti/in_order/163
+                        time:   [57.349 ns 57.483 ns 57.620 ns]
+                        change: [−1.3573% −1.0477% −0.7213%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking probe_order/std/shuffled/163
+Benchmarking probe_order/std/shuffled/163: Warming up for 400.00 ms
+Benchmarking probe_order/std/shuffled/163: Collecting 50 samples in estimated 1.5000 s (81M iterations)
+Benchmarking probe_order/std/shuffled/163: Analyzing
+probe_order/std/shuffled/163
+                        time:   [18.521 ns 18.598 ns 18.696 ns]
+                        change: [+0.0110% +0.4053% +0.8239%] (p = 0.06 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high severe
+Benchmarking probe_order/std_null/shuffled/163
+Benchmarking probe_order/std_null/shuffled/163: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/shuffled/163: Collecting 50 samples in estimated 1.5000 s (79M iterations)
+Benchmarking probe_order/std_null/shuffled/163: Analyzing
+probe_order/std_null/shuffled/163
+                        time:   [18.709 ns 18.802 ns 18.896 ns]
+                        change: [+0.5033% +1.0967% +1.6919%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high mild
+Benchmarking probe_order/arctic/shuffled/163
+Benchmarking probe_order/arctic/shuffled/163: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/shuffled/163: Collecting 50 samples in estimated 1.5000 s (55M iterations)
+Benchmarking probe_order/arctic/shuffled/163: Analyzing
+probe_order/arctic/shuffled/163
+                        time:   [27.308 ns 27.348 ns 27.393 ns]
+                        change: [+0.1447% +0.5072% +0.9093%] (p = 0.01 < 0.05)
+                        Change within noise threshold.
+Found 4 outliers among 50 measurements (8.00%)
+  3 (6.00%) high mild
+  1 (2.00%) high severe
+Benchmarking probe_order/wti/shuffled/163
+Benchmarking probe_order/wti/shuffled/163: Warming up for 400.00 ms
+Benchmarking probe_order/wti/shuffled/163: Collecting 50 samples in estimated 1.5000 s (24M iterations)
+Benchmarking probe_order/wti/shuffled/163: Analyzing
+probe_order/wti/shuffled/163
+                        time:   [63.508 ns 63.689 ns 63.889 ns]
+                        change: [−1.2444% −0.7217% −0.2425%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 4 outliers among 50 measurements (8.00%)
+  3 (6.00%) high mild
+  1 (2.00%) high severe
+Benchmarking probe_order/std/fixed/163
+Benchmarking probe_order/std/fixed/163: Warming up for 400.00 ms
+Benchmarking probe_order/std/fixed/163: Collecting 50 samples in estimated 1.5000 s (55M iterations)
+Benchmarking probe_order/std/fixed/163: Analyzing
+probe_order/std/fixed/163
+                        time:   [27.231 ns 27.315 ns 27.416 ns]
+                        change: [−0.2715% +0.3864% +1.0080%] (p = 0.24 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking probe_order/std_null/fixed/163
+Benchmarking probe_order/std_null/fixed/163: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/fixed/163: Collecting 50 samples in estimated 1.5000 s (54M iterations)
+Benchmarking probe_order/std_null/fixed/163: Analyzing
+probe_order/std_null/fixed/163
+                        time:   [27.404 ns 27.587 ns 27.803 ns]
+                        change: [+0.7557% +1.6125% +2.6667%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) high mild
+  1 (2.00%) high severe
+Benchmarking probe_order/arctic/fixed/163
+Benchmarking probe_order/arctic/fixed/163: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/fixed/163: Collecting 50 samples in estimated 1.5000 s (58M iterations)
+Benchmarking probe_order/arctic/fixed/163: Analyzing
+probe_order/arctic/fixed/163
+                        time:   [26.024 ns 26.059 ns 26.092 ns]
+                        change: [+4.4769% +4.7605% +5.0622%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) low mild
+  1 (2.00%) high severe
+Benchmarking probe_order/wti/fixed/163
+Benchmarking probe_order/wti/fixed/163: Warming up for 400.00 ms
+Benchmarking probe_order/wti/fixed/163: Collecting 50 samples in estimated 1.5000 s (38M iterations)
+Benchmarking probe_order/wti/fixed/163: Analyzing
+probe_order/wti/fixed/163
+                        time:   [39.592 ns 39.680 ns 39.786 ns]
+                        change: [−0.0726% +0.3318% +0.7648%] (p = 0.12 > 0.05)
+                        No change in performance detected.
+Found 3 outliers among 50 measurements (6.00%)
+  1 (2.00%) low severe
+  1 (2.00%) high mild
+  1 (2.00%) high severe
+Benchmarking probe_order/std/zipf/163
+Benchmarking probe_order/std/zipf/163: Warming up for 400.00 ms
+Benchmarking probe_order/std/zipf/163: Collecting 50 samples in estimated 1.5000 s (87M iterations)
+Benchmarking probe_order/std/zipf/163: Analyzing
+probe_order/std/zipf/163
+                        time:   [17.399 ns 17.471 ns 17.539 ns]
+                        change: [−0.3635% +0.2783% +0.9056%] (p = 0.40 > 0.05)
+                        No change in performance detected.
+Benchmarking probe_order/std_null/zipf/163
+Benchmarking probe_order/std_null/zipf/163: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/zipf/163: Collecting 50 samples in estimated 1.5000 s (86M iterations)
+Benchmarking probe_order/std_null/zipf/163: Analyzing
+probe_order/std_null/zipf/163
+                        time:   [17.402 ns 17.473 ns 17.544 ns]
+                        change: [−0.4247% +0.1000% +0.6950%] (p = 0.74 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking probe_order/arctic/zipf/163
+Benchmarking probe_order/arctic/zipf/163: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/zipf/163: Collecting 50 samples in estimated 1.5000 s (51M iterations)
+Benchmarking probe_order/arctic/zipf/163: Analyzing
+probe_order/arctic/zipf/163
+                        time:   [29.084 ns 29.132 ns 29.176 ns]
+                        change: [+0.3190% +0.6194% +0.9195%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 3 outliers among 50 measurements (6.00%)
+  3 (6.00%) high mild
+Benchmarking probe_order/wti/zipf/163
+Benchmarking probe_order/wti/zipf/163: Warming up for 400.00 ms
+Benchmarking probe_order/wti/zipf/163: Collecting 50 samples in estimated 1.5000 s (24M iterations)
+Benchmarking probe_order/wti/zipf/163: Analyzing
+probe_order/wti/zipf/163
+                        time:   [61.621 ns 61.767 ns 61.912 ns]
+                        change: [−1.3750% −0.9598% −0.5187%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) high mild
+  1 (2.00%) high severe
+Benchmarking probe_order/std/in_order/512
+Benchmarking probe_order/std/in_order/512: Warming up for 400.00 ms
+Benchmarking probe_order/std/in_order/512: Collecting 50 samples in estimated 1.5000 s (50M iterations)
+Benchmarking probe_order/std/in_order/512: Analyzing
+probe_order/std/in_order/512
+                        time:   [27.694 ns 28.514 ns 29.410 ns]
+                        change: [−2.1324% −0.2590% +1.7481%] (p = 0.80 > 0.05)
+                        No change in performance detected.
+Found 7 outliers among 50 measurements (14.00%)
+  3 (6.00%) high mild
+  4 (8.00%) high severe
+Benchmarking probe_order/std_null/in_order/512
+Benchmarking probe_order/std_null/in_order/512: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/in_order/512: Collecting 50 samples in estimated 1.5000 s (48M iterations)
+Benchmarking probe_order/std_null/in_order/512: Analyzing
+probe_order/std_null/in_order/512
+                        time:   [30.706 ns 31.805 ns 32.938 ns]
+                        change: [+14.811% +17.720% +20.929%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Benchmarking probe_order/arctic/in_order/512
+Benchmarking probe_order/arctic/in_order/512: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/in_order/512: Collecting 50 samples in estimated 1.5000 s (53M iterations)
+Benchmarking probe_order/arctic/in_order/512: Analyzing
+probe_order/arctic/in_order/512
+                        time:   [28.221 ns 28.308 ns 28.418 ns]
+                        change: [−2.0611% −1.6906% −1.3278%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high mild
+Benchmarking probe_order/wti/in_order/512
+Benchmarking probe_order/wti/in_order/512: Warming up for 400.00 ms
+Benchmarking probe_order/wti/in_order/512: Collecting 50 samples in estimated 1.5001 s (20M iterations)
+Benchmarking probe_order/wti/in_order/512: Analyzing
+probe_order/wti/in_order/512
+                        time:   [74.842 ns 75.029 ns 75.243 ns]
+                        change: [−1.5324% −1.2042% −0.8540%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Benchmarking probe_order/std/shuffled/512
+Benchmarking probe_order/std/shuffled/512: Warming up for 400.00 ms
+Benchmarking probe_order/std/shuffled/512: Collecting 50 samples in estimated 1.5000 s (56M iterations)
+Benchmarking probe_order/std/shuffled/512: Analyzing
+probe_order/std/shuffled/512
+                        time:   [27.965 ns 28.778 ns 29.632 ns]
+                        change: [+5.6613% +7.6009% +9.6223%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Benchmarking probe_order/std_null/shuffled/512
+Benchmarking probe_order/std_null/shuffled/512: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/shuffled/512: Collecting 50 samples in estimated 1.5000 s (48M iterations)
+Benchmarking probe_order/std_null/shuffled/512: Analyzing
+probe_order/std_null/shuffled/512
+                        time:   [29.068 ns 29.753 ns 30.440 ns]
+                        change: [+9.7985% +12.653% +15.031%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Benchmarking probe_order/arctic/shuffled/512
+Benchmarking probe_order/arctic/shuffled/512: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/shuffled/512: Collecting 50 samples in estimated 1.5000 s (45M iterations)
+Benchmarking probe_order/arctic/shuffled/512: Analyzing
+probe_order/arctic/shuffled/512
+                        time:   [33.056 ns 33.193 ns 33.320 ns]
+                        change: [−1.6295% −1.1930% −0.7512%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Benchmarking probe_order/wti/shuffled/512
+Benchmarking probe_order/wti/shuffled/512: Warming up for 400.00 ms
+Benchmarking probe_order/wti/shuffled/512: Collecting 50 samples in estimated 1.5001 s (18M iterations)
+Benchmarking probe_order/wti/shuffled/512: Analyzing
+probe_order/wti/shuffled/512
+                        time:   [85.621 ns 85.959 ns 86.291 ns]
+                        change: [+0.4603% +0.8672% +1.2840%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) low mild
+Benchmarking probe_order/std/fixed/512
+Benchmarking probe_order/std/fixed/512: Warming up for 400.00 ms
+Benchmarking probe_order/std/fixed/512: Collecting 50 samples in estimated 1.5000 s (57M iterations)
+Benchmarking probe_order/std/fixed/512: Analyzing
+probe_order/std/fixed/512
+                        time:   [26.203 ns 26.290 ns 26.392 ns]
+                        change: [+0.1229% +0.6568% +1.1429%] (p = 0.01 < 0.05)
+                        Change within noise threshold.
+Found 4 outliers among 50 measurements (8.00%)
+  1 (2.00%) low mild
+  2 (4.00%) high mild
+  1 (2.00%) high severe
+Benchmarking probe_order/std_null/fixed/512
+Benchmarking probe_order/std_null/fixed/512: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/fixed/512: Collecting 50 samples in estimated 1.5000 s (57M iterations)
+Benchmarking probe_order/std_null/fixed/512: Analyzing
+probe_order/std_null/fixed/512
+                        time:   [26.402 ns 26.466 ns 26.524 ns]
+                        change: [−0.3903% +0.2201% +0.7657%] (p = 0.46 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) low mild
+Benchmarking probe_order/arctic/fixed/512
+Benchmarking probe_order/arctic/fixed/512: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/fixed/512: Collecting 50 samples in estimated 1.5000 s (60M iterations)
+Benchmarking probe_order/arctic/fixed/512: Analyzing
+probe_order/arctic/fixed/512
+                        time:   [24.464 ns 24.553 ns 24.665 ns]
+                        change: [+0.6659% +1.2021% +1.7415%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Benchmarking probe_order/wti/fixed/512
+Benchmarking probe_order/wti/fixed/512: Warming up for 400.00 ms
+Benchmarking probe_order/wti/fixed/512: Collecting 50 samples in estimated 1.5001 s (31M iterations)
+Benchmarking probe_order/wti/fixed/512: Analyzing
+probe_order/wti/fixed/512
+                        time:   [49.334 ns 49.383 ns 49.435 ns]
+                        change: [−1.1772% −0.9596% −0.7475%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high mild
+Benchmarking probe_order/std/zipf/512
+Benchmarking probe_order/std/zipf/512: Warming up for 400.00 ms
+Benchmarking probe_order/std/zipf/512: Collecting 50 samples in estimated 1.5000 s (54M iterations)
+Benchmarking probe_order/std/zipf/512: Analyzing
+probe_order/std/zipf/512
+                        time:   [27.346 ns 27.498 ns 27.667 ns]
+                        change: [−0.8081% −0.2099% +0.3786%] (p = 0.51 > 0.05)
+                        No change in performance detected.
+Found 3 outliers among 50 measurements (6.00%)
+  1 (2.00%) high mild
+  2 (4.00%) high severe
+Benchmarking probe_order/std_null/zipf/512
+Benchmarking probe_order/std_null/zipf/512: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/zipf/512: Collecting 50 samples in estimated 1.5000 s (52M iterations)
+Benchmarking probe_order/std_null/zipf/512: Analyzing
+probe_order/std_null/zipf/512
+                        time:   [27.622 ns 27.858 ns 28.105 ns]
+                        change: [−0.3854% +0.5173% +1.3460%] (p = 0.26 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking probe_order/arctic/zipf/512
+Benchmarking probe_order/arctic/zipf/512: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/zipf/512: Collecting 50 samples in estimated 1.5000 s (43M iterations)
+Benchmarking probe_order/arctic/zipf/512: Analyzing
+probe_order/arctic/zipf/512
+                        time:   [35.180 ns 35.250 ns 35.312 ns]
+                        change: [−1.3213% −0.7668% −0.2299%] (p = 0.01 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) low mild
+Benchmarking probe_order/wti/zipf/512
+Benchmarking probe_order/wti/zipf/512: Warming up for 400.00 ms
+Benchmarking probe_order/wti/zipf/512: Collecting 50 samples in estimated 1.5001 s (18M iterations)
+Benchmarking probe_order/wti/zipf/512: Analyzing
+probe_order/wti/zipf/512
+                        time:   [82.252 ns 82.365 ns 82.489 ns]
+                        change: [−1.7583% −1.1155% −0.4710%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Benchmarking probe_order/std/in_order/8192
+Benchmarking probe_order/std/in_order/8192: Warming up for 400.00 ms
+Benchmarking probe_order/std/in_order/8192: Collecting 50 samples in estimated 1.5001 s (25M iterations)
+Benchmarking probe_order/std/in_order/8192: Analyzing
+probe_order/std/in_order/8192
+                        time:   [58.909 ns 59.124 ns 59.340 ns]
+                        change: [−0.0615% +0.5116% +1.0957%] (p = 0.09 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking probe_order/std_null/in_order/8192
+Benchmarking probe_order/std_null/in_order/8192: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/in_order/8192: Collecting 50 samples in estimated 1.5001 s (25M iterations)
+Benchmarking probe_order/std_null/in_order/8192: Analyzing
+probe_order/std_null/in_order/8192
+                        time:   [58.964 ns 59.338 ns 59.806 ns]
+                        change: [−0.8119% −0.1924% +0.4530%] (p = 0.56 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high severe
+Benchmarking probe_order/arctic/in_order/8192
+Benchmarking probe_order/arctic/in_order/8192: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/in_order/8192: Collecting 50 samples in estimated 1.5000 s (41M iterations)
+Benchmarking probe_order/arctic/in_order/8192: Analyzing
+probe_order/arctic/in_order/8192
+                        time:   [36.201 ns 36.263 ns 36.331 ns]
+                        change: [+0.4075% +1.0205% +1.5980%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) low mild
+  1 (2.00%) high mild
+Benchmarking probe_order/wti/in_order/8192
+Benchmarking probe_order/wti/in_order/8192: Warming up for 400.00 ms
+Benchmarking probe_order/wti/in_order/8192: Collecting 50 samples in estimated 1.5000 s (15M iterations)
+Benchmarking probe_order/wti/in_order/8192: Analyzing
+probe_order/wti/in_order/8192
+                        time:   [102.69 ns 102.84 ns 102.99 ns]
+                        change: [+1.0975% +1.4596% +1.8145%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 3 outliers among 50 measurements (6.00%)
+  1 (2.00%) low severe
+  1 (2.00%) low mild
+  1 (2.00%) high mild
+Benchmarking probe_order/std/shuffled/8192
+Benchmarking probe_order/std/shuffled/8192: Warming up for 400.00 ms
+Benchmarking probe_order/std/shuffled/8192: Collecting 50 samples in estimated 1.5000 s (17M iterations)
+Benchmarking probe_order/std/shuffled/8192: Analyzing
+probe_order/std/shuffled/8192
+                        time:   [85.528 ns 86.015 ns 86.695 ns]
+                        change: [+0.8254% +2.2804% +4.0644%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 5 outliers among 50 measurements (10.00%)
+  1 (2.00%) high mild
+  4 (8.00%) high severe
+Benchmarking probe_order/std_null/shuffled/8192
+Benchmarking probe_order/std_null/shuffled/8192: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/shuffled/8192: Collecting 50 samples in estimated 1.5000 s (17M iterations)
+Benchmarking probe_order/std_null/shuffled/8192: Analyzing
+probe_order/std_null/shuffled/8192
+                        time:   [85.120 ns 85.534 ns 85.933 ns]
+                        change: [−0.1633% +0.2973% +0.7345%] (p = 0.21 > 0.05)
+                        No change in performance detected.
+Benchmarking probe_order/arctic/shuffled/8192
+Benchmarking probe_order/arctic/shuffled/8192: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/shuffled/8192: Collecting 50 samples in estimated 1.5000 s (33M iterations)
+Benchmarking probe_order/arctic/shuffled/8192: Analyzing
+probe_order/arctic/shuffled/8192
+                        time:   [45.234 ns 45.323 ns 45.410 ns]
+                        change: [−10.659% −6.5407% −3.0935%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 3 outliers among 50 measurements (6.00%)
+  1 (2.00%) low mild
+  2 (4.00%) high mild
+Benchmarking probe_order/wti/shuffled/8192
+Benchmarking probe_order/wti/shuffled/8192: Warming up for 400.00 ms
+Benchmarking probe_order/wti/shuffled/8192: Collecting 50 samples in estimated 1.5002 s (8.3M iterations)
+Benchmarking probe_order/wti/shuffled/8192: Analyzing
+probe_order/wti/shuffled/8192
+                        time:   [180.10 ns 180.30 ns 180.53 ns]
+                        change: [−3.3487% −2.9259% −2.5367%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking probe_order/std/fixed/8192
+Benchmarking probe_order/std/fixed/8192: Warming up for 400.00 ms
+Benchmarking probe_order/std/fixed/8192: Collecting 50 samples in estimated 1.5000 s (50M iterations)
+Benchmarking probe_order/std/fixed/8192: Analyzing
+probe_order/std/fixed/8192
+                        time:   [29.691 ns 29.778 ns 29.865 ns]
+                        change: [−4.8839% −3.8875% −2.9941%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Benchmarking probe_order/std_null/fixed/8192
+Benchmarking probe_order/std_null/fixed/8192: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/fixed/8192: Collecting 50 samples in estimated 1.5000 s (50M iterations)
+Benchmarking probe_order/std_null/fixed/8192: Analyzing
+probe_order/std_null/fixed/8192
+                        time:   [30.014 ns 30.087 ns 30.164 ns]
+                        change: [−2.3935% −1.2268% −0.2648%] (p = 0.02 < 0.05)
+                        Change within noise threshold.
+Found 5 outliers among 50 measurements (10.00%)
+  1 (2.00%) low mild
+  2 (4.00%) high mild
+  2 (4.00%) high severe
+Benchmarking probe_order/arctic/fixed/8192
+Benchmarking probe_order/arctic/fixed/8192: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/fixed/8192: Collecting 50 samples in estimated 1.5000 s (47M iterations)
+Benchmarking probe_order/arctic/fixed/8192: Analyzing
+probe_order/arctic/fixed/8192
+                        time:   [32.195 ns 32.263 ns 32.335 ns]
+                        change: [−2.9359% −1.4398% −0.3168%] (p = 0.02 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high mild
+Benchmarking probe_order/wti/fixed/8192
+Benchmarking probe_order/wti/fixed/8192: Warming up for 400.00 ms
+Benchmarking probe_order/wti/fixed/8192: Collecting 50 samples in estimated 1.5000 s (24M iterations)
+Benchmarking probe_order/wti/fixed/8192: Analyzing
+probe_order/wti/fixed/8192
+                        time:   [62.271 ns 62.367 ns 62.456 ns]
+                        change: [−4.2425% −2.7012% −1.3760%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 3 outliers among 50 measurements (6.00%)
+  3 (6.00%) high mild
+Benchmarking probe_order/std/zipf/8192
+Benchmarking probe_order/std/zipf/8192: Warming up for 400.00 ms
+Benchmarking probe_order/std/zipf/8192: Collecting 50 samples in estimated 1.5000 s (22M iterations)
+Benchmarking probe_order/std/zipf/8192: Analyzing
+probe_order/std/zipf/8192
+                        time:   [67.461 ns 67.928 ns 68.377 ns]
+                        change: [−3.1424% −2.2327% −1.3771%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Benchmarking probe_order/std_null/zipf/8192
+Benchmarking probe_order/std_null/zipf/8192: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/zipf/8192: Collecting 50 samples in estimated 1.5000 s (21M iterations)
+Benchmarking probe_order/std_null/zipf/8192: Analyzing
+probe_order/std_null/zipf/8192
+                        time:   [69.477 ns 70.243 ns 70.946 ns]
+                        change: [+1.9559% +3.3592% +4.5922%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 6 outliers among 50 measurements (12.00%)
+  3 (6.00%) low severe
+  3 (6.00%) low mild
+Benchmarking probe_order/arctic/zipf/8192
+Benchmarking probe_order/arctic/zipf/8192: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/zipf/8192: Collecting 50 samples in estimated 1.5001 s (32M iterations)
+Benchmarking probe_order/arctic/zipf/8192: Analyzing
+probe_order/arctic/zipf/8192
+                        time:   [45.963 ns 46.057 ns 46.148 ns]
+                        change: [−0.9856% −0.6328% −0.3027%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) high mild
+  1 (2.00%) high severe
+Benchmarking probe_order/wti/zipf/8192
+Benchmarking probe_order/wti/zipf/8192: Warming up for 400.00 ms
+Benchmarking probe_order/wti/zipf/8192: Collecting 50 samples in estimated 1.5001 s (9.4M iterations)
+Benchmarking probe_order/wti/zipf/8192: Analyzing
+probe_order/wti/zipf/8192
+                        time:   [160.46 ns 160.93 ns 161.46 ns]
+                        change: [−1.1745% −0.8225% −0.4626%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Benchmarking probe_order/std/in_order/131072
+Benchmarking probe_order/std/in_order/131072: Warming up for 400.00 ms
+Benchmarking probe_order/std/in_order/131072: Collecting 50 samples in estimated 1.5000 s (22M iterations)
+Benchmarking probe_order/std/in_order/131072: Analyzing
+probe_order/std/in_order/131072
+                        time:   [67.036 ns 67.369 ns 67.712 ns]
+                        change: [−2.6445% −1.8196% −0.9979%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 6 outliers among 50 measurements (12.00%)
+  1 (2.00%) low severe
+  3 (6.00%) low mild
+  2 (4.00%) high mild
+Benchmarking probe_order/std_null/in_order/131072
+Benchmarking probe_order/std_null/in_order/131072: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/in_order/131072: Collecting 50 samples in estimated 1.5001 s (22M iterations)
+Benchmarking probe_order/std_null/in_order/131072: Analyzing
+probe_order/std_null/in_order/131072
+                        time:   [67.304 ns 67.590 ns 67.934 ns]
+                        change: [−1.6768% −0.9862% −0.3385%] (p = 0.01 < 0.05)
+                        Change within noise threshold.
+Found 5 outliers among 50 measurements (10.00%)
+  1 (2.00%) low severe
+  2 (4.00%) low mild
+  2 (4.00%) high severe
+Benchmarking probe_order/arctic/in_order/131072
+Benchmarking probe_order/arctic/in_order/131072: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/in_order/131072: Collecting 50 samples in estimated 1.5001 s (31M iterations)
+Benchmarking probe_order/arctic/in_order/131072: Analyzing
+probe_order/arctic/in_order/131072
+                        time:   [47.294 ns 47.410 ns 47.530 ns]
+                        change: [−0.9044% −0.5849% −0.2652%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) low mild
+  1 (2.00%) high severe
+Benchmarking probe_order/wti/in_order/131072
+Benchmarking probe_order/wti/in_order/131072: Warming up for 400.00 ms
+Benchmarking probe_order/wti/in_order/131072: Collecting 50 samples in estimated 1.5001 s (11M iterations)
+Benchmarking probe_order/wti/in_order/131072: Analyzing
+probe_order/wti/in_order/131072
+                        time:   [135.85 ns 136.28 ns 136.66 ns]
+                        change: [−1.8453% −0.7595% +0.1460%] (p = 0.15 > 0.05)
+                        No change in performance detected.
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) low mild
+  1 (2.00%) high mild
+Benchmarking probe_order/std/shuffled/131072
+Benchmarking probe_order/std/shuffled/131072: Warming up for 400.00 ms
+Benchmarking probe_order/std/shuffled/131072: Collecting 50 samples in estimated 1.5002 s (10.0M iterations)
+Benchmarking probe_order/std/shuffled/131072: Analyzing
+probe_order/std/shuffled/131072
+                        time:   [151.40 ns 152.82 ns 154.30 ns]
+                        change: [+1.3264% +2.8638% +4.3984%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking probe_order/std_null/shuffled/131072
+Benchmarking probe_order/std_null/shuffled/131072: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/shuffled/131072: Collecting 50 samples in estimated 1.5001 s (9.8M iterations)
+Benchmarking probe_order/std_null/shuffled/131072: Analyzing
+probe_order/std_null/shuffled/131072
+                        time:   [159.43 ns 163.08 ns 166.94 ns]
+                        change: [+3.4909% +6.6144% +9.4453%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 4 outliers among 50 measurements (8.00%)
+  1 (2.00%) low mild
+  3 (6.00%) high mild
+Benchmarking probe_order/arctic/shuffled/131072
+Benchmarking probe_order/arctic/shuffled/131072: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/shuffled/131072: Collecting 50 samples in estimated 1.5001 s (19M iterations)
+Benchmarking probe_order/arctic/shuffled/131072: Analyzing
+probe_order/arctic/shuffled/131072
+                        time:   [79.388 ns 80.474 ns 81.581 ns]
+                        change: [+12.835% +15.243% +17.547%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Benchmarking probe_order/wti/shuffled/131072
+Benchmarking probe_order/wti/shuffled/131072: Warming up for 400.00 ms
+Benchmarking probe_order/wti/shuffled/131072: Collecting 50 samples in estimated 1.5003 s (3.8M iterations)
+Benchmarking probe_order/wti/shuffled/131072: Analyzing
+probe_order/wti/shuffled/131072
+                        time:   [364.89 ns 374.84 ns 386.95 ns]
+                        change: [+13.349% +16.603% +19.993%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Benchmarking probe_order/std/fixed/131072
+Benchmarking probe_order/std/fixed/131072: Warming up for 400.00 ms
+Benchmarking probe_order/std/fixed/131072: Collecting 50 samples in estimated 1.5000 s (39M iterations)
+Benchmarking probe_order/std/fixed/131072: Analyzing
+probe_order/std/fixed/131072
+                        time:   [37.880 ns 38.079 ns 38.298 ns]
+                        change: [−0.3384% +0.3237% +0.9597%] (p = 0.32 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking probe_order/std_null/fixed/131072
+Benchmarking probe_order/std_null/fixed/131072: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/fixed/131072: Collecting 50 samples in estimated 1.5000 s (40M iterations)
+Benchmarking probe_order/std_null/fixed/131072: Analyzing
+probe_order/std_null/fixed/131072
+                        time:   [37.650 ns 37.886 ns 38.155 ns]
+                        change: [−2.1047% −1.1056% −0.1738%] (p = 0.02 < 0.05)
+                        Change within noise threshold.
+Found 5 outliers among 50 measurements (10.00%)
+  4 (8.00%) high mild
+  1 (2.00%) high severe
+Benchmarking probe_order/arctic/fixed/131072
+Benchmarking probe_order/arctic/fixed/131072: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/fixed/131072: Collecting 50 samples in estimated 1.5000 s (35M iterations)
+Benchmarking probe_order/arctic/fixed/131072: Analyzing
+probe_order/arctic/fixed/131072
+                        time:   [42.032 ns 42.160 ns 42.289 ns]
+                        change: [+0.7049% +1.0831% +1.4588%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Benchmarking probe_order/wti/fixed/131072
+Benchmarking probe_order/wti/fixed/131072: Warming up for 400.00 ms
+Benchmarking probe_order/wti/fixed/131072: Collecting 50 samples in estimated 1.5001 s (18M iterations)
+Benchmarking probe_order/wti/fixed/131072: Analyzing
+probe_order/wti/fixed/131072
+                        time:   [84.624 ns 84.834 ns 85.056 ns]
+                        change: [−3.4059% −1.9918% −0.9884%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) low mild
+  1 (2.00%) high mild
+Benchmarking probe_order/std/zipf/131072
+Benchmarking probe_order/std/zipf/131072: Warming up for 400.00 ms
+Benchmarking probe_order/std/zipf/131072: Collecting 50 samples in estimated 1.5001 s (12M iterations)
+Benchmarking probe_order/std/zipf/131072: Analyzing
+probe_order/std/zipf/131072
+                        time:   [122.93 ns 123.87 ns 124.93 ns]
+                        change: [−2.4797% −1.4753% −0.4741%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high mild
+Benchmarking probe_order/std_null/zipf/131072
+Benchmarking probe_order/std_null/zipf/131072: Warming up for 400.00 ms
+Benchmarking probe_order/std_null/zipf/131072: Collecting 50 samples in estimated 1.5001 s (12M iterations)
+Benchmarking probe_order/std_null/zipf/131072: Analyzing
+probe_order/std_null/zipf/131072
+                        time:   [130.69 ns 131.82 ns 133.08 ns]
+                        change: [−0.8664% +1.4596% +3.4555%] (p = 0.20 > 0.05)
+                        No change in performance detected.
+Found 5 outliers among 50 measurements (10.00%)
+  3 (6.00%) low mild
+  2 (4.00%) high mild
+Benchmarking probe_order/arctic/zipf/131072
+Benchmarking probe_order/arctic/zipf/131072: Warming up for 400.00 ms
+Benchmarking probe_order/arctic/zipf/131072: Collecting 50 samples in estimated 1.5001 s (22M iterations)
+Benchmarking probe_order/arctic/zipf/131072: Analyzing
+probe_order/arctic/zipf/131072
+                        time:   [68.541 ns 68.910 ns 69.302 ns]
+                        change: [+2.1677% +3.4732% +4.6113%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 3 outliers among 50 measurements (6.00%)
+  3 (6.00%) low mild
+Benchmarking probe_order/wti/zipf/131072
+Benchmarking probe_order/wti/zipf/131072: Warming up for 400.00 ms
+Benchmarking probe_order/wti/zipf/131072: Collecting 50 samples in estimated 1.5002 s (4.5M iterations)
+Benchmarking probe_order/wti/zipf/131072: Analyzing
+probe_order/wti/zipf/131072
+                        time:   [337.44 ns 339.43 ns 341.51 ns]
+                        change: [+3.3471% +6.3569% +8.6962%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 6 outliers among 50 measurements (12.00%)
+  2 (4.00%) low mild
+  3 (6.00%) high mild
+  1 (2.00%) high severe
+

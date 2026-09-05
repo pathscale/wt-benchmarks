@@ -1,0 +1,11 @@
+== conditions ==
+ProductName:		macOS
+ProductVersion:		26.5
+BuildVersion:		25F71
+Apple M4 Max
+physical cores: 16, logical: 16
+rustc 1.97.1 (8bab26f4f 2026-07-14)
+profile: release (lto=fat, codegen-units=1, debug=line-tables-only)
+arctic-wt checkout: 6ac52067cf550161b6a6f19d13820997de575f83
+WorkTablesIndex checkout: 5b4b54d205a04d21a136c4943529068b2800090e
+wt-benchmarks checkout: 4b355f32b6f27d9c420226e827e343bc65857b51 (+ uncommitted)

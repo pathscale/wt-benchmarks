@@ -1,0 +1,1702 @@
+warning: unused import: `Formatter`
+ --> /Users/revenge/code/WorkTablesIndex/src/concurrent/map.rs:1:32
+  |
+1 | use std::fmt::{Debug, Display, Formatter};
+  |                                ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::sync::Arc`
+ --> /Users/revenge/code/WorkTablesIndex/src/concurrent/map.rs:2:5
+  |
+2 | use std::sync::Arc;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused import: `parking_lot::Mutex`
+ --> /Users/revenge/code/WorkTablesIndex/src/concurrent/map.rs:5:5
+  |
+5 | use parking_lot::Mutex;
+  |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Display`
+ --> /Users/revenge/code/WorkTablesIndex/src/concurrent/map.rs:1:23
+  |
+1 | use std::fmt::{Debug, Display, Formatter};
+  |                       ^^^^^^^
+
+warning: variable does not need to be mutable
+  --> /Users/revenge/code/WorkTablesIndex/src/concurrent/operation.rs:48:29
+   |
+48 |                         let mut cdc = vec![];
+   |                             ----^^^
+   |                             |
+   |                             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/operation.rs:149:29
+    |
+149 |                         let mut cdc = vec![];
+    |                             ----^^^
+    |                             |
+    |                             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/operation.rs:197:37
+    |
+197 | ...                   let mut cdc = vec![];
+    |                           ----^^^
+    |                           |
+    |                           help: remove this `mut`
+
+warning: unused variable: `old_max`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/operation.rs:103:37
+    |
+103 | ...                   let old_max = max.clone();
+    |                           ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_old_max`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:235:17
+    |
+235 |             let mut cdc = vec![];
+    |                 ----^^^
+    |                 |
+    |                 help: remove this `mut`
+
+warning: unused variable: `value_cdc`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:344:39
+    |
+344 |                     if let Ok((value, value_cdc)) = op.commit::<EMIT_CDC>(&mut index, adopt) {
+    |                                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_value_cdc`
+
+warning: unused variable: `value_cdc`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:358:46
+    |
+358 |                     return if let Ok((value, value_cdc)) = op.commit::<EMIT_CDC>(&mut index, adopt) {
+    |                                              ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_value_cdc`
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:386:21
+    |
+386 |                 let mut cdc = vec![];
+    |                     ----^^^
+    |                     |
+    |                     help: remove this `mut`
+
+warning: unused variable: `max`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:378:39
+    |
+378 |             Err((mut node_guard, idx, max)) => {
+    |                                       ^^^ help: if this is intentional, prefix it with an underscore: `_max`
+
+warning: variable does not need to be mutable
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:516:13
+    |
+516 |         let mut cdc = vec![];
+    |             ----^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `idx`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:534:27
+    |
+534 |             let (deleted, idx) = deleted.expect("should be ok as checked before");
+    |                           ^^^ help: if this is intentional, prefix it with an underscore: `_idx`
+
+warning: unused variable: `value_cdc`
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:574:34
+    |
+574 |             return if let Ok((_, value_cdc)) = operation.unwrap().commit::<EMIT_CDC>(&mut index, no_identity_adoption) {
+    |                                  ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_value_cdc`
+
+warning: method `with_grouped_borrow_routing` is never used
+   --> /Users/revenge/code/WorkTablesIndex/src/concurrent/set.rs:204:19
+    |
+178 | / impl<T, Node> BTreeSet<T, Node>
+179 | | where
+180 | |     T: Debug + Ord + Clone + Send,
+181 | |     Node: NodeLike<T> + Send + 'static,
+    | |_______________________________________- method in this implementation
+...
+204 |       pub(crate) fn with_grouped_borrow_routing(mut self) -> Self {
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `WorkTablesIndex` (lib) generated 17 warnings (run `cargo fix --lib -p WorkTablesIndex` to apply 15 suggestions)
+    Finished `bench` profile [optimized + debuginfo] target(s) in 0.09s
+     Running benches/arctic_concurrent.rs (target/release/deps/arctic_concurrent-fa4c1883a69010cb)
+Gnuplot not found, using plotters backend
+conditions: debug_assertions=false arch=aarch64 os=macos arctic_smr=ps-reclaim(default)+no-op wti_features=concurrent lock=parking_lot write_every=[0, 20] suite=0.1.0
+Benchmarking arctic_concurrent/arctic_lockfree/163/t1/w0
+Benchmarking arctic_concurrent/arctic_lockfree/163/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/163/t1/w0: Collecting 10 samples in estimated 1.0000 s (30M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/163/t1/w0: Analyzing
+arctic_concurrent/arctic_lockfree/163/t1/w0
+                        time:   [33.229 ns 33.318 ns 33.363 ns]
+                        thrpt:  [29.973 Melem/s 30.014 Melem/s 30.094 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t1/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t1/w0: Collecting 10 samples in estimated 1.0000 s (32M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t1/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/163/t1/w0
+                        time:   [31.011 ns 31.104 ns 31.261 ns]
+                        thrpt:  [31.989 Melem/s 32.150 Melem/s 32.247 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t1/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t1/w0: Collecting 10 samples in estimated 1.0000 s (32M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t1/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/163/t1/w0
+                        time:   [30.928 ns 31.038 ns 31.143 ns]
+                        thrpt:  [32.110 Melem/s 32.219 Melem/s 32.333 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/163/t1/w0
+Benchmarking arctic_concurrent/std_rwlock/163/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/163/t1/w0: Collecting 10 samples in estimated 1.0000 s (55M iterations)
+Benchmarking arctic_concurrent/std_rwlock/163/t1/w0: Analyzing
+arctic_concurrent/std_rwlock/163/t1/w0
+                        time:   [18.165 ns 18.420 ns 18.720 ns]
+                        thrpt:  [53.417 Melem/s 54.288 Melem/s 55.050 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/std_rwlock_null/163/t1/w0
+Benchmarking arctic_concurrent/std_rwlock_null/163/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/163/t1/w0: Collecting 10 samples in estimated 1.0000 s (55M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/163/t1/w0: Analyzing
+arctic_concurrent/std_rwlock_null/163/t1/w0
+                        time:   [18.029 ns 18.072 ns 18.132 ns]
+                        thrpt:  [55.152 Melem/s 55.334 Melem/s 55.466 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/163/t1/w0
+Benchmarking arctic_concurrent/wti_concurrent/163/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/163/t1/w0: Collecting 10 samples in estimated 1.0000 s (18M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/163/t1/w0: Analyzing
+arctic_concurrent/wti_concurrent/163/t1/w0
+                        time:   [55.831 ns 56.006 ns 56.189 ns]
+                        thrpt:  [17.797 Melem/s 17.855 Melem/s 17.911 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_lockfree/163/t2/w0
+Benchmarking arctic_concurrent/arctic_lockfree/163/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/163/t2/w0: Collecting 10 samples in estimated 1.0000 s (30M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/163/t2/w0: Analyzing
+arctic_concurrent/arctic_lockfree/163/t2/w0
+                        time:   [32.811 ns 32.844 ns 32.883 ns]
+                        thrpt:  [60.822 Melem/s 60.894 Melem/s 60.955 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t2/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t2/w0: Collecting 10 samples in estimated 1.0000 s (32M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t2/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/163/t2/w0
+                        time:   [31.017 ns 31.068 ns 31.136 ns]
+                        thrpt:  [64.233 Melem/s 64.376 Melem/s 64.480 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t2/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t2/w0: Collecting 10 samples in estimated 1.0000 s (10M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t2/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/163/t2/w0
+                        time:   [94.026 ns 99.458 ns 104.34 ns]
+                        thrpt:  [19.168 Melem/s 20.109 Melem/s 21.271 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/163/t2/w0
+Benchmarking arctic_concurrent/std_rwlock/163/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/163/t2/w0: Collecting 10 samples in estimated 1.0000 s (16M iterations)
+Benchmarking arctic_concurrent/std_rwlock/163/t2/w0: Analyzing
+arctic_concurrent/std_rwlock/163/t2/w0
+                        time:   [68.054 ns 72.978 ns 77.622 ns]
+                        thrpt:  [25.766 Melem/s 27.406 Melem/s 29.388 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/163/t2/w0
+Benchmarking arctic_concurrent/std_rwlock_null/163/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/163/t2/w0: Collecting 10 samples in estimated 1.0000 s (14M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/163/t2/w0: Analyzing
+arctic_concurrent/std_rwlock_null/163/t2/w0
+                        time:   [73.652 ns 76.187 ns 78.553 ns]
+                        thrpt:  [25.460 Melem/s 26.251 Melem/s 27.155 Melem/s]
+Found 3 outliers among 10 measurements (30.00%)
+  2 (20.00%) low mild
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/wti_concurrent/163/t2/w0
+Benchmarking arctic_concurrent/wti_concurrent/163/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/163/t2/w0: Collecting 10 samples in estimated 1.0000 s (6.7M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/163/t2/w0: Analyzing
+arctic_concurrent/wti_concurrent/163/t2/w0
+                        time:   [148.05 ns 149.09 ns 150.69 ns]
+                        thrpt:  [13.272 Melem/s 13.415 Melem/s 13.509 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/163/t4/w0
+Benchmarking arctic_concurrent/arctic_lockfree/163/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/163/t4/w0: Collecting 10 samples in estimated 1.0000 s (30M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/163/t4/w0: Analyzing
+arctic_concurrent/arctic_lockfree/163/t4/w0
+                        time:   [32.995 ns 33.034 ns 33.093 ns]
+                        thrpt:  [120.87 Melem/s 121.09 Melem/s 121.23 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t4/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t4/w0: Collecting 10 samples in estimated 1.0000 s (32M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t4/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/163/t4/w0
+                        time:   [31.295 ns 31.314 ns 31.353 ns]
+                        thrpt:  [127.58 Melem/s 127.74 Melem/s 127.82 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t4/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t4/w0: Collecting 10 samples in estimated 1.0000 s (3.6M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t4/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/163/t4/w0
+                        time:   [285.23 ns 294.04 ns 300.85 ns]
+                        thrpt:  [13.295 Melem/s 13.604 Melem/s 14.024 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/163/t4/w0
+Benchmarking arctic_concurrent/std_rwlock/163/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/163/t4/w0: Collecting 10 samples in estimated 1.0000 s (4.0M iterations)
+Benchmarking arctic_concurrent/std_rwlock/163/t4/w0: Analyzing
+arctic_concurrent/std_rwlock/163/t4/w0
+                        time:   [252.40 ns 261.18 ns 269.74 ns]
+                        thrpt:  [14.829 Melem/s 15.315 Melem/s 15.848 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) low severe
+Benchmarking arctic_concurrent/std_rwlock_null/163/t4/w0
+Benchmarking arctic_concurrent/std_rwlock_null/163/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/163/t4/w0: Collecting 10 samples in estimated 1.0000 s (3.8M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/163/t4/w0: Analyzing
+arctic_concurrent/std_rwlock_null/163/t4/w0
+                        time:   [241.26 ns 248.36 ns 254.27 ns]
+                        thrpt:  [15.731 Melem/s 16.106 Melem/s 16.580 Melem/s]
+Found 3 outliers among 10 measurements (30.00%)
+  1 (10.00%) low severe
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/wti_concurrent/163/t4/w0
+Benchmarking arctic_concurrent/wti_concurrent/163/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/163/t4/w0: Collecting 10 samples in estimated 1.0000 s (2.6M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/163/t4/w0: Analyzing
+arctic_concurrent/wti_concurrent/163/t4/w0
+                        time:   [386.93 ns 388.82 ns 389.74 ns]
+                        thrpt:  [10.263 Melem/s 10.288 Melem/s 10.338 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/arctic_lockfree/163/t8/w0
+Benchmarking arctic_concurrent/arctic_lockfree/163/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/163/t8/w0: Collecting 10 samples in estimated 1.0000 s (30M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/163/t8/w0: Analyzing
+arctic_concurrent/arctic_lockfree/163/t8/w0
+                        time:   [33.594 ns 33.662 ns 33.803 ns]
+                        thrpt:  [236.66 Melem/s 237.66 Melem/s 238.14 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t8/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t8/w0: Collecting 10 samples in estimated 1.0000 s (31M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t8/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/163/t8/w0
+                        time:   [32.203 ns 32.664 ns 33.505 ns]
+                        thrpt:  [238.77 Melem/s 244.92 Melem/s 248.42 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t8/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t8/w0: Collecting 10 samples in estimated 1.0000 s (868k iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t8/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/163/t8/w0
+                        time:   [1.1193 µs 1.1381 µs 1.1551 µs]
+                        thrpt:  [6.9259 Melem/s 7.0290 Melem/s 7.1471 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/163/t8/w0
+Benchmarking arctic_concurrent/std_rwlock/163/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/163/t8/w0: Collecting 10 samples in estimated 1.0000 s (1.1M iterations)
+Benchmarking arctic_concurrent/std_rwlock/163/t8/w0: Analyzing
+arctic_concurrent/std_rwlock/163/t8/w0
+                        time:   [865.56 ns 883.87 ns 902.85 ns]
+                        thrpt:  [8.8608 Melem/s 9.0511 Melem/s 9.2425 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+Benchmarking arctic_concurrent/std_rwlock_null/163/t8/w0
+Benchmarking arctic_concurrent/std_rwlock_null/163/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/163/t8/w0: Collecting 10 samples in estimated 1.0000 s (1.1M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/163/t8/w0: Analyzing
+arctic_concurrent/std_rwlock_null/163/t8/w0
+                        time:   [762.16 ns 956.31 ns 1.0525 µs]
+                        thrpt:  [7.6010 Melem/s 8.3655 Melem/s 10.497 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/163/t8/w0
+Benchmarking arctic_concurrent/wti_concurrent/163/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/163/t8/w0: Collecting 10 samples in estimated 1.0000 s (1.1M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/163/t8/w0: Analyzing
+arctic_concurrent/wti_concurrent/163/t8/w0
+                        time:   [849.73 ns 872.75 ns 896.17 ns]
+                        thrpt:  [8.9268 Melem/s 9.1664 Melem/s 9.4148 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree/163/t1/w20
+Benchmarking arctic_concurrent/arctic_lockfree/163/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/163/t1/w20: Collecting 10 samples in estimated 1.0000 s (29M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/163/t1/w20: Analyzing
+arctic_concurrent/arctic_lockfree/163/t1/w20
+                        time:   [34.124 ns 34.392 ns 34.651 ns]
+                        thrpt:  [28.859 Melem/s 29.076 Melem/s 29.305 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t1/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t1/w20: Collecting 10 samples in estimated 1.0000 s (31M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t1/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/163/t1/w20
+                        time:   [31.670 ns 32.306 ns 33.840 ns]
+                        thrpt:  [29.551 Melem/s 30.954 Melem/s 31.576 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t1/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t1/w20: Collecting 10 samples in estimated 1.0000 s (32M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t1/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/163/t1/w20
+                        time:   [31.161 ns 31.317 ns 31.464 ns]
+                        thrpt:  [31.783 Melem/s 31.932 Melem/s 32.092 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock/163/t1/w20
+Benchmarking arctic_concurrent/std_rwlock/163/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/163/t1/w20: Collecting 10 samples in estimated 1.0000 s (52M iterations)
+Benchmarking arctic_concurrent/std_rwlock/163/t1/w20: Analyzing
+arctic_concurrent/std_rwlock/163/t1/w20
+                        time:   [18.736 ns 18.826 ns 18.883 ns]
+                        thrpt:  [52.958 Melem/s 53.117 Melem/s 53.374 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/163/t1/w20
+Benchmarking arctic_concurrent/std_rwlock_null/163/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/163/t1/w20: Collecting 10 samples in estimated 1.0000 s (53M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/163/t1/w20: Analyzing
+arctic_concurrent/std_rwlock_null/163/t1/w20
+                        time:   [18.870 ns 19.576 ns 20.976 ns]
+                        thrpt:  [47.674 Melem/s 51.084 Melem/s 52.993 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/wti_concurrent/163/t1/w20
+Benchmarking arctic_concurrent/wti_concurrent/163/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/163/t1/w20: Collecting 10 samples in estimated 1.0000 s (17M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/163/t1/w20: Analyzing
+arctic_concurrent/wti_concurrent/163/t1/w20
+                        time:   [57.937 ns 58.093 ns 58.169 ns]
+                        thrpt:  [17.191 Melem/s 17.214 Melem/s 17.260 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/163/t2/w20
+Benchmarking arctic_concurrent/arctic_lockfree/163/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/163/t2/w20: Collecting 10 samples in estimated 1.0000 s (27M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/163/t2/w20: Analyzing
+arctic_concurrent/arctic_lockfree/163/t2/w20
+                        time:   [36.763 ns 37.141 ns 37.298 ns]
+                        thrpt:  [53.622 Melem/s 53.849 Melem/s 54.403 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t2/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t2/w20: Collecting 10 samples in estimated 1.0000 s (28M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t2/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/163/t2/w20
+                        time:   [35.406 ns 36.904 ns 38.456 ns]
+                        thrpt:  [52.008 Melem/s 54.195 Melem/s 56.488 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t2/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t2/w20: Collecting 10 samples in estimated 1.0000 s (8.3M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t2/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/163/t2/w20
+                        time:   [104.52 ns 110.78 ns 119.37 ns]
+                        thrpt:  [16.754 Melem/s 18.054 Melem/s 19.134 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/163/t2/w20
+Benchmarking arctic_concurrent/std_rwlock/163/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/163/t2/w20: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/std_rwlock/163/t2/w20: Analyzing
+arctic_concurrent/std_rwlock/163/t2/w20
+                        time:   [69.905 ns 74.533 ns 79.335 ns]
+                        thrpt:  [25.210 Melem/s 26.834 Melem/s 28.610 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/std_rwlock_null/163/t2/w20
+Benchmarking arctic_concurrent/std_rwlock_null/163/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/163/t2/w20: Collecting 10 samples in estimated 1.0000 s (14M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/163/t2/w20: Analyzing
+arctic_concurrent/std_rwlock_null/163/t2/w20
+                        time:   [76.455 ns 77.356 ns 78.897 ns]
+                        thrpt:  [25.350 Melem/s 25.854 Melem/s 26.159 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/wti_concurrent/163/t2/w20
+Benchmarking arctic_concurrent/wti_concurrent/163/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/163/t2/w20: Collecting 10 samples in estimated 1.0000 s (6.3M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/163/t2/w20: Analyzing
+arctic_concurrent/wti_concurrent/163/t2/w20
+                        time:   [155.79 ns 158.22 ns 163.81 ns]
+                        thrpt:  [12.209 Melem/s 12.641 Melem/s 12.838 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/163/t4/w20
+Benchmarking arctic_concurrent/arctic_lockfree/163/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/163/t4/w20: Collecting 10 samples in estimated 1.0000 s (25M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/163/t4/w20: Analyzing
+arctic_concurrent/arctic_lockfree/163/t4/w20
+                        time:   [38.493 ns 38.683 ns 38.947 ns]
+                        thrpt:  [102.70 Melem/s 103.40 Melem/s 103.91 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t4/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t4/w20: Collecting 10 samples in estimated 1.0000 s (28M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t4/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/163/t4/w20
+                        time:   [35.163 ns 36.088 ns 37.779 ns]
+                        thrpt:  [105.88 Melem/s 110.84 Melem/s 113.76 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t4/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t4/w20: Collecting 10 samples in estimated 1.0000 s (3.9M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t4/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/163/t4/w20
+                        time:   [253.44 ns 260.22 ns 265.47 ns]
+                        thrpt:  [15.068 Melem/s 15.372 Melem/s 15.783 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/std_rwlock/163/t4/w20
+Benchmarking arctic_concurrent/std_rwlock/163/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/163/t4/w20: Collecting 10 samples in estimated 1.0000 s (3.8M iterations)
+Benchmarking arctic_concurrent/std_rwlock/163/t4/w20: Analyzing
+arctic_concurrent/std_rwlock/163/t4/w20
+                        time:   [256.42 ns 278.66 ns 295.09 ns]
+                        thrpt:  [13.555 Melem/s 14.354 Melem/s 15.599 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock_null/163/t4/w20
+Benchmarking arctic_concurrent/std_rwlock_null/163/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/163/t4/w20: Collecting 10 samples in estimated 1.0000 s (3.3M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/163/t4/w20: Analyzing
+arctic_concurrent/std_rwlock_null/163/t4/w20
+                        time:   [267.30 ns 275.06 ns 282.90 ns]
+                        thrpt:  [14.139 Melem/s 14.542 Melem/s 14.965 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/163/t4/w20
+Benchmarking arctic_concurrent/wti_concurrent/163/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/163/t4/w20: Collecting 10 samples in estimated 1.0000 s (2.4M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/163/t4/w20: Analyzing
+arctic_concurrent/wti_concurrent/163/t4/w20
+                        time:   [412.26 ns 423.59 ns 429.06 ns]
+                        thrpt:  [9.3227 Melem/s 9.4431 Melem/s 9.7026 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/163/t8/w20
+Benchmarking arctic_concurrent/arctic_lockfree/163/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/163/t8/w20: Collecting 10 samples in estimated 1.0000 s (22M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/163/t8/w20: Analyzing
+arctic_concurrent/arctic_lockfree/163/t8/w20
+                        time:   [43.692 ns 44.326 ns 44.987 ns]
+                        thrpt:  [177.83 Melem/s 180.48 Melem/s 183.10 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t8/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t8/w20: Collecting 10 samples in estimated 1.0000 s (25M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/163/t8/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/163/t8/w20
+                        time:   [37.478 ns 37.617 ns 37.796 ns]
+                        thrpt:  [211.66 Melem/s 212.67 Melem/s 213.46 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t8/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t8/w20: Collecting 10 samples in estimated 1.0000 s (818k iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/163/t8/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/163/t8/w20
+                        time:   [1.1540 µs 1.1738 µs 1.2047 µs]
+                        thrpt:  [6.6407 Melem/s 6.8157 Melem/s 6.9323 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/163/t8/w20
+Benchmarking arctic_concurrent/std_rwlock/163/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/163/t8/w20: Collecting 10 samples in estimated 1.0000 s (1.1M iterations)
+Benchmarking arctic_concurrent/std_rwlock/163/t8/w20: Analyzing
+arctic_concurrent/std_rwlock/163/t8/w20
+                        time:   [899.55 ns 908.88 ns 916.87 ns]
+                        thrpt:  [8.7253 Melem/s 8.8020 Melem/s 8.8933 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/163/t8/w20
+Benchmarking arctic_concurrent/std_rwlock_null/163/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/163/t8/w20: Collecting 10 samples in estimated 1.0000 s (1.1M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/163/t8/w20: Analyzing
+arctic_concurrent/std_rwlock_null/163/t8/w20
+                        time:   [870.50 ns 884.30 ns 902.48 ns]
+                        thrpt:  [8.8645 Melem/s 9.0467 Melem/s 9.1901 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/163/t8/w20
+Benchmarking arctic_concurrent/wti_concurrent/163/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/163/t8/w20: Collecting 10 samples in estimated 1.0000 s (834k iterations)
+Benchmarking arctic_concurrent/wti_concurrent/163/t8/w20: Analyzing
+arctic_concurrent/wti_concurrent/163/t8/w20
+                        time:   [1.2985 µs 1.3240 µs 1.3491 µs]
+                        thrpt:  [5.9301 Melem/s 6.0422 Melem/s 6.1610 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/512/t1/w0
+Benchmarking arctic_concurrent/arctic_lockfree/512/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/512/t1/w0: Collecting 10 samples in estimated 1.0000 s (26M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/512/t1/w0: Analyzing
+arctic_concurrent/arctic_lockfree/512/t1/w0
+                        time:   [38.393 ns 38.668 ns 39.019 ns]
+                        thrpt:  [25.628 Melem/s 25.861 Melem/s 26.046 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t1/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t1/w0: Collecting 10 samples in estimated 1.0000 s (28M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t1/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/512/t1/w0
+                        time:   [36.418 ns 36.531 ns 36.644 ns]
+                        thrpt:  [27.290 Melem/s 27.374 Melem/s 27.459 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t1/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t1/w0: Collecting 10 samples in estimated 1.0000 s (28M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t1/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/512/t1/w0
+                        time:   [36.107 ns 36.402 ns 36.756 ns]
+                        thrpt:  [27.206 Melem/s 27.471 Melem/s 27.696 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/512/t1/w0
+Benchmarking arctic_concurrent/std_rwlock/512/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/512/t1/w0: Collecting 10 samples in estimated 1.0000 s (44M iterations)
+Benchmarking arctic_concurrent/std_rwlock/512/t1/w0: Analyzing
+arctic_concurrent/std_rwlock/512/t1/w0
+                        time:   [22.584 ns 22.660 ns 22.752 ns]
+                        thrpt:  [43.951 Melem/s 44.131 Melem/s 44.278 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock_null/512/t1/w0
+Benchmarking arctic_concurrent/std_rwlock_null/512/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/512/t1/w0: Collecting 10 samples in estimated 1.0000 s (44M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/512/t1/w0: Analyzing
+arctic_concurrent/std_rwlock_null/512/t1/w0
+                        time:   [22.376 ns 22.451 ns 22.534 ns]
+                        thrpt:  [44.377 Melem/s 44.541 Melem/s 44.691 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/512/t1/w0
+Benchmarking arctic_concurrent/wti_concurrent/512/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/512/t1/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/512/t1/w0: Analyzing
+arctic_concurrent/wti_concurrent/512/t1/w0
+                        time:   [77.253 ns 77.681 ns 78.142 ns]
+                        thrpt:  [12.797 Melem/s 12.873 Melem/s 12.944 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/512/t2/w0
+Benchmarking arctic_concurrent/arctic_lockfree/512/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/512/t2/w0: Collecting 10 samples in estimated 1.0000 s (26M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/512/t2/w0: Analyzing
+arctic_concurrent/arctic_lockfree/512/t2/w0
+                        time:   [38.295 ns 38.729 ns 39.178 ns]
+                        thrpt:  [51.050 Melem/s 51.640 Melem/s 52.226 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t2/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t2/w0: Collecting 10 samples in estimated 1.0000 s (27M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t2/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/512/t2/w0
+                        time:   [36.324 ns 36.359 ns 36.409 ns]
+                        thrpt:  [54.932 Melem/s 55.007 Melem/s 55.060 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t2/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t2/w0: Collecting 10 samples in estimated 1.0000 s (9.2M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t2/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/512/t2/w0
+                        time:   [104.50 ns 108.36 ns 111.95 ns]
+                        thrpt:  [17.865 Melem/s 18.457 Melem/s 19.138 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/512/t2/w0
+Benchmarking arctic_concurrent/std_rwlock/512/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/512/t2/w0: Collecting 10 samples in estimated 1.0000 s (14M iterations)
+Benchmarking arctic_concurrent/std_rwlock/512/t2/w0: Analyzing
+arctic_concurrent/std_rwlock/512/t2/w0
+                        time:   [73.350 ns 77.570 ns 80.931 ns]
+                        thrpt:  [24.712 Melem/s 25.783 Melem/s 27.267 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/512/t2/w0
+Benchmarking arctic_concurrent/std_rwlock_null/512/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/512/t2/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/512/t2/w0: Analyzing
+arctic_concurrent/std_rwlock_null/512/t2/w0
+                        time:   [73.665 ns 75.588 ns 77.729 ns]
+                        thrpt:  [25.730 Melem/s 26.459 Melem/s 27.150 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/wti_concurrent/512/t2/w0
+Benchmarking arctic_concurrent/wti_concurrent/512/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/512/t2/w0: Collecting 10 samples in estimated 1.0000 s (4.9M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/512/t2/w0: Analyzing
+arctic_concurrent/wti_concurrent/512/t2/w0
+                        time:   [203.11 ns 203.78 ns 204.57 ns]
+                        thrpt:  [9.7767 Melem/s 9.8147 Melem/s 9.8467 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/arctic_lockfree/512/t4/w0
+Benchmarking arctic_concurrent/arctic_lockfree/512/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/512/t4/w0: Collecting 10 samples in estimated 1.0000 s (26M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/512/t4/w0: Analyzing
+arctic_concurrent/arctic_lockfree/512/t4/w0
+                        time:   [38.495 ns 38.521 ns 38.569 ns]
+                        thrpt:  [103.71 Melem/s 103.84 Melem/s 103.91 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t4/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t4/w0: Collecting 10 samples in estimated 1.0000 s (27M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t4/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/512/t4/w0
+                        time:   [36.566 ns 36.605 ns 36.650 ns]
+                        thrpt:  [109.14 Melem/s 109.27 Melem/s 109.39 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t4/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t4/w0: Collecting 10 samples in estimated 1.0000 s (3.7M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t4/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/512/t4/w0
+                        time:   [265.68 ns 286.22 ns 299.58 ns]
+                        thrpt:  [13.352 Melem/s 13.975 Melem/s 15.056 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/512/t4/w0
+Benchmarking arctic_concurrent/std_rwlock/512/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/512/t4/w0: Collecting 10 samples in estimated 1.0000 s (3.6M iterations)
+Benchmarking arctic_concurrent/std_rwlock/512/t4/w0: Analyzing
+arctic_concurrent/std_rwlock/512/t4/w0
+                        time:   [268.83 ns 273.84 ns 278.05 ns]
+                        thrpt:  [14.386 Melem/s 14.607 Melem/s 14.879 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/std_rwlock_null/512/t4/w0
+Benchmarking arctic_concurrent/std_rwlock_null/512/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/512/t4/w0: Collecting 10 samples in estimated 1.0000 s (3.7M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/512/t4/w0: Analyzing
+arctic_concurrent/std_rwlock_null/512/t4/w0
+                        time:   [274.85 ns 291.69 ns 304.28 ns]
+                        thrpt:  [13.146 Melem/s 13.713 Melem/s 14.553 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/512/t4/w0
+Benchmarking arctic_concurrent/wti_concurrent/512/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/512/t4/w0: Collecting 10 samples in estimated 1.0000 s (1.8M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/512/t4/w0: Analyzing
+arctic_concurrent/wti_concurrent/512/t4/w0
+                        time:   [537.42 ns 543.52 ns 546.93 ns]
+                        thrpt:  [7.3136 Melem/s 7.3595 Melem/s 7.4430 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/512/t8/w0
+Benchmarking arctic_concurrent/arctic_lockfree/512/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/512/t8/w0: Collecting 10 samples in estimated 1.0000 s (25M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/512/t8/w0: Analyzing
+arctic_concurrent/arctic_lockfree/512/t8/w0
+                        time:   [39.188 ns 39.325 ns 39.560 ns]
+                        thrpt:  [202.22 Melem/s 203.43 Melem/s 204.15 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t8/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t8/w0: Collecting 10 samples in estimated 1.0000 s (27M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t8/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/512/t8/w0
+                        time:   [37.288 ns 37.561 ns 37.819 ns]
+                        thrpt:  [211.53 Melem/s 212.99 Melem/s 214.55 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t8/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t8/w0: Collecting 10 samples in estimated 1.0001 s (900k iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t8/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/512/t8/w0
+                        time:   [1.0865 µs 1.1039 µs 1.1313 µs]
+                        thrpt:  [7.0713 Melem/s 7.2468 Melem/s 7.3632 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/512/t8/w0
+Benchmarking arctic_concurrent/std_rwlock/512/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/512/t8/w0: Collecting 10 samples in estimated 1.0000 s (1.1M iterations)
+Benchmarking arctic_concurrent/std_rwlock/512/t8/w0: Analyzing
+arctic_concurrent/std_rwlock/512/t8/w0
+                        time:   [911.47 ns 922.19 ns 928.98 ns]
+                        thrpt:  [8.6116 Melem/s 8.6750 Melem/s 8.7771 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/std_rwlock_null/512/t8/w0
+Benchmarking arctic_concurrent/std_rwlock_null/512/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/512/t8/w0: Collecting 10 samples in estimated 1.0000 s (1.1M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/512/t8/w0: Analyzing
+arctic_concurrent/std_rwlock_null/512/t8/w0
+                        time:   [911.32 ns 924.10 ns 933.76 ns]
+                        thrpt:  [8.5675 Melem/s 8.6571 Melem/s 8.7785 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/wti_concurrent/512/t8/w0
+Benchmarking arctic_concurrent/wti_concurrent/512/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/512/t8/w0: Collecting 10 samples in estimated 1.0001 s (634k iterations)
+Benchmarking arctic_concurrent/wti_concurrent/512/t8/w0: Analyzing
+arctic_concurrent/wti_concurrent/512/t8/w0
+                        time:   [1.6711 µs 1.6783 µs 1.6870 µs]
+                        thrpt:  [4.7422 Melem/s 4.7667 Melem/s 4.7872 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/arctic_lockfree/512/t1/w20
+Benchmarking arctic_concurrent/arctic_lockfree/512/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/512/t1/w20: Collecting 10 samples in estimated 1.0000 s (26M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/512/t1/w20: Analyzing
+arctic_concurrent/arctic_lockfree/512/t1/w20
+                        time:   [39.330 ns 39.660 ns 39.886 ns]
+                        thrpt:  [25.072 Melem/s 25.214 Melem/s 25.426 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t1/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t1/w20: Collecting 10 samples in estimated 1.0000 s (27M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t1/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/512/t1/w20
+                        time:   [37.677 ns 37.812 ns 37.901 ns]
+                        thrpt:  [26.384 Melem/s 26.447 Melem/s 26.542 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t1/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t1/w20: Collecting 10 samples in estimated 1.0000 s (27M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t1/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/512/t1/w20
+                        time:   [37.167 ns 37.324 ns 37.409 ns]
+                        thrpt:  [26.732 Melem/s 26.792 Melem/s 26.906 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/512/t1/w20
+Benchmarking arctic_concurrent/std_rwlock/512/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/512/t1/w20: Collecting 10 samples in estimated 1.0000 s (44M iterations)
+Benchmarking arctic_concurrent/std_rwlock/512/t1/w20: Analyzing
+arctic_concurrent/std_rwlock/512/t1/w20
+                        time:   [23.094 ns 23.199 ns 23.308 ns]
+                        thrpt:  [42.904 Melem/s 43.106 Melem/s 43.301 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/512/t1/w20
+Benchmarking arctic_concurrent/std_rwlock_null/512/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/512/t1/w20: Collecting 10 samples in estimated 1.0000 s (44M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/512/t1/w20: Analyzing
+arctic_concurrent/std_rwlock_null/512/t1/w20
+                        time:   [23.276 ns 23.319 ns 23.364 ns]
+                        thrpt:  [42.801 Melem/s 42.883 Melem/s 42.962 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) low severe
+Benchmarking arctic_concurrent/wti_concurrent/512/t1/w20
+Benchmarking arctic_concurrent/wti_concurrent/512/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/512/t1/w20: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/512/t1/w20: Analyzing
+arctic_concurrent/wti_concurrent/512/t1/w20
+                        time:   [76.392 ns 76.968 ns 77.463 ns]
+                        thrpt:  [12.909 Melem/s 12.992 Melem/s 13.090 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/512/t2/w20
+Benchmarking arctic_concurrent/arctic_lockfree/512/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/512/t2/w20: Collecting 10 samples in estimated 1.0000 s (24M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/512/t2/w20: Analyzing
+arctic_concurrent/arctic_lockfree/512/t2/w20
+                        time:   [40.909 ns 41.308 ns 41.533 ns]
+                        thrpt:  [48.154 Melem/s 48.417 Melem/s 48.889 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t2/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t2/w20: Collecting 10 samples in estimated 1.0000 s (26M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t2/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/512/t2/w20
+                        time:   [38.228 ns 38.575 ns 38.900 ns]
+                        thrpt:  [51.413 Melem/s 51.846 Melem/s 52.317 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t2/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t2/w20: Collecting 10 samples in estimated 1.0000 s (9.5M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t2/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/512/t2/w20
+                        time:   [105.82 ns 108.49 ns 111.45 ns]
+                        thrpt:  [17.945 Melem/s 18.435 Melem/s 18.900 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock/512/t2/w20
+Benchmarking arctic_concurrent/std_rwlock/512/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/512/t2/w20: Collecting 10 samples in estimated 1.0000 s (11M iterations)
+Benchmarking arctic_concurrent/std_rwlock/512/t2/w20: Analyzing
+arctic_concurrent/std_rwlock/512/t2/w20
+                        time:   [83.862 ns 85.372 ns 86.703 ns]
+                        thrpt:  [23.067 Melem/s 23.427 Melem/s 23.849 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock_null/512/t2/w20
+Benchmarking arctic_concurrent/std_rwlock_null/512/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/512/t2/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/512/t2/w20: Analyzing
+arctic_concurrent/std_rwlock_null/512/t2/w20
+                        time:   [80.720 ns 83.048 ns 85.247 ns]
+                        thrpt:  [23.461 Melem/s 24.082 Melem/s 24.777 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/512/t2/w20
+Benchmarking arctic_concurrent/wti_concurrent/512/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/512/t2/w20: Collecting 10 samples in estimated 1.0000 s (4.9M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/512/t2/w20: Analyzing
+arctic_concurrent/wti_concurrent/512/t2/w20
+                        time:   [202.77 ns 203.69 ns 204.74 ns]
+                        thrpt:  [9.7687 Melem/s 9.8186 Melem/s 9.8635 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_lockfree/512/t4/w20
+Benchmarking arctic_concurrent/arctic_lockfree/512/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/512/t4/w20: Collecting 10 samples in estimated 1.0000 s (23M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/512/t4/w20: Analyzing
+arctic_concurrent/arctic_lockfree/512/t4/w20
+                        time:   [43.501 ns 43.701 ns 43.896 ns]
+                        thrpt:  [91.124 Melem/s 91.531 Melem/s 91.953 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t4/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t4/w20: Collecting 10 samples in estimated 1.0000 s (25M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t4/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/512/t4/w20
+                        time:   [40.554 ns 40.711 ns 40.821 ns]
+                        thrpt:  [97.990 Melem/s 98.253 Melem/s 98.634 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) low mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t4/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t4/w20: Collecting 10 samples in estimated 1.0000 s (4.2M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t4/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/512/t4/w20
+                        time:   [239.51 ns 242.67 ns 244.55 ns]
+                        thrpt:  [16.356 Melem/s 16.483 Melem/s 16.701 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/512/t4/w20
+Benchmarking arctic_concurrent/std_rwlock/512/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/512/t4/w20: Collecting 10 samples in estimated 1.0000 s (3.8M iterations)
+Benchmarking arctic_concurrent/std_rwlock/512/t4/w20: Analyzing
+arctic_concurrent/std_rwlock/512/t4/w20
+                        time:   [266.01 ns 269.19 ns 272.31 ns]
+                        thrpt:  [14.689 Melem/s 14.860 Melem/s 15.037 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock_null/512/t4/w20
+Benchmarking arctic_concurrent/std_rwlock_null/512/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/512/t4/w20: Collecting 10 samples in estimated 1.0000 s (3.6M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/512/t4/w20: Analyzing
+arctic_concurrent/std_rwlock_null/512/t4/w20
+                        time:   [238.09 ns 258.04 ns 274.85 ns]
+                        thrpt:  [14.553 Melem/s 15.502 Melem/s 16.801 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/wti_concurrent/512/t4/w20
+Benchmarking arctic_concurrent/wti_concurrent/512/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/512/t4/w20: Collecting 10 samples in estimated 1.0000 s (1.8M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/512/t4/w20: Analyzing
+arctic_concurrent/wti_concurrent/512/t4/w20
+                        time:   [531.69 ns 542.26 ns 550.39 ns]
+                        thrpt:  [7.2676 Melem/s 7.3765 Melem/s 7.5232 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/arctic_lockfree/512/t8/w20
+Benchmarking arctic_concurrent/arctic_lockfree/512/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/512/t8/w20: Collecting 10 samples in estimated 1.0000 s (21M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/512/t8/w20: Analyzing
+arctic_concurrent/arctic_lockfree/512/t8/w20
+                        time:   [45.975 ns 46.317 ns 46.997 ns]
+                        thrpt:  [170.22 Melem/s 172.72 Melem/s 174.01 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t8/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t8/w20: Collecting 10 samples in estimated 1.0000 s (23M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/512/t8/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/512/t8/w20
+                        time:   [43.065 ns 45.670 ns 49.486 ns]
+                        thrpt:  [161.66 Melem/s 175.17 Melem/s 185.76 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t8/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t8/w20: Collecting 10 samples in estimated 1.0000 s (756k iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/512/t8/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/512/t8/w20
+                        time:   [1.2327 µs 1.2481 µs 1.2735 µs]
+                        thrpt:  [6.2820 Melem/s 6.4096 Melem/s 6.4897 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/std_rwlock/512/t8/w20
+Benchmarking arctic_concurrent/std_rwlock/512/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/512/t8/w20: Collecting 10 samples in estimated 1.0000 s (955k iterations)
+Benchmarking arctic_concurrent/std_rwlock/512/t8/w20: Analyzing
+arctic_concurrent/std_rwlock/512/t8/w20
+                        time:   [1.0300 µs 1.0403 µs 1.0467 µs]
+                        thrpt:  [7.6427 Melem/s 7.6901 Melem/s 7.7673 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/std_rwlock_null/512/t8/w20
+Benchmarking arctic_concurrent/std_rwlock_null/512/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/512/t8/w20: Collecting 10 samples in estimated 1.0000 s (966k iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/512/t8/w20: Analyzing
+arctic_concurrent/std_rwlock_null/512/t8/w20
+                        time:   [1.0212 µs 1.0315 µs 1.0406 µs]
+                        thrpt:  [7.6881 Melem/s 7.7558 Melem/s 7.8342 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/wti_concurrent/512/t8/w20
+Benchmarking arctic_concurrent/wti_concurrent/512/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/512/t8/w20: Collecting 10 samples in estimated 1.0001 s (569k iterations)
+Benchmarking arctic_concurrent/wti_concurrent/512/t8/w20: Analyzing
+arctic_concurrent/wti_concurrent/512/t8/w20
+                        time:   [1.2195 µs 1.3870 µs 1.7333 µs]
+                        thrpt:  [4.6155 Melem/s 5.7680 Melem/s 6.5600 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t1/w0
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t1/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t1/w0: Analyzing
+arctic_concurrent/arctic_lockfree/8192/t1/w0
+                        time:   [73.792 ns 85.647 ns 95.244 ns]
+                        thrpt:  [10.499 Melem/s 11.676 Melem/s 13.552 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t1/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t1/w0: Collecting 10 samples in estimated 1.0000 s (10M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t1/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/8192/t1/w0
+                        time:   [76.840 ns 86.406 ns 99.678 ns]
+                        thrpt:  [10.032 Melem/s 11.573 Melem/s 13.014 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t1/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t1/w0: Collecting 10 samples in estimated 1.0000 s (10M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t1/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/8192/t1/w0
+                        time:   [66.406 ns 79.002 ns 93.107 ns]
+                        thrpt:  [10.740 Melem/s 12.658 Melem/s 15.059 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock/8192/t1/w0
+Benchmarking arctic_concurrent/std_rwlock/8192/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/8192/t1/w0: Collecting 10 samples in estimated 1.0000 s (5.6M iterations)
+Benchmarking arctic_concurrent/std_rwlock/8192/t1/w0: Analyzing
+arctic_concurrent/std_rwlock/8192/t1/w0
+                        time:   [106.68 ns 112.26 ns 122.47 ns]
+                        thrpt:  [8.1653 Melem/s 8.9077 Melem/s 9.3737 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t1/w0
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t1/w0: Collecting 10 samples in estimated 1.0000 s (8.7M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t1/w0: Analyzing
+arctic_concurrent/std_rwlock_null/8192/t1/w0
+                        time:   [127.69 ns 142.50 ns 156.43 ns]
+                        thrpt:  [6.3925 Melem/s 7.0174 Melem/s 7.8313 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/wti_concurrent/8192/t1/w0
+Benchmarking arctic_concurrent/wti_concurrent/8192/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/8192/t1/w0: Collecting 10 samples in estimated 1.0000 s (4.5M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/8192/t1/w0: Analyzing
+arctic_concurrent/wti_concurrent/8192/t1/w0
+                        time:   [172.48 ns 190.91 ns 209.23 ns]
+                        thrpt:  [4.7793 Melem/s 5.2380 Melem/s 5.7979 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t2/w0
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t2/w0: Collecting 10 samples in estimated 1.0000 s (9.2M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t2/w0: Analyzing
+arctic_concurrent/arctic_lockfree/8192/t2/w0
+                        time:   [85.551 ns 100.68 ns 114.09 ns]
+                        thrpt:  [17.530 Melem/s 19.864 Melem/s 23.378 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t2/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t2/w0: Collecting 10 samples in estimated 1.0000 s (11M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t2/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/8192/t2/w0
+                        time:   [83.102 ns 89.192 ns 98.385 ns]
+                        thrpt:  [20.328 Melem/s 22.424 Melem/s 24.067 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t2/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t2/w0: Collecting 10 samples in estimated 1.0000 s (6.5M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t2/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/8192/t2/w0
+                        time:   [157.62 ns 163.21 ns 169.83 ns]
+                        thrpt:  [11.776 Melem/s 12.254 Melem/s 12.689 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/8192/t2/w0
+Benchmarking arctic_concurrent/std_rwlock/8192/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/8192/t2/w0: Collecting 10 samples in estimated 1.0000 s (5.3M iterations)
+Benchmarking arctic_concurrent/std_rwlock/8192/t2/w0: Analyzing
+arctic_concurrent/std_rwlock/8192/t2/w0
+                        time:   [180.67 ns 187.75 ns 192.15 ns]
+                        thrpt:  [10.409 Melem/s 10.653 Melem/s 11.070 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t2/w0
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t2/w0: Collecting 10 samples in estimated 1.0000 s (5.1M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t2/w0: Analyzing
+arctic_concurrent/std_rwlock_null/8192/t2/w0
+                        time:   [177.06 ns 186.77 ns 203.63 ns]
+                        thrpt:  [9.8218 Melem/s 10.708 Melem/s 11.296 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/8192/t2/w0
+Benchmarking arctic_concurrent/wti_concurrent/8192/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/8192/t2/w0: Collecting 10 samples in estimated 1.0000 s (2.6M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/8192/t2/w0: Analyzing
+arctic_concurrent/wti_concurrent/8192/t2/w0
+                        time:   [359.54 ns 378.14 ns 420.00 ns]
+                        thrpt:  [4.7619 Melem/s 5.2891 Melem/s 5.5627 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t4/w0
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t4/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t4/w0: Analyzing
+arctic_concurrent/arctic_lockfree/8192/t4/w0
+                        time:   [69.447 ns 71.653 ns 76.049 ns]
+                        thrpt:  [52.598 Melem/s 55.825 Melem/s 57.598 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t4/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t4/w0: Collecting 10 samples in estimated 1.0000 s (14M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t4/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/8192/t4/w0
+                        time:   [63.624 ns 65.484 ns 68.443 ns]
+                        thrpt:  [58.442 Melem/s 61.084 Melem/s 62.870 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t4/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t4/w0: Collecting 10 samples in estimated 1.0000 s (2.3M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t4/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/8192/t4/w0
+                        time:   [379.55 ns 403.73 ns 431.79 ns]
+                        thrpt:  [9.2637 Melem/s 9.9076 Melem/s 10.539 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/8192/t4/w0
+Benchmarking arctic_concurrent/std_rwlock/8192/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/8192/t4/w0: Collecting 10 samples in estimated 1.0000 s (2.3M iterations)
+Benchmarking arctic_concurrent/std_rwlock/8192/t4/w0: Analyzing
+arctic_concurrent/std_rwlock/8192/t4/w0
+                        time:   [458.16 ns 469.74 ns 478.63 ns]
+                        thrpt:  [8.3572 Melem/s 8.5153 Melem/s 8.7305 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t4/w0
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t4/w0: Collecting 10 samples in estimated 1.0000 s (2.3M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t4/w0: Analyzing
+arctic_concurrent/std_rwlock_null/8192/t4/w0
+                        time:   [420.66 ns 433.49 ns 440.94 ns]
+                        thrpt:  [9.0716 Melem/s 9.2275 Melem/s 9.5090 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/wti_concurrent/8192/t4/w0
+Benchmarking arctic_concurrent/wti_concurrent/8192/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/8192/t4/w0: Collecting 10 samples in estimated 1.0000 s (1.8M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/8192/t4/w0: Analyzing
+arctic_concurrent/wti_concurrent/8192/t4/w0
+                        time:   [519.93 ns 528.35 ns 535.74 ns]
+                        thrpt:  [7.4663 Melem/s 7.5707 Melem/s 7.6934 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t8/w0
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t8/w0: Collecting 10 samples in estimated 1.0000 s (19M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t8/w0: Analyzing
+arctic_concurrent/arctic_lockfree/8192/t8/w0
+                        time:   [52.901 ns 53.102 ns 53.463 ns]
+                        thrpt:  [149.64 Melem/s 150.65 Melem/s 151.23 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t8/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t8/w0: Collecting 10 samples in estimated 1.0000 s (20M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t8/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/8192/t8/w0
+                        time:   [50.256 ns 50.547 ns 50.935 ns]
+                        thrpt:  [157.06 Melem/s 158.27 Melem/s 159.19 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t8/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t8/w0: Collecting 10 samples in estimated 1.0000 s (831k iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t8/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/8192/t8/w0
+                        time:   [1.1925 µs 1.2222 µs 1.2499 µs]
+                        thrpt:  [6.4007 Melem/s 6.5458 Melem/s 6.7085 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/8192/t8/w0
+Benchmarking arctic_concurrent/std_rwlock/8192/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/8192/t8/w0: Collecting 10 samples in estimated 1.0000 s (867k iterations)
+Benchmarking arctic_concurrent/std_rwlock/8192/t8/w0: Analyzing
+arctic_concurrent/std_rwlock/8192/t8/w0
+                        time:   [1.1430 µs 1.1558 µs 1.1687 µs]
+                        thrpt:  [6.8454 Melem/s 6.9219 Melem/s 6.9993 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t8/w0
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t8/w0: Collecting 10 samples in estimated 1.0000 s (861k iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t8/w0: Analyzing
+arctic_concurrent/std_rwlock_null/8192/t8/w0
+                        time:   [1.1601 µs 1.1735 µs 1.1800 µs]
+                        thrpt:  [6.7799 Melem/s 6.8171 Melem/s 6.8961 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/wti_concurrent/8192/t8/w0
+Benchmarking arctic_concurrent/wti_concurrent/8192/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/8192/t8/w0: Collecting 10 samples in estimated 1.0001 s (477k iterations)
+Benchmarking arctic_concurrent/wti_concurrent/8192/t8/w0: Analyzing
+arctic_concurrent/wti_concurrent/8192/t8/w0
+                        time:   [1.9581 µs 2.0505 µs 2.1223 µs]
+                        thrpt:  [3.7695 Melem/s 3.9016 Melem/s 4.0857 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t1/w20
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t1/w20: Collecting 10 samples in estimated 1.0000 s (19M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t1/w20: Analyzing
+arctic_concurrent/arctic_lockfree/8192/t1/w20
+                        time:   [52.987 ns 53.060 ns 53.218 ns]
+                        thrpt:  [18.791 Melem/s 18.846 Melem/s 18.873 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t1/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t1/w20: Collecting 10 samples in estimated 1.0000 s (19M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t1/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/8192/t1/w20
+                        time:   [50.602 ns 52.083 ns 55.329 ns]
+                        thrpt:  [18.074 Melem/s 19.200 Melem/s 19.762 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) high severe
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t1/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t1/w20: Collecting 10 samples in estimated 1.0000 s (20M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t1/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/8192/t1/w20
+                        time:   [50.346 ns 50.898 ns 52.096 ns]
+                        thrpt:  [19.195 Melem/s 19.647 Melem/s 19.863 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) high severe
+Benchmarking arctic_concurrent/std_rwlock/8192/t1/w20
+Benchmarking arctic_concurrent/std_rwlock/8192/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/8192/t1/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/std_rwlock/8192/t1/w20: Analyzing
+arctic_concurrent/std_rwlock/8192/t1/w20
+                        time:   [82.909 ns 84.471 ns 88.173 ns]
+                        thrpt:  [11.341 Melem/s 11.838 Melem/s 12.061 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t1/w20
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t1/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t1/w20: Analyzing
+arctic_concurrent/std_rwlock_null/8192/t1/w20
+                        time:   [85.566 ns 86.897 ns 90.249 ns]
+                        thrpt:  [11.080 Melem/s 11.508 Melem/s 11.687 Melem/s]
+Found 3 outliers among 10 measurements (30.00%)
+  1 (10.00%) low severe
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/wti_concurrent/8192/t1/w20
+Benchmarking arctic_concurrent/wti_concurrent/8192/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/8192/t1/w20: Collecting 10 samples in estimated 1.0000 s (7.5M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/8192/t1/w20: Analyzing
+arctic_concurrent/wti_concurrent/8192/t1/w20
+                        time:   [129.74 ns 130.11 ns 130.51 ns]
+                        thrpt:  [7.6624 Melem/s 7.6859 Melem/s 7.7076 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t2/w20
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t2/w20: Collecting 10 samples in estimated 1.0000 s (18M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t2/w20: Analyzing
+arctic_concurrent/arctic_lockfree/8192/t2/w20
+                        time:   [54.618 ns 55.257 ns 56.966 ns]
+                        thrpt:  [35.109 Melem/s 36.195 Melem/s 36.618 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t2/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t2/w20: Collecting 10 samples in estimated 1.0000 s (20M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t2/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/8192/t2/w20
+                        time:   [50.498 ns 50.698 ns 50.940 ns]
+                        thrpt:  [39.262 Melem/s 39.450 Melem/s 39.606 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t2/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t2/w20: Collecting 10 samples in estimated 1.0000 s (7.5M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t2/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/8192/t2/w20
+                        time:   [117.17 ns 120.07 ns 123.06 ns]
+                        thrpt:  [16.252 Melem/s 16.657 Melem/s 17.069 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/8192/t2/w20
+Benchmarking arctic_concurrent/std_rwlock/8192/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/8192/t2/w20: Collecting 10 samples in estimated 1.0000 s (7.5M iterations)
+Benchmarking arctic_concurrent/std_rwlock/8192/t2/w20: Analyzing
+arctic_concurrent/std_rwlock/8192/t2/w20
+                        time:   [122.97 ns 127.20 ns 131.70 ns]
+                        thrpt:  [15.186 Melem/s 15.724 Melem/s 16.265 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t2/w20
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t2/w20: Collecting 10 samples in estimated 1.0000 s (7.9M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t2/w20: Analyzing
+arctic_concurrent/std_rwlock_null/8192/t2/w20
+                        time:   [120.79 ns 125.03 ns 130.54 ns]
+                        thrpt:  [15.321 Melem/s 15.996 Melem/s 16.558 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/8192/t2/w20
+Benchmarking arctic_concurrent/wti_concurrent/8192/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/8192/t2/w20: Collecting 10 samples in estimated 1.0000 s (4.1M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/8192/t2/w20: Analyzing
+arctic_concurrent/wti_concurrent/8192/t2/w20
+                        time:   [237.91 ns 249.68 ns 258.32 ns]
+                        thrpt:  [7.7423 Melem/s 8.0103 Melem/s 8.4064 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t4/w20
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t4/w20: Collecting 10 samples in estimated 1.0000 s (18M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t4/w20: Analyzing
+arctic_concurrent/arctic_lockfree/8192/t4/w20
+                        time:   [54.886 ns 55.096 ns 55.339 ns]
+                        thrpt:  [72.282 Melem/s 72.600 Melem/s 72.878 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t4/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t4/w20: Collecting 10 samples in estimated 1.0000 s (19M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t4/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/8192/t4/w20
+                        time:   [51.988 ns 52.168 ns 52.301 ns]
+                        thrpt:  [76.480 Melem/s 76.675 Melem/s 76.941 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t4/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t4/w20: Collecting 10 samples in estimated 1.0000 s (3.2M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t4/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/8192/t4/w20
+                        time:   [306.79 ns 325.61 ns 353.52 ns]
+                        thrpt:  [11.315 Melem/s 12.285 Melem/s 13.038 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/std_rwlock/8192/t4/w20
+Benchmarking arctic_concurrent/std_rwlock/8192/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/8192/t4/w20: Collecting 10 samples in estimated 1.0000 s (3.0M iterations)
+Benchmarking arctic_concurrent/std_rwlock/8192/t4/w20: Analyzing
+arctic_concurrent/std_rwlock/8192/t4/w20
+                        time:   [325.51 ns 328.87 ns 333.25 ns]
+                        thrpt:  [12.003 Melem/s 12.163 Melem/s 12.288 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t4/w20
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t4/w20: Collecting 10 samples in estimated 1.0000 s (3.0M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t4/w20: Analyzing
+arctic_concurrent/std_rwlock_null/8192/t4/w20
+                        time:   [332.80 ns 340.05 ns 344.09 ns]
+                        thrpt:  [11.625 Melem/s 11.763 Melem/s 12.019 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/8192/t4/w20
+Benchmarking arctic_concurrent/wti_concurrent/8192/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/8192/t4/w20: Collecting 10 samples in estimated 1.0000 s (2.0M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/8192/t4/w20: Analyzing
+arctic_concurrent/wti_concurrent/8192/t4/w20
+                        time:   [508.85 ns 511.80 ns 516.46 ns]
+                        thrpt:  [7.7450 Melem/s 7.8156 Melem/s 7.8609 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t8/w20
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t8/w20: Collecting 10 samples in estimated 1.0000 s (18M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/8192/t8/w20: Analyzing
+arctic_concurrent/arctic_lockfree/8192/t8/w20
+                        time:   [56.744 ns 56.994 ns 57.328 ns]
+                        thrpt:  [139.55 Melem/s 140.37 Melem/s 140.99 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t8/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t8/w20: Collecting 10 samples in estimated 1.0000 s (19M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/8192/t8/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/8192/t8/w20
+                        time:   [53.321 ns 53.605 ns 54.170 ns]
+                        thrpt:  [147.68 Melem/s 149.24 Melem/s 150.03 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t8/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t8/w20: Collecting 10 samples in estimated 1.0000 s (733k iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/8192/t8/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/8192/t8/w20
+                        time:   [1.3671 µs 1.3790 µs 1.3903 µs]
+                        thrpt:  [5.7543 Melem/s 5.8013 Melem/s 5.8519 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock/8192/t8/w20
+Benchmarking arctic_concurrent/std_rwlock/8192/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/8192/t8/w20: Collecting 10 samples in estimated 1.0000 s (700k iterations)
+Benchmarking arctic_concurrent/std_rwlock/8192/t8/w20: Analyzing
+arctic_concurrent/std_rwlock/8192/t8/w20
+                        time:   [1.4731 µs 1.4928 µs 1.5057 µs]
+                        thrpt:  [5.3130 Melem/s 5.3589 Melem/s 5.4309 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t8/w20
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t8/w20: Collecting 10 samples in estimated 1.0000 s (678k iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/8192/t8/w20: Analyzing
+arctic_concurrent/std_rwlock_null/8192/t8/w20
+                        time:   [1.4160 µs 1.4262 µs 1.4337 µs]
+                        thrpt:  [5.5799 Melem/s 5.6095 Melem/s 5.6496 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/8192/t8/w20
+Benchmarking arctic_concurrent/wti_concurrent/8192/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/8192/t8/w20: Collecting 10 samples in estimated 1.0001 s (478k iterations)
+Benchmarking arctic_concurrent/wti_concurrent/8192/t8/w20: Analyzing
+arctic_concurrent/wti_concurrent/8192/t8/w20
+                        time:   [2.0339 µs 2.0463 µs 2.0558 µs]
+                        thrpt:  [3.8915 Melem/s 3.9095 Melem/s 3.9334 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t1/w0
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t1/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t1/w0: Analyzing
+arctic_concurrent/arctic_lockfree/131072/t1/w0
+                        time:   [77.596 ns 79.358 ns 80.456 ns]
+                        thrpt:  [12.429 Melem/s 12.601 Melem/s 12.887 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t1/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t1/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t1/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/131072/t1/w0
+                        time:   [76.344 ns 78.574 ns 81.164 ns]
+                        thrpt:  [12.321 Melem/s 12.727 Melem/s 13.099 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t1/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t1/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t1/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/131072/t1/w0
+                        time:   [81.235 ns 82.421 ns 83.721 ns]
+                        thrpt:  [11.944 Melem/s 12.133 Melem/s 12.310 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/131072/t1/w0
+Benchmarking arctic_concurrent/std_rwlock/131072/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/131072/t1/w0: Collecting 10 samples in estimated 1.0000 s (6.3M iterations)
+Benchmarking arctic_concurrent/std_rwlock/131072/t1/w0: Analyzing
+arctic_concurrent/std_rwlock/131072/t1/w0
+                        time:   [152.17 ns 154.26 ns 156.82 ns]
+                        thrpt:  [6.3766 Melem/s 6.4827 Melem/s 6.5717 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t1/w0
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t1/w0: Collecting 10 samples in estimated 1.0000 s (6.4M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t1/w0: Analyzing
+arctic_concurrent/std_rwlock_null/131072/t1/w0
+                        time:   [151.05 ns 153.66 ns 158.17 ns]
+                        thrpt:  [6.3223 Melem/s 6.5077 Melem/s 6.6201 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/wti_concurrent/131072/t1/w0
+Benchmarking arctic_concurrent/wti_concurrent/131072/t1/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/131072/t1/w0: Collecting 10 samples in estimated 1.0000 s (4.5M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/131072/t1/w0: Analyzing
+arctic_concurrent/wti_concurrent/131072/t1/w0
+                        time:   [220.48 ns 222.52 ns 225.34 ns]
+                        thrpt:  [4.4377 Melem/s 4.4941 Melem/s 4.5355 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t2/w0
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t2/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t2/w0: Analyzing
+arctic_concurrent/arctic_lockfree/131072/t2/w0
+                        time:   [78.028 ns 78.503 ns 78.941 ns]
+                        thrpt:  [25.335 Melem/s 25.477 Melem/s 25.632 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t2/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t2/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t2/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/131072/t2/w0
+                        time:   [78.497 ns 80.976 ns 82.736 ns]
+                        thrpt:  [24.173 Melem/s 24.699 Melem/s 25.479 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t2/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t2/w0: Collecting 10 samples in estimated 1.0000 s (7.3M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t2/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/131072/t2/w0
+                        time:   [114.06 ns 116.10 ns 121.34 ns]
+                        thrpt:  [16.483 Melem/s 17.226 Melem/s 17.535 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/131072/t2/w0
+Benchmarking arctic_concurrent/std_rwlock/131072/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/131072/t2/w0: Collecting 10 samples in estimated 1.0000 s (6.1M iterations)
+Benchmarking arctic_concurrent/std_rwlock/131072/t2/w0: Analyzing
+arctic_concurrent/std_rwlock/131072/t2/w0
+                        time:   [161.53 ns 161.75 ns 162.14 ns]
+                        thrpt:  [12.335 Melem/s 12.365 Melem/s 12.381 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t2/w0
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t2/w0: Collecting 10 samples in estimated 1.0000 s (5.3M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t2/w0: Analyzing
+arctic_concurrent/std_rwlock_null/131072/t2/w0
+                        time:   [160.79 ns 161.87 ns 163.14 ns]
+                        thrpt:  [12.259 Melem/s 12.355 Melem/s 12.439 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/wti_concurrent/131072/t2/w0
+Benchmarking arctic_concurrent/wti_concurrent/131072/t2/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/131072/t2/w0: Collecting 10 samples in estimated 1.0000 s (3.8M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/131072/t2/w0: Analyzing
+arctic_concurrent/wti_concurrent/131072/t2/w0
+                        time:   [267.99 ns 282.30 ns 297.41 ns]
+                        thrpt:  [6.7247 Melem/s 7.0845 Melem/s 7.4630 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t4/w0
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t4/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t4/w0: Analyzing
+arctic_concurrent/arctic_lockfree/131072/t4/w0
+                        time:   [77.436 ns 78.376 ns 79.194 ns]
+                        thrpt:  [50.509 Melem/s 51.036 Melem/s 51.656 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t4/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t4/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t4/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/131072/t4/w0
+                        time:   [74.418 ns 75.284 ns 76.276 ns]
+                        thrpt:  [52.441 Melem/s 53.132 Melem/s 53.751 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t4/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t4/w0: Collecting 10 samples in estimated 1.0000 s (2.7M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t4/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/131072/t4/w0
+                        time:   [346.59 ns 353.47 ns 357.79 ns]
+                        thrpt:  [11.180 Melem/s 11.317 Melem/s 11.541 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/std_rwlock/131072/t4/w0
+Benchmarking arctic_concurrent/std_rwlock/131072/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/131072/t4/w0: Collecting 10 samples in estimated 1.0000 s (2.6M iterations)
+Benchmarking arctic_concurrent/std_rwlock/131072/t4/w0: Analyzing
+arctic_concurrent/std_rwlock/131072/t4/w0
+                        time:   [361.74 ns 376.14 ns 402.63 ns]
+                        thrpt:  [9.9347 Melem/s 10.634 Melem/s 11.058 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t4/w0
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t4/w0: Collecting 10 samples in estimated 1.0000 s (2.9M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t4/w0: Analyzing
+arctic_concurrent/std_rwlock_null/131072/t4/w0
+                        time:   [336.74 ns 359.92 ns 383.25 ns]
+                        thrpt:  [10.437 Melem/s 11.114 Melem/s 11.879 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/wti_concurrent/131072/t4/w0
+Benchmarking arctic_concurrent/wti_concurrent/131072/t4/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/131072/t4/w0: Collecting 10 samples in estimated 1.0000 s (1.6M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/131072/t4/w0: Analyzing
+arctic_concurrent/wti_concurrent/131072/t4/w0
+                        time:   [608.45 ns 621.43 ns 629.50 ns]
+                        thrpt:  [6.3543 Melem/s 6.4367 Melem/s 6.5740 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t8/w0
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t8/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t8/w0: Analyzing
+arctic_concurrent/arctic_lockfree/131072/t8/w0
+                        time:   [77.254 ns 77.460 ns 77.830 ns]
+                        thrpt:  [102.79 Melem/s 103.28 Melem/s 103.55 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t8/w0
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t8/w0: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t8/w0: Analyzing
+arctic_concurrent/arctic_lockfree_noop/131072/t8/w0
+                        time:   [75.506 ns 75.821 ns 76.150 ns]
+                        thrpt:  [105.06 Melem/s 105.51 Melem/s 105.95 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t8/w0
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t8/w0: Collecting 10 samples in estimated 1.0001 s (700k iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t8/w0: Analyzing
+arctic_concurrent/arctic_seq_rwlock/131072/t8/w0
+                        time:   [1.3780 µs 1.4086 µs 1.4288 µs]
+                        thrpt:  [5.5992 Melem/s 5.6794 Melem/s 5.8056 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/131072/t8/w0
+Benchmarking arctic_concurrent/std_rwlock/131072/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/131072/t8/w0: Collecting 10 samples in estimated 1.0000 s (771k iterations)
+Benchmarking arctic_concurrent/std_rwlock/131072/t8/w0: Analyzing
+arctic_concurrent/std_rwlock/131072/t8/w0
+                        time:   [1.2889 µs 1.2981 µs 1.3019 µs]
+                        thrpt:  [6.1450 Melem/s 6.1628 Melem/s 6.2071 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t8/w0
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t8/w0: Collecting 10 samples in estimated 1.0000 s (770k iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t8/w0: Analyzing
+arctic_concurrent/std_rwlock_null/131072/t8/w0
+                        time:   [1.2889 µs 1.2996 µs 1.3050 µs]
+                        thrpt:  [6.1302 Melem/s 6.1558 Melem/s 6.2070 Melem/s]
+Benchmarking arctic_concurrent/wti_concurrent/131072/t8/w0
+Benchmarking arctic_concurrent/wti_concurrent/131072/t8/w0: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/131072/t8/w0: Collecting 10 samples in estimated 1.0001 s (565k iterations)
+Benchmarking arctic_concurrent/wti_concurrent/131072/t8/w0: Analyzing
+arctic_concurrent/wti_concurrent/131072/t8/w0
+                        time:   [1.7651 µs 1.7700 µs 1.7730 µs]
+                        thrpt:  [4.5121 Melem/s 4.5197 Melem/s 4.5322 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t1/w20
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t1/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t1/w20: Analyzing
+arctic_concurrent/arctic_lockfree/131072/t1/w20
+                        time:   [82.116 ns 83.832 ns 86.895 ns]
+                        thrpt:  [11.508 Melem/s 11.929 Melem/s 12.178 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t1/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t1/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t1/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/131072/t1/w20
+                        time:   [79.008 ns 79.691 ns 80.650 ns]
+                        thrpt:  [12.399 Melem/s 12.548 Melem/s 12.657 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t1/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t1/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t1/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/131072/t1/w20
+                        time:   [78.473 ns 79.682 ns 82.426 ns]
+                        thrpt:  [12.132 Melem/s 12.550 Melem/s 12.743 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/std_rwlock/131072/t1/w20
+Benchmarking arctic_concurrent/std_rwlock/131072/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/131072/t1/w20: Collecting 10 samples in estimated 1.0000 s (6.3M iterations)
+Benchmarking arctic_concurrent/std_rwlock/131072/t1/w20: Analyzing
+arctic_concurrent/std_rwlock/131072/t1/w20
+                        time:   [156.71 ns 158.93 ns 160.67 ns]
+                        thrpt:  [6.2239 Melem/s 6.2922 Melem/s 6.3814 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t1/w20
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t1/w20: Collecting 10 samples in estimated 1.0000 s (6.0M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t1/w20: Analyzing
+arctic_concurrent/std_rwlock_null/131072/t1/w20
+                        time:   [157.83 ns 161.54 ns 164.92 ns]
+                        thrpt:  [6.0636 Melem/s 6.1906 Melem/s 6.3357 Melem/s]
+Found 4 outliers among 10 measurements (40.00%)
+  2 (20.00%) low severe
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/wti_concurrent/131072/t1/w20
+Benchmarking arctic_concurrent/wti_concurrent/131072/t1/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/131072/t1/w20: Collecting 10 samples in estimated 1.0000 s (4.0M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/131072/t1/w20: Analyzing
+arctic_concurrent/wti_concurrent/131072/t1/w20
+                        time:   [238.06 ns 240.85 ns 246.57 ns]
+                        thrpt:  [4.0557 Melem/s 4.1519 Melem/s 4.2007 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t2/w20
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t2/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t2/w20: Analyzing
+arctic_concurrent/arctic_lockfree/131072/t2/w20
+                        time:   [82.570 ns 83.156 ns 83.593 ns]
+                        thrpt:  [23.925 Melem/s 24.051 Melem/s 24.222 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t2/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t2/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t2/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/131072/t2/w20
+                        time:   [80.257 ns 80.664 ns 81.011 ns]
+                        thrpt:  [24.688 Melem/s 24.794 Melem/s 24.920 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t2/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t2/w20: Collecting 10 samples in estimated 1.0000 s (6.5M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t2/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/131072/t2/w20
+                        time:   [142.19 ns 145.64 ns 150.92 ns]
+                        thrpt:  [13.252 Melem/s 13.732 Melem/s 14.066 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/131072/t2/w20
+Benchmarking arctic_concurrent/std_rwlock/131072/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/131072/t2/w20: Collecting 10 samples in estimated 1.0000 s (4.9M iterations)
+Benchmarking arctic_concurrent/std_rwlock/131072/t2/w20: Analyzing
+arctic_concurrent/std_rwlock/131072/t2/w20
+                        time:   [201.46 ns 203.03 ns 204.66 ns]
+                        thrpt:  [9.7724 Melem/s 9.8508 Melem/s 9.9277 Melem/s]
+Found 3 outliers among 10 measurements (30.00%)
+  1 (10.00%) low severe
+  1 (10.00%) low mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t2/w20
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t2/w20: Collecting 10 samples in estimated 1.0000 s (4.9M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t2/w20: Analyzing
+arctic_concurrent/std_rwlock_null/131072/t2/w20
+                        time:   [205.49 ns 208.71 ns 210.69 ns]
+                        thrpt:  [9.4926 Melem/s 9.5825 Melem/s 9.7327 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/wti_concurrent/131072/t2/w20
+Benchmarking arctic_concurrent/wti_concurrent/131072/t2/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/131072/t2/w20: Collecting 10 samples in estimated 1.0000 s (3.4M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/131072/t2/w20: Analyzing
+arctic_concurrent/wti_concurrent/131072/t2/w20
+                        time:   [282.28 ns 292.01 ns 303.87 ns]
+                        thrpt:  [6.5819 Melem/s 6.8492 Melem/s 7.0851 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t4/w20
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t4/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t4/w20: Analyzing
+arctic_concurrent/arctic_lockfree/131072/t4/w20
+                        time:   [79.905 ns 80.167 ns 80.350 ns]
+                        thrpt:  [49.782 Melem/s 49.896 Melem/s 50.059 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t4/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t4/w20: Collecting 10 samples in estimated 1.0000 s (13M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t4/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/131072/t4/w20
+                        time:   [78.214 ns 78.919 ns 79.510 ns]
+                        thrpt:  [50.308 Melem/s 50.685 Melem/s 51.142 Melem/s]
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t4/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t4/w20: Collecting 10 samples in estimated 1.0000 s (2.7M iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t4/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/131072/t4/w20
+                        time:   [365.31 ns 369.86 ns 375.33 ns]
+                        thrpt:  [10.657 Melem/s 10.815 Melem/s 10.950 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/std_rwlock/131072/t4/w20
+Benchmarking arctic_concurrent/std_rwlock/131072/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/131072/t4/w20: Collecting 10 samples in estimated 1.0000 s (2.9M iterations)
+Benchmarking arctic_concurrent/std_rwlock/131072/t4/w20: Analyzing
+arctic_concurrent/std_rwlock/131072/t4/w20
+                        time:   [335.26 ns 341.92 ns 348.96 ns]
+                        thrpt:  [11.463 Melem/s 11.699 Melem/s 11.931 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t4/w20
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t4/w20: Collecting 10 samples in estimated 1.0000 s (2.9M iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t4/w20: Analyzing
+arctic_concurrent/std_rwlock_null/131072/t4/w20
+                        time:   [346.58 ns 349.82 ns 352.61 ns]
+                        thrpt:  [11.344 Melem/s 11.435 Melem/s 11.541 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+Benchmarking arctic_concurrent/wti_concurrent/131072/t4/w20
+Benchmarking arctic_concurrent/wti_concurrent/131072/t4/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/131072/t4/w20: Collecting 10 samples in estimated 1.0000 s (1.7M iterations)
+Benchmarking arctic_concurrent/wti_concurrent/131072/t4/w20: Analyzing
+arctic_concurrent/wti_concurrent/131072/t4/w20
+                        time:   [600.22 ns 629.97 ns 645.04 ns]
+                        thrpt:  [6.2011 Melem/s 6.3495 Melem/s 6.6642 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t8/w20
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t8/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree/131072/t8/w20: Analyzing
+arctic_concurrent/arctic_lockfree/131072/t8/w20
+                        time:   [79.520 ns 80.312 ns 81.240 ns]
+                        thrpt:  [98.474 Melem/s 99.611 Melem/s 100.60 Melem/s]
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t8/w20
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t8/w20: Collecting 10 samples in estimated 1.0000 s (12M iterations)
+Benchmarking arctic_concurrent/arctic_lockfree_noop/131072/t8/w20: Analyzing
+arctic_concurrent/arctic_lockfree_noop/131072/t8/w20
+                        time:   [79.466 ns 79.896 ns 80.357 ns]
+                        thrpt:  [99.556 Melem/s 100.13 Melem/s 100.67 Melem/s]
+Found 2 outliers among 10 measurements (20.00%)
+  2 (20.00%) high mild
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t8/w20
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t8/w20: Collecting 10 samples in estimated 1.0001 s (586k iterations)
+Benchmarking arctic_concurrent/arctic_seq_rwlock/131072/t8/w20: Analyzing
+arctic_concurrent/arctic_seq_rwlock/131072/t8/w20
+                        time:   [1.5082 µs 1.5878 µs 1.6551 µs]
+                        thrpt:  [4.8336 Melem/s 5.0385 Melem/s 5.3045 Melem/s]
+Benchmarking arctic_concurrent/std_rwlock/131072/t8/w20
+Benchmarking arctic_concurrent/std_rwlock/131072/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock/131072/t8/w20: Collecting 10 samples in estimated 1.0001 s (538k iterations)
+Benchmarking arctic_concurrent/std_rwlock/131072/t8/w20: Analyzing
+arctic_concurrent/std_rwlock/131072/t8/w20
+                        time:   [1.7160 µs 1.7501 µs 1.8211 µs]
+                        thrpt:  [4.3930 Melem/s 4.5712 Melem/s 4.6620 Melem/s]
+Found 3 outliers among 10 measurements (30.00%)
+  1 (10.00%) low mild
+  1 (10.00%) high mild
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t8/w20
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t8/w20: Collecting 10 samples in estimated 1.0001 s (593k iterations)
+Benchmarking arctic_concurrent/std_rwlock_null/131072/t8/w20: Analyzing
+arctic_concurrent/std_rwlock_null/131072/t8/w20
+                        time:   [1.6349 µs 1.7298 µs 1.8903 µs]
+                        thrpt:  [4.2321 Melem/s 4.6247 Melem/s 4.8934 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high severe
+Benchmarking arctic_concurrent/wti_concurrent/131072/t8/w20
+Benchmarking arctic_concurrent/wti_concurrent/131072/t8/w20: Warming up for 300.00 ms
+Benchmarking arctic_concurrent/wti_concurrent/131072/t8/w20: Collecting 10 samples in estimated 1.0001 s (567k iterations)
+Benchmarking arctic_concurrent/wti_concurrent/131072/t8/w20: Analyzing
+arctic_concurrent/wti_concurrent/131072/t8/w20
+                        time:   [1.7560 µs 1.7619 µs 1.7685 µs]
+                        thrpt:  [4.5237 Melem/s 4.5407 Melem/s 4.5558 Melem/s]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low mild
+

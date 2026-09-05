@@ -1,0 +1,101 @@
+== conditions ==
+debug_assertions: false
+arch: aarch64 os: macos
+profile: release (lto=fat, codegen-units=1)
+WorkTablesIndex default features (wt-slice-binary-search), sequential map
+key shape: fn:unit%06d/loop:%d, probes shuffled with seed 0x5eed1eafc0ffee01
+sizes: [163, 512, 8192, 131072]  node capacities: [16, 64, 256, 1024]
+reps: 15 (+3 discarded)  target ops/rep: 20000
+budget: 400 s
+
+== n=163, 163 distinct probes x 123 rounds = 20049 ops per repetition ==
+arm                      median        p10        p90   spread
+std_get                   18.61      18.06      19.39     7.2%
+std_get_null              18.39      17.99      18.96     5.2%
+wti_get                   62.96      62.26      63.31     1.7%
+wti_get_null              63.39      61.60      64.30     4.3%
+wti_contains_key          61.72      60.39      63.03     4.3%
+wti_range_next            67.01      65.76      70.78     7.5%
+wti_get_owned_key         59.17      57.76      60.18     4.1%
+std_get_u64                5.37       5.26       5.63     6.8%
+wti_get_u64                5.82       5.73       5.89     2.8%
+flat_partition_point      58.04      56.53      59.17     4.5%
+flat_binary_search        52.33      50.44      55.50     9.7%
+wti_get_cap16             72.73      71.05      74.97     5.4%
+wti_get_cap64             66.50      65.59      68.16     3.9%
+wti_get_cap256            62.42      61.34      64.78     5.5%
+wti_get_cap1024           62.40      61.47      64.39     4.7%
+null floor (std_get vs std_get_null): 1.2%
+null floor (wti_get vs wti_get_null): 0.7%
+wti_get / std_get: 3.38x
+wti_get_u64 / std_get_u64: 1.08x
+wti_get_cap1024 / wti_get_cap64: 0.94x
+
+== n=512, 512 distinct probes x 40 rounds = 20480 ops per repetition ==
+arm                      median        p10        p90   spread
+std_get                   26.60      26.10      30.78    17.6%
+std_get_null              27.67      26.12      32.80    24.1%
+wti_get                   84.00      82.88      86.40     4.2%
+wti_get_null              85.01      82.94      87.30     5.1%
+wti_contains_key          82.42      81.21      86.58     6.5%
+wti_range_next            88.90      87.19      90.94     4.2%
+wti_get_owned_key         81.76      80.23      83.65     4.2%
+std_get_u64                7.22       6.60       7.42    11.3%
+wti_get_u64                6.55       6.44       6.62     2.8%
+flat_partition_point      79.04      77.51      80.65     4.0%
+flat_binary_search        71.60      71.08      74.49     4.8%
+wti_get_cap16             95.39      93.69      98.59     5.1%
+wti_get_cap64             92.53      91.69      94.97     3.5%
+wti_get_cap256            93.30      91.17      95.50     4.6%
+wti_get_cap1024           84.49      83.19      85.54     2.8%
+null floor (std_get vs std_get_null): 4.0%
+null floor (wti_get vs wti_get_null): 1.2%
+wti_get / std_get: 3.16x
+wti_get_u64 / std_get_u64: 0.91x
+wti_get_cap1024 / wti_get_cap64: 0.91x
+
+== n=8192, 8192 distinct probes x 3 rounds = 24576 ops per repetition ==
+arm                      median        p10        p90   spread
+std_get                   84.15      81.20      87.29     7.2%
+std_get_null              84.07      81.40      87.90     7.7%
+wti_get                  189.42     186.41     192.56     3.2%
+wti_get_null             190.01     186.57     192.61     3.2%
+wti_contains_key         189.22     185.57     190.94     2.8%
+wti_range_next           219.19     215.54     222.97     3.4%
+wti_get_owned_key        196.99     193.50     201.15     3.9%
+std_get_u64               35.90      31.92      37.74    16.2%
+wti_get_u64               20.12      19.77      20.93     5.8%
+flat_partition_point     170.80     166.91     174.65     4.5%
+flat_binary_search       159.74     158.93     168.59     6.0%
+wti_get_cap16            189.88     185.51     193.41     4.2%
+wti_get_cap64            195.82     191.90     199.23     3.7%
+wti_get_cap256           184.05     182.50     187.66     2.8%
+wti_get_cap1024          191.49     187.75     194.38     3.5%
+null floor (std_get vs std_get_null): 0.1%
+null floor (wti_get vs wti_get_null): 0.3%
+wti_get / std_get: 2.25x
+wti_get_u64 / std_get_u64: 0.56x
+wti_get_cap1024 / wti_get_cap64: 0.98x
+
+== n=131072, 20000 distinct probes x 1 rounds = 20000 ops per repetition ==
+arm                      median        p10        p90   spread
+std_get                  154.14     140.36     167.75    17.8%
+std_get_null             159.15     139.79     168.00    17.7%
+wti_get                  396.13     367.47     410.56    10.9%
+wti_get_null             397.60     351.28     419.67    17.2%
+wti_contains_key         405.80     364.34     452.21    21.7%
+wti_range_next           493.92     404.13     540.41    27.6%
+wti_get_owned_key        490.18     455.65     542.82    17.8%
+std_get_u64               44.78      44.10      46.47     5.3%
+wti_get_u64               25.94      25.49      27.89     9.2%
+flat_partition_point     363.12     340.08     416.05    20.9%
+flat_binary_search       347.96     331.10     368.40    10.7%
+wti_get_cap16            457.29     428.03     493.29    14.3%
+wti_get_cap64            456.60     422.25     470.06    10.5%
+wti_get_cap256           391.31     366.09     442.31    19.5%
+wti_get_cap1024          392.83     363.32     431.73    17.4%
+null floor (std_get vs std_get_null): 3.3%
+null floor (wti_get vs wti_get_null): 0.4%
+wti_get / std_get: 2.57x
+wti_get_u64 / std_get_u64: 0.58x
+wti_get_cap1024 / wti_get_cap64: 0.86x
