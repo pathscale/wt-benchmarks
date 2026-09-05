@@ -51,6 +51,7 @@ use arctic::{Order, SequentialMap};
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use worktables_index::BTreeMap as WtiMap;
+use wt_benchmarks::rng::{PROBE_SHUFFLE_SEED, shuffle_seeded};
 
 /// The sizes the review reported, so the tables line up row for row.
 const SIZES: &[usize] = &[163, 512, 8_192, 131_072];
@@ -86,15 +87,13 @@ fn scan_prefix(i: usize) -> String {
 /// Probe order is the largest effect in this comparison and it is entirely harness: an
 /// in-order walk moves `BTreeMap` point get by 3.4x at 131,072 keys against a shuffled one,
 /// because it walks the tree the way the tree is laid out. Seeded so two runs compare.
+///
+/// The shuffle itself now lives in `wt_benchmarks::rng`, because `benches/probe_order.rs`
+/// makes this order one of four and has to produce the identical permutation. Two benches
+/// with two private shuffles cannot be read against each other.
 fn shuffled_probes(keys: &[String]) -> Vec<&str> {
     let mut out: Vec<&str> = keys.iter().map(String::as_str).collect();
-    let mut state: u64 = 0x5eed_1eaf_c0ff_ee01;
-    for i in (1..out.len()).rev() {
-        state ^= state << 13;
-        state ^= state >> 7;
-        state ^= state << 17;
-        out.swap(i, (state % (i as u64 + 1)) as usize);
-    }
+    shuffle_seeded(&mut out, PROBE_SHUFFLE_SEED);
     out
 }
 

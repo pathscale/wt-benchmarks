@@ -29,7 +29,11 @@ arctic = { package = "arctic-wt", version = "^0.1" }
 # footing as std and Arctic rather than through worktable's macro.
 # TEMPORARY path dependency, same reason: point this at a published version once there is
 # one to point at. Local paths in a committed manifest build on exactly one machine.
-worktables_index = { package = "WorkTablesIndex", path = "/Users/revenge/code/WorkTablesIndex" }
+# `concurrent` is on so benches/arctic_concurrent.rs can put WorkTablesIndex's own
+# concurrent map next to Arctic's. It is not an extra build: `worktable` already enables it.
+worktables_index = { package = "WorkTablesIndex", path = "/Users/revenge/code/WorkTablesIndex", features = [
+    "concurrent",
+] }
 dashmap = "6"
 derive_more = { version = "2", features = ["from", "error", "display", "debug", "into"] }
 eyre = "0.6"
@@ -249,3 +253,21 @@ harness = false
 [patch.crates-io]
 arctic-wt = { path = "/Users/revenge/code/arctic-wt" }
 
+
+# Probe order as the independent variable, across std `BTreeMap`, Arctic
+# `SequentialMap` and WorkTablesIndex, at every size the sibling
+# `arctic_paths` bench uses. In key order, seeded shuffle, one fixed key, and
+# YCSB Zipf 0.99. Read as a ratio to each backend's own in-order arm; carries a
+# null twin per order because the floor is not one number.
+[[bench]]
+name = "probe_order"
+harness = false
+
+# Arctic's `ConcurrentMap` against the lock it replaces: `SequentialMap` and
+# `std::BTreeMap` behind an `RwLock`, plus WorkTablesIndex's own concurrent map
+# and a no-op-SMR floor. Read-mostly, threads 1/2/4/8, same key shape and sizes
+# as `arctic_paths` and `probe_order`. Index level, overlapping keys; the
+# table-level backend question is `concurrent_mix`.
+[[bench]]
+name = "arctic_concurrent"
+harness = false
