@@ -51,6 +51,13 @@
 //! a lock-free map does not. Introducing structural writes would fold index-maintenance
 //! cost into that and neither effect could be read off the result.
 //!
+//! **Two mixes, `w0` and `w20`,** because one would leave the result ambiguous. An
+//! `RwLock` costs a reader two separate things and a single 5%-write sweep charges both to
+//! the same number: exclusion while a writer holds the lock, and the atomic read-write on
+//! one shared word that taking the *read* lock requires, which bounces a cache line between
+//! cores even when no writer exists. `w0` has no writers at all and isolates the second;
+//! `w20` adds the first. See `WRITE_EVERY`.
+//!
 //! Run: `cargo bench --bench arctic_concurrent`. One axis: `-- 'arctic_concurrent/std'`.
 
 use std::collections::BTreeMap;
@@ -75,27 +82,45 @@ const SIZES: &[usize] = &[163, 512, 8_192, 131_072];
 /// the numbers are scaling rather than oversubscription.
 const THREADS: &[usize] = &[1, 2, 4, 8];
 
-/// One operation in twenty is a write. Fixed stride rather than a sampled coin, so the mix
-/// is identical in every arm and no RNG runs inside the timed region. Threads start at
-/// different offsets in the probe vector, so their writes are staggered rather than in
-/// lockstep.
-const WRITE_EVERY: usize = 20;
+/// Write mixes, as "one operation in N is a write". `0` means never.
+///
+/// Two of them, because one would not say which half of the lock's loss is which. An
+/// `RwLock` costs a reader two things: exclusion while a writer holds it, and an atomic
+/// read-write on one shared word to take the *read* lock, which ping-pongs a cache line
+/// between cores whether or not any writer exists. `w0` has no writers at all, so whatever
+/// it loses is the second cost on its own; `w20` adds the first. A lock-free map pays
+/// neither and the two arms should sit on top of each other.
+///
+/// Fixed stride rather than a sampled coin, so the mix is identical in every arm and no RNG
+/// runs inside the timed region. Threads start at different offsets in the probe vector, so
+/// their writes are staggered rather than in lockstep.
+const WRITE_EVERY: &[usize] = &[0, 20];
 
-/// Bounded on purpose: six arms times four thread counts times four sizes is 96 cells, each
-/// spawning its thread set per sample. Shrink the fixture before raising any of these.
+/// Bounded on purpose: six arms times four thread counts times four sizes times two write
+/// mixes is 192 cells, each spawning its thread set per sample. About seven minutes on this
+/// machine. Shrink the fixture before raising any of these.
 const SAMPLES: usize = 10;
 const MEASURE: Duration = Duration::from_millis(1_000);
 const WARM_UP: Duration = Duration::from_millis(300);
 
 /// The key shape from the compiler this came from, identical to the sibling benches.
-fn path_keys(n: usize) -> Vec<String> {
-    (0..n).map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3)).collect()
+///
+/// **Leaked on purpose.** WorkTablesIndex's concurrent `BTreeMap` requires `T: Send +
+/// 'static`, so a borrowed `&str` key cannot enter it. The alternative was giving that one
+/// arm `String` keys while the others keep `&str`, which measures key handling and calls it
+/// concurrency - the exact trap `benches/nonunique.rs` documents. Leaking is bounded: one
+/// population per size, about 2.7 MB in total across the four, released at process exit.
+fn path_keys(n: usize) -> &'static [String] {
+    let keys: Vec<String> = (0..n)
+        .map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3))
+        .collect();
+    Vec::leak(keys)
 }
 
 /// The shared seeded shuffle. Probe order is the largest single effect in this comparison
 /// (see `benches/probe_order.rs`), so it is pinned here rather than left to each arm.
-fn shuffled_probes(keys: &[String]) -> Vec<&str> {
-    let mut out: Vec<&str> = keys.iter().map(String::as_str).collect();
+fn shuffled_probes(keys: &'static [String]) -> Vec<&'static str> {
+    let mut out: Vec<&'static str> = keys.iter().map(String::as_str).collect();
     shuffle_seeded(&mut out, PROBE_SHUFFLE_SEED);
     out
 }
@@ -157,16 +182,17 @@ fn probe_index(thread: usize, operation: u64, threads: usize, len: usize) -> usi
     (thread.wrapping_mul(stride).wrapping_add(operation as usize)) % len
 }
 
+/// Whether operation `n` is a write under the given stride. `every == 0` means never.
 #[inline]
-fn is_write(operation: u64) -> bool {
-    operation % WRITE_EVERY as u64 == 0
+fn is_write(operation: u64, every: usize) -> bool {
+    every != 0 && operation % every as u64 == 0
 }
 
 fn bench(c: &mut Criterion) {
     eprintln!(
         "conditions: debug_assertions={} arch={} os={} \
          arctic_smr=ps-reclaim(default)+no-op wti_features=concurrent lock=parking_lot \
-         write_every={WRITE_EVERY} suite={}",
+         write_every={WRITE_EVERY:?} suite={}",
         cfg!(debug_assertions),
         std::env::consts::ARCH,
         std::env::consts::OS,
@@ -179,9 +205,9 @@ fn bench(c: &mut Criterion) {
     group.warm_up_time(WARM_UP);
 
     for &n in SIZES {
-        let paths = path_keys(n);
-        let probes = shuffled_probes(&paths);
-        let arctic_probes: Vec<&Str<NonNull>> = probes
+        let paths: &'static [String] = path_keys(n);
+        let probes = shuffled_probes(paths);
+        let arctic_probes: Vec<&'static Str<NonNull>> = probes
             .iter()
             .map(|s| Str::<NonNull>::new(s).expect("no null byte"))
             .collect();
@@ -209,17 +235,26 @@ fn bench(c: &mut Criterion) {
         assert_eq!(std_map.len(), n, "n={n}: std arm lost rows");
         assert_eq!(wti.len(), n, "n={n}: wti arm lost rows");
         assert_eq!(
-            arctic_probes.iter().filter(|k| arctic_lockfree.get(k).is_some()).count(),
+            arctic_probes
+                .iter()
+                .filter(|k| arctic_lockfree.get(k).is_some())
+                .count(),
             n,
             "n={n}: arctic lock-free arm lost rows",
         );
         assert_eq!(
-            arctic_probes.iter().filter(|k| arctic_noop.get(k).is_some()).count(),
+            arctic_probes
+                .iter()
+                .filter(|k| arctic_noop.get(k).is_some())
+                .count(),
             n,
             "n={n}: arctic no-op-SMR arm lost rows",
         );
         assert_eq!(
-            arctic_probes.iter().filter(|k| arctic_seq.get(k).is_some()).count(),
+            arctic_probes
+                .iter()
+                .filter(|k| arctic_seq.get(k).is_some())
+                .count(),
             n,
             "n={n}: arctic sequential arm lost rows",
         );
@@ -227,106 +262,111 @@ fn bench(c: &mut Criterion) {
         let arctic_seq = RwLock::new(arctic_seq);
         let std_map = RwLock::new(std_map);
 
-        for &threads in THREADS {
-            // One element per thread per iteration, so the reported throughput is the
-            // aggregate the scaling question is actually about.
-            group.throughput(Throughput::Elements(threads as u64));
-            let id = format!("{n}/t{threads}");
+        for &write_every in WRITE_EVERY {
+            for &threads in THREADS {
+                // One element per thread per iteration, so the reported throughput is the
+                // aggregate the scaling question is actually about.
+                group.throughput(Throughput::Elements(threads as u64));
+                let id = format!("{n}/t{threads}/w{write_every}");
 
-            group.bench_function(BenchmarkId::new("arctic_lockfree", &id), |b| {
-                b.iter_custom(|iters| {
-                    scaled(threads, iters, |thread, operation| {
-                        let index = probe_index(thread, operation, threads, arctic_probes.len());
-                        let key = arctic_probes[index];
-                        if is_write(operation) {
-                            arctic_lockfree.upsert(key, operation);
-                            operation
-                        } else {
-                            arctic_lockfree.get(key).map_or(0, |value| *value)
-                        }
+                group.bench_function(BenchmarkId::new("arctic_lockfree", &id), |b| {
+                    b.iter_custom(|iters| {
+                        scaled(threads, iters, |thread, operation| {
+                            let index =
+                                probe_index(thread, operation, threads, arctic_probes.len());
+                            let key = arctic_probes[index];
+                            if is_write(operation, write_every) {
+                                arctic_lockfree.upsert(key, operation);
+                                operation
+                            } else {
+                                arctic_lockfree.get(key).map_or(0, |value| *value)
+                            }
+                        })
                     })
-                })
-            });
+                });
 
-            group.bench_function(BenchmarkId::new("arctic_lockfree_noop", &id), |b| {
-                b.iter_custom(|iters| {
-                    scaled(threads, iters, |thread, operation| {
-                        let index = probe_index(thread, operation, threads, arctic_probes.len());
-                        let key = arctic_probes[index];
-                        if is_write(operation) {
-                            arctic_noop.upsert(key, operation);
-                            operation
-                        } else {
-                            arctic_noop.get(key).map_or(0, |value| *value)
-                        }
+                group.bench_function(BenchmarkId::new("arctic_lockfree_noop", &id), |b| {
+                    b.iter_custom(|iters| {
+                        scaled(threads, iters, |thread, operation| {
+                            let index =
+                                probe_index(thread, operation, threads, arctic_probes.len());
+                            let key = arctic_probes[index];
+                            if is_write(operation, write_every) {
+                                arctic_noop.upsert(key, operation);
+                                operation
+                            } else {
+                                arctic_noop.get(key).map_or(0, |value| *value)
+                            }
+                        })
                     })
-                })
-            });
+                });
 
-            group.bench_function(BenchmarkId::new("arctic_seq_rwlock", &id), |b| {
-                b.iter_custom(|iters| {
-                    scaled(threads, iters, |thread, operation| {
-                        let index = probe_index(thread, operation, threads, arctic_probes.len());
-                        let key = arctic_probes[index];
-                        if is_write(operation) {
-                            arctic_seq.write().upsert(key, operation);
-                            operation
-                        } else {
-                            arctic_seq.read().get(key).copied().unwrap_or(0)
-                        }
+                group.bench_function(BenchmarkId::new("arctic_seq_rwlock", &id), |b| {
+                    b.iter_custom(|iters| {
+                        scaled(threads, iters, |thread, operation| {
+                            let index =
+                                probe_index(thread, operation, threads, arctic_probes.len());
+                            let key = arctic_probes[index];
+                            if is_write(operation, write_every) {
+                                let _ = arctic_seq.write().upsert(key, operation);
+                                operation
+                            } else {
+                                arctic_seq.read().get(key).copied().unwrap_or(0)
+                            }
+                        })
                     })
-                })
-            });
+                });
 
-            group.bench_function(BenchmarkId::new("std_rwlock", &id), |b| {
-                b.iter_custom(|iters| {
-                    scaled(threads, iters, |thread, operation| {
-                        let index = probe_index(thread, operation, threads, probes.len());
-                        let key = probes[index];
-                        if is_write(operation) {
-                            std_map.write().insert(key, operation);
-                            operation
-                        } else {
-                            std_map.read().get(key).copied().unwrap_or(0)
-                        }
+                group.bench_function(BenchmarkId::new("std_rwlock", &id), |b| {
+                    b.iter_custom(|iters| {
+                        scaled(threads, iters, |thread, operation| {
+                            let index = probe_index(thread, operation, threads, probes.len());
+                            let key = probes[index];
+                            if is_write(operation, write_every) {
+                                std_map.write().insert(key, operation);
+                                operation
+                            } else {
+                                std_map.read().get(key).copied().unwrap_or(0)
+                            }
+                        })
                     })
-                })
-            });
+                });
 
-            // The null: `std_rwlock` again, unchanged. Anything inside this gap is not a
-            // result, and on a machine shared with other agent lanes the gap moves.
-            group.bench_function(BenchmarkId::new("std_rwlock_null", &id), |b| {
-                b.iter_custom(|iters| {
-                    scaled(threads, iters, |thread, operation| {
-                        let index = probe_index(thread, operation, threads, probes.len());
-                        let key = probes[index];
-                        if is_write(operation) {
-                            std_map.write().insert(key, operation);
-                            operation
-                        } else {
-                            std_map.read().get(key).copied().unwrap_or(0)
-                        }
+                // The null: `std_rwlock` again, unchanged. Anything inside this gap is not a
+                // result, and on a machine shared with other agent lanes the gap moves.
+                group.bench_function(BenchmarkId::new("std_rwlock_null", &id), |b| {
+                    b.iter_custom(|iters| {
+                        scaled(threads, iters, |thread, operation| {
+                            let index = probe_index(thread, operation, threads, probes.len());
+                            let key = probes[index];
+                            if is_write(operation, write_every) {
+                                std_map.write().insert(key, operation);
+                                operation
+                            } else {
+                                std_map.read().get(key).copied().unwrap_or(0)
+                            }
+                        })
                     })
-                })
-            });
+                });
 
-            // WorkTablesIndex does have a concurrent story: a structural read/write lock
-            // over per-node locks. `lookup_for_select` is its definitive owned point read,
-            // which is the call a table's select path makes.
-            group.bench_function(BenchmarkId::new("wti_concurrent", &id), |b| {
-                b.iter_custom(|iters| {
-                    scaled(threads, iters, |thread, operation| {
-                        let index = probe_index(thread, operation, threads, probes.len());
-                        let key = probes[index];
-                        if is_write(operation) {
-                            wti.insert(key, operation);
-                            operation
-                        } else {
-                            wti.lookup_for_select(&key).unwrap_or(0)
-                        }
+                // WorkTablesIndex does have a concurrent story: a structural read/write lock
+                // over per-node locks. `lookup_for_select` is its definitive owned point read,
+                // which is the call a table's select path makes.
+                group.bench_function(BenchmarkId::new("wti_concurrent", &id), |b| {
+                    b.iter_custom(|iters| {
+                        scaled(threads, iters, |thread, operation| {
+                            let index = probe_index(thread, operation, threads, probes.len());
+                            let key = probes[index];
+                            if is_write(operation, write_every) {
+                                wti.insert(key, operation);
+                                operation
+                            } else {
+                                wti.lookup_for_select(&key).unwrap_or(0)
+                            }
+                        })
                     })
-                })
-            });
+                });
+            }
         }
     }
 
