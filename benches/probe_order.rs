@@ -39,8 +39,8 @@ use std::collections::BTreeMap;
 use std::hint::black_box;
 use std::time::Duration;
 
-use arctic::key::{BoxedStr, NonNull, Str};
 use arctic::SequentialMap;
+use arctic::key::{BoxedStr, NonNull, Str};
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use worktables_index::BTreeMap as WtiMap;
@@ -63,18 +63,18 @@ const ZIPF_THETA: f64 = 0.99;
 /// of `n` probes, so their sequential access to the probe vector itself costs the same.
 #[derive(Clone, Copy)]
 enum Order {
-    InOrder,
+    Ordered,
     Shuffled,
     Fixed,
     Zipf,
 }
 
 impl Order {
-    const ALL: [Self; 4] = [Self::InOrder, Self::Shuffled, Self::Fixed, Self::Zipf];
+    const ALL: [Self; 4] = [Self::Ordered, Self::Shuffled, Self::Fixed, Self::Zipf];
 
     fn as_str(self) -> &'static str {
         match self {
-            Self::InOrder => "in_order",
+            Self::Ordered => "in_order",
             Self::Shuffled => "shuffled",
             Self::Fixed => "fixed",
             Self::Zipf => "zipf",
@@ -84,7 +84,9 @@ impl Order {
 
 /// The key shape from the compiler this came from, identical to `benches/arctic_paths.rs`.
 fn path_keys(n: usize) -> Vec<String> {
-    (0..n).map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3)).collect()
+    (0..n)
+        .map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3))
+        .collect()
 }
 
 /// The probe sequence for one order over one population.
@@ -98,7 +100,7 @@ fn probes(keys: &[String], order: Order) -> Vec<&str> {
         // with a fixed-width unit number, so generation order is already lexicographic
         // order. Sorting anyway, because the arm's claim is "in key order" and that claim
         // should not depend on remembering the format string.
-        Order::InOrder => {
+        Order::Ordered => {
             let mut out: Vec<&str> = keys.iter().map(String::as_str).collect();
             out.sort_unstable();
             out
@@ -151,8 +153,11 @@ fn bench(c: &mut Criterion) {
             let key = Str::<NonNull>::new(k.as_str()).expect("no null byte");
             let _ = arctic.insert(key, i as u64);
         }
-        let btree: BTreeMap<&str, u64> =
-            paths.iter().enumerate().map(|(i, k)| (k.as_str(), i as u64)).collect();
+        let btree: BTreeMap<&str, u64> = paths
+            .iter()
+            .enumerate()
+            .map(|(i, k)| (k.as_str(), i as u64))
+            .collect();
         let mut wti = WtiMap::<&str, u64>::new();
         for (i, k) in paths.iter().enumerate() {
             wti.insert(k.as_str(), i as u64);
@@ -184,7 +189,10 @@ fn bench(c: &mut Criterion) {
                 order.as_str(),
             );
             assert_eq!(
-                arctic_probes.iter().filter(|k| arctic.get(k).is_some()).count(),
+                arctic_probes
+                    .iter()
+                    .filter(|k| arctic.get(k).is_some())
+                    .count(),
                 probes.len(),
                 "n={n} order={}: arctic disagrees with std about the population",
                 order.as_str(),
@@ -212,13 +220,17 @@ fn bench(c: &mut Criterion) {
                     })
                 },
             );
-            group.bench_with_input(BenchmarkId::new(format!("arctic/{label}"), n), &n, |b, _| {
-                let mut i = 0usize;
-                b.iter(|| {
-                    i = (i + 1) % arctic_probes.len();
-                    black_box(arctic.get(arctic_probes[i]).copied())
-                })
-            });
+            group.bench_with_input(
+                BenchmarkId::new(format!("arctic/{label}"), n),
+                &n,
+                |b, _| {
+                    let mut i = 0usize;
+                    b.iter(|| {
+                        i = (i + 1) % arctic_probes.len();
+                        black_box(arctic.get(arctic_probes[i]).copied())
+                    })
+                },
+            );
             group.bench_with_input(BenchmarkId::new(format!("wti/{label}"), n), &n, |b, _| {
                 let mut i = 0usize;
                 b.iter(|| {

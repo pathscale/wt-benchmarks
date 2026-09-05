@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 pub use generator::{
-    AcknowledgedKeyspace, FIELD_COUNT, GeneratedWorkload, Operation, OperationKind,
+    AcknowledgedKeyspace, FIELD_COUNT, GeneratedWorkload, Operation, OperationKind, ZipfCdf,
     generate_streams, make_fields,
 };
 #[cfg(feature = "worktable-adapter")]

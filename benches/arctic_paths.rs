@@ -59,7 +59,9 @@ const SIZES: &[usize] = &[163, 512, 8_192, 131_072];
 /// The key shape from the compiler this came from: a structural path, long, with a shared
 /// leading literal. Prefix sharing is the thing a radix tree pays for, so it is the variable.
 fn path_keys(n: usize) -> Vec<String> {
-    (0..n).map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3)).collect()
+    (0..n)
+        .map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3))
+        .collect()
 }
 
 /// The same population addressed as an integer, which is the condition Arctic claims.
@@ -99,7 +101,7 @@ fn shuffled_probes(keys: &[String]) -> Vec<&str> {
 
 fn bench(c: &mut Criterion) {
     eprintln!(
-        "conditions: debug_assertions={} target={} arctic={}",
+        "conditions: debug_assertions={} target={} suite={}",
         cfg!(debug_assertions),
         std::env::consts::ARCH,
         env!("CARGO_PKG_VERSION"),
@@ -120,10 +122,16 @@ fn bench(c: &mut Criterion) {
         for (i, k) in ints.iter().enumerate() {
             let _ = arctic_int.insert(*k, i as u64);
         }
-        let btree_path: BTreeMap<&str, u64> =
-            paths.iter().enumerate().map(|(i, k)| (k.as_str(), i as u64)).collect();
-        let btree_int: BTreeMap<u128, u64> =
-            ints.iter().enumerate().map(|(i, k)| (*k, i as u64)).collect();
+        let btree_path: BTreeMap<&str, u64> = paths
+            .iter()
+            .enumerate()
+            .map(|(i, k)| (k.as_str(), i as u64))
+            .collect();
+        let btree_int: BTreeMap<u128, u64> = ints
+            .iter()
+            .enumerate()
+            .map(|(i, k)| (*k, i as u64))
+            .collect();
         let mut wti_path = WtiMap::<&str, u64>::new();
         for (i, k) in paths.iter().enumerate() {
             wti_path.insert(k.as_str(), i as u64);
@@ -147,8 +155,14 @@ fn bench(c: &mut Criterion) {
         // re-measure. The timed arm now uses the validated form, which is what a caller with
         // a checked key actually writes.
         let validated = Str::<NonNull>::new(p.as_str()).expect("no null byte");
-        let arctic_hits = arctic_path.prefix(validated.into()).values(Order::Ascend).count();
-        let bare_hits = arctic_path.prefix(p.as_str().into()).values(Order::Ascend).count();
+        let arctic_hits = arctic_path
+            .prefix(validated.into())
+            .values(Order::Ascend)
+            .count();
+        let bare_hits = arctic_path
+            .prefix(p.as_str().into())
+            .values(Order::Ascend)
+            .count();
         let btree_hits = btree_path
             .range(p.as_str()..)
             .take_while(|(k, _)| k.starts_with(p.as_str()))
@@ -170,7 +184,12 @@ fn bench(c: &mut Criterion) {
         // The reported case: prefix scan, string keys.
         group.bench_with_input(BenchmarkId::new("arctic_path_prefix", n), &n, |b, _| {
             b.iter(|| {
-                black_box(arctic_path.prefix(p.as_str().into()).values(Order::Ascend).count())
+                black_box(
+                    arctic_path
+                        .prefix(p.as_str().into())
+                        .values(Order::Ascend)
+                        .count(),
+                )
             })
         });
         group.bench_with_input(BenchmarkId::new("btree_path_prefix", n), &n, |b, _| {
