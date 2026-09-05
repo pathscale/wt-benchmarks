@@ -28,10 +28,13 @@
 //! nanoseconds mix the backend in with the order; the ratio is the degradation shape, and
 //! the shapes are what is comparable across three structures with different constant costs.
 //!
-//! **The null arms are per order, not one for the whole bench.** The probe vector is walked
-//! sequentially in every arm, but it is `n` entries long for three of the orders and one
-//! entry long for `fixed`, so the floor is not the same number in each. This suite has seen
-//! identical arms report 7.8% at p = 0.00; anything inside the floor is not a result.
+//! **All four orders probe an `n`-entry vector**, `fixed` included: it repeats one key `n`
+//! times rather than returning a one-element vector. Only the *map* access pattern is
+//! allowed to differ. Getting this wrong was worth 47% on its own - see `probes` below.
+//!
+//! **The null arms are per order, not one for the whole bench.** Cache pressure differs by
+//! order, and so does the floor. This suite has seen identical arms report 7.8% at
+//! p = 0.00; anything inside the floor is not a result.
 //!
 //! Run: `cargo bench --bench probe_order`. One axis: `-- 'probe_order/std'`.
 
@@ -39,8 +42,8 @@ use std::collections::BTreeMap;
 use std::hint::black_box;
 use std::time::Duration;
 
-use arctic::key::{BoxedStr, NonNull, Str};
 use arctic::SequentialMap;
+use arctic::key::{BoxedStr, NonNull, Str};
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use worktables_index::BTreeMap as WtiMap;
@@ -59,8 +62,8 @@ const WARM_UP: Duration = Duration::from_millis(400);
 /// YCSB's canonical skew, matching `Config::default().zipf_theta`.
 const ZIPF_THETA: f64 = 0.99;
 
-/// The probe order under test. `Fixed` is one key repeated; the other three walk a vector
-/// of `n` probes, so their sequential access to the probe vector itself costs the same.
+/// The probe order under test. All four produce `n` probes, so the walk over the probe
+/// vector itself costs the same in every arm and only the map access differs.
 #[derive(Clone, Copy)]
 enum Order {
     InOrder,
@@ -84,14 +87,20 @@ impl Order {
 
 /// The key shape from the compiler this came from, identical to `benches/arctic_paths.rs`.
 fn path_keys(n: usize) -> Vec<String> {
-    (0..n).map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3)).collect()
+    (0..n)
+        .map(|i| format!("fn:unit{:06}/loop:{}", i / 3, i % 3))
+        .collect()
 }
 
 /// The probe sequence for one order over one population.
 ///
-/// Every arm walks its returned vector with `i = (i + 1) % len`, so the vector access
-/// pattern is sequential everywhere and only the *map* access pattern differs. `Fixed`
-/// returns one element, which is the point of it.
+/// **Every order returns `n` probes, `Fixed` included.** Each arm walks its vector with
+/// `i = (i + 1) % len`, so the vector access is sequential and identically shaped
+/// everywhere and only the *map* access pattern differs. The first version of this file
+/// returned a single element for `Fixed`, which changed the modulus, the vector footprint
+/// and the loop shape all at once, and it showed: `std` reported 27.4 ns for `fixed` at 163
+/// keys against 18.6 ns for `shuffled`, a perfectly cache-resident probe losing to a
+/// scattered one. That was the harness, not the index.
 fn probes(keys: &[String], order: Order) -> Vec<&str> {
     match order {
         // `path_keys` emits `fn:unit000000/loop:0`, `..loop:1`, `..loop:2`, `fn:unit000001/..`
@@ -109,8 +118,11 @@ fn probes(keys: &[String], order: Order) -> Vec<&str> {
             out
         }
         // The middle key, which is the probe `benches/arctic_paths.rs` uses for its integer
-        // arms. One entry, hit forever: every level of every structure stays resident.
-        Order::Fixed => vec![keys[keys.len() / 2].as_str()],
+        // arms, repeated to the same length as the other orders. Hit forever: every level
+        // of every structure stays resident. This is perfect locality, and it is also the
+        // bias an earlier review took to its limit when it probed one key and concluded
+        // `BTreeMap` won everywhere.
+        Order::Fixed => vec![keys[keys.len() / 2].as_str(); keys.len()],
         // Rank drawn Zipf, then scattered through `mix64` so rank is not position. That is
         // exactly what `ycsb::generator::sample_key` does for `Distribution::Zipfian`; a
         // Zipf directly over position would put the hot set in one contiguous run and
@@ -151,8 +163,11 @@ fn bench(c: &mut Criterion) {
             let key = Str::<NonNull>::new(k.as_str()).expect("no null byte");
             let _ = arctic.insert(key, i as u64);
         }
-        let btree: BTreeMap<&str, u64> =
-            paths.iter().enumerate().map(|(i, k)| (k.as_str(), i as u64)).collect();
+        let btree: BTreeMap<&str, u64> = paths
+            .iter()
+            .enumerate()
+            .map(|(i, k)| (k.as_str(), i as u64))
+            .collect();
         let mut wti = WtiMap::<&str, u64>::new();
         for (i, k) in paths.iter().enumerate() {
             wti.insert(k.as_str(), i as u64);
@@ -184,7 +199,10 @@ fn bench(c: &mut Criterion) {
                 order.as_str(),
             );
             assert_eq!(
-                arctic_probes.iter().filter(|k| arctic.get(k).is_some()).count(),
+                arctic_probes
+                    .iter()
+                    .filter(|k| arctic.get(k).is_some())
+                    .count(),
                 probes.len(),
                 "n={n} order={}: arctic disagrees with std about the population",
                 order.as_str(),
@@ -212,13 +230,17 @@ fn bench(c: &mut Criterion) {
                     })
                 },
             );
-            group.bench_with_input(BenchmarkId::new(format!("arctic/{label}"), n), &n, |b, _| {
-                let mut i = 0usize;
-                b.iter(|| {
-                    i = (i + 1) % arctic_probes.len();
-                    black_box(arctic.get(arctic_probes[i]).copied())
-                })
-            });
+            group.bench_with_input(
+                BenchmarkId::new(format!("arctic/{label}"), n),
+                &n,
+                |b, _| {
+                    let mut i = 0usize;
+                    b.iter(|| {
+                        i = (i + 1) % arctic_probes.len();
+                        black_box(arctic.get(arctic_probes[i]).copied())
+                    })
+                },
+            );
             group.bench_with_input(BenchmarkId::new(format!("wti/{label}"), n), &n, |b, _| {
                 let mut i = 0usize;
                 b.iter(|| {

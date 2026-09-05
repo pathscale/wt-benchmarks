@@ -258,13 +258,18 @@ fn make_value(seed: u64, length: usize) -> String {
     String::from_utf8(bytes).expect("ASCII payload")
 }
 
-struct ZipfCdf {
+/// YCSB's Zipf CDF, shared rather than reimplemented.
+///
+/// Public because `benches/probe_order.rs` needs a skewed probe order and this
+/// suite already owns one generator. A second Zipf written next door would be a
+/// second definition of "skewed" and the two benches could not be read together.
+pub struct ZipfCdf {
     cumulative: Vec<f64>,
     theta: f64,
 }
 
 impl ZipfCdf {
-    fn new(items: usize, theta: f64) -> Self {
+    pub fn new(items: usize, theta: f64) -> Self {
         let mut result = Self {
             cumulative: Vec::with_capacity(items),
             theta,
@@ -281,7 +286,7 @@ impl ZipfCdf {
         }
     }
 
-    fn sample(&self, rng: &mut Rng, bound: usize) -> usize {
+    pub fn sample(&self, rng: &mut Rng, bound: usize) -> usize {
         self.sample_token(rng.next_u64(), bound)
     }
 
