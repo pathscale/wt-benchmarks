@@ -50,6 +50,7 @@ use arctic::key::{BoxedStr, NonNull, Str};
 use arctic::{Order, SequentialMap};
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use worktables_index::BTreeMap as WtiMap;
 
 /// The sizes the review reported, so the tables line up row for row.
 const SIZES: &[usize] = &[163, 512, 8_192, 131_072];
@@ -80,6 +81,23 @@ fn scan_prefix(i: usize) -> String {
     format!("fn:unit{:06}/", i)
 }
 
+/// Probes in a deterministic shuffle rather than in key order.
+///
+/// Probe order is the largest effect in this comparison and it is entirely harness: an
+/// in-order walk moves `BTreeMap` point get by 3.4x at 131,072 keys against a shuffled one,
+/// because it walks the tree the way the tree is laid out. Seeded so two runs compare.
+fn shuffled_probes(keys: &[String]) -> Vec<&str> {
+    let mut out: Vec<&str> = keys.iter().map(String::as_str).collect();
+    let mut state: u64 = 0x5eed_1eaf_c0ff_ee01;
+    for i in (1..out.len()).rev() {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        out.swap(i, (state % (i as u64 + 1)) as usize);
+    }
+    out
+}
+
 fn bench(c: &mut Criterion) {
     eprintln!(
         "conditions: debug_assertions={} target={} arctic={}",
@@ -107,9 +125,12 @@ fn bench(c: &mut Criterion) {
             paths.iter().enumerate().map(|(i, k)| (k.as_str(), i as u64)).collect();
         let btree_int: BTreeMap<u128, u64> =
             ints.iter().enumerate().map(|(i, k)| (*k, i as u64)).collect();
+        let mut wti_path = WtiMap::<&str, u64>::new();
+        for (i, k) in paths.iter().enumerate() {
+            wti_path.insert(k.as_str(), i as u64);
+        }
 
         let p = scan_prefix((n / 3) / 2);
-        let probe_path = paths[n / 2].clone();
         let probe_int = ints[n / 2];
 
         // **The guard that makes this benchmark honest.** A scan returning nothing is
@@ -120,22 +141,26 @@ fn bench(c: &mut Criterion) {
         // because a terminated string can never be a proper prefix of another. So both arms
         // are required to find the same non-zero number before either is timed. If this
         // panics, the original measurement timed a no-op against real work.
-        // Bare &str, NOT the validated Str: see the module note. The validated form
-        // returns zero here and that is the defect this file exists to pin.
-        let arctic_hits = arctic_path.prefix(p.as_str().into()).values(Order::Ascend).count();
+        // **Fixed in 0.1.9**, and this file's pin is what said so. Until then the validated
+        // form returned zero while the bare `&str` returned the right count, so the timed arm
+        // used the bare form and asserted the validated one still returned zero. When the fix
+        // landed that assertion failed by design, naming the file and telling the reader to
+        // re-measure. The timed arm now uses the validated form, which is what a caller with
+        // a checked key actually writes.
         let validated = Str::<NonNull>::new(p.as_str()).expect("no null byte");
-        let validated_hits = arctic_path.prefix(validated.into()).values(Order::Ascend).count();
+        let arctic_hits = arctic_path.prefix(validated.into()).values(Order::Ascend).count();
+        let bare_hits = arctic_path.prefix(p.as_str().into()).values(Order::Ascend).count();
         let btree_hits = btree_path
             .range(p.as_str()..)
             .take_while(|(k, _)| k.starts_with(p.as_str()))
             .count();
-        // The pin on the defect. When Arctic fixes the validated-key prefix path this
-        // fails, which is the signal to drop the bare-&str workaround above and re-measure.
-        // A benchmark that quietly kept passing would leave the workaround in place forever.
+        // The durable guard the pin became: the two call forms must agree. That is the
+        // property the defect broke, and it holds independently of which one is timed.
         assert_eq!(
-            validated_hits, 0,
-            "n={n}: prefix() with a validated Str now returns {validated_hits} rather than 0, \
-             so the defect is fixed - use the validated form in the timed arms and re-measure",
+            arctic_hits, bare_hits,
+            "n={n}: the validated and bare call forms disagree - validated {arctic_hits}, \
+             bare {bare_hits}. This is the 0.1.9 defect returning, in one direction or the \
+             other",
         );
         assert!(
             arctic_hits > 0 && arctic_hits == btree_hits,
@@ -172,11 +197,57 @@ fn bench(c: &mut Criterion) {
         });
 
         // Point get, string keys.
+        //
+        // Two things here are deliberate, and both were wrong in the first version of this
+        // file. **Key construction is hoisted**: `Str::new` costs 6.4 ns and validating
+        // inside the timed loop charged Arctic +17.5% while the `BTreeMap` arm compared a
+        // plain `&str`, which measures key handling and calls it the index. **And the probe
+        // rotates over a shuffled order** rather than hammering one key: probing in key
+        // order instead of shuffled moves `BTreeMap` point get by 3.4x at 131,072, so a
+        // single fixed probe is that bias taken to its limit and it flatters the comparison
+        // tree. A deterministic shuffle keeps the two arms on one population.
+        let probes: Vec<&str> = shuffled_probes(&paths);
+        let arctic_probes: Vec<&Str<NonNull>> = probes
+            .iter()
+            .map(|s| Str::<NonNull>::new(s).expect("no null byte"))
+            .collect();
+
         group.bench_with_input(BenchmarkId::new("arctic_path_get", n), &n, |b, _| {
-            b.iter(|| { let k = Str::<NonNull>::new(probe_path.as_str()).expect("no null byte"); black_box(arctic_path.get(k).copied()) })
+            let mut i = 0usize;
+            b.iter(|| {
+                i = (i + 1) % arctic_probes.len();
+                black_box(arctic_path.get(arctic_probes[i]).copied())
+            })
         });
         group.bench_with_input(BenchmarkId::new("btree_path_get", n), &n, |b, _| {
-            b.iter(|| black_box(btree_path.get(probe_path.as_str()).copied()))
+            let mut i = 0usize;
+            b.iter(|| {
+                i = (i + 1) % probes.len();
+                black_box(btree_path.get(probes[i]).copied())
+            })
+        });
+
+        // The third arm: the house index, on the same footing. WorkTablesIndex is a
+        // comparison tree like std's rather than a radix tree like Arctic, so it is the
+        // control that says whether Arctic's prefix advantage is about radix structure or
+        // about this crate. Called directly rather than through worktable's `using` clause,
+        // because the question is the index and not the table around it.
+        group.bench_with_input(BenchmarkId::new("wti_path_prefix", n), &n, |b, _| {
+            b.iter(|| {
+                black_box(
+                    wti_path
+                        .range(p.as_str()..)
+                        .take_while(|(k, _)| k.starts_with(p.as_str()))
+                        .count(),
+                )
+            })
+        });
+        group.bench_with_input(BenchmarkId::new("wti_path_get", n), &n, |b, _| {
+            let mut i = 0usize;
+            b.iter(|| {
+                i = (i + 1) % probes.len();
+                black_box(wti_path.get(probes[i]).copied())
+            })
         });
 
         // The backend on equal footing: integer keys, the condition Arctic claims.

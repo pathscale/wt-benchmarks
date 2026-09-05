@@ -25,6 +25,9 @@ external-adapters = ["redb-adapter", "sqlite-adapter", "lmdb-adapter", "duckdb-a
 
 [dependencies]
 arctic = { package = "arctic-wt", version = "^0.1" }
+# WorkTablesIndex directly, so benches/arctic_paths.rs can call its BTreeMap on the same
+# footing as std and Arctic rather than through worktable's macro.
+worktables_index = { package = "WorkTablesIndex", path = "/Users/revenge/code/WorkTablesIndex" }
 dashmap = "6"
 derive_more = { version = "2", features = ["from", "error", "display", "debug", "into"] }
 eyre = "0.6"
@@ -233,3 +236,7 @@ harness = false
 [[bench]]
 name = "arctic_paths"
 harness = false
+
+[patch.crates-io]
+arctic-wt = { path = "/Users/revenge/code/arctic-wt" }
+
