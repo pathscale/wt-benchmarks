@@ -1,5 +1,10 @@
 //! Arctic against `BTreeMap` on structural-path keys, because a review said `BTreeMap` won.
 //!
+//! **Consumer profile: EKOPathRS.** See `docs/BENCHMARK_CATALOG.md`. A resident compiler
+//! session holds 354 distinct regions across 163 units, capped at 512, and the query its
+//! reactivity needs is a prefix scan over a structural path, not a point lookup. A backend
+//! chosen on YCSB numbers is chosen on the wrong workload for this consumer.
+//!
 //! **Why this exists.** A storage review inside `~/code/EKOPathRS` measured Arctic's
 //! `SequentialMap` against `std::collections::BTreeMap` on keys shaped `fn:<unit>/loop:<i>`
 //! and reported `BTreeMap` ahead by about 2x at every size that compiler actually has -

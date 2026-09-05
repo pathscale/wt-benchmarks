@@ -153,6 +153,40 @@ are views. The neuron-pair co-activation matrix is not a table and must never
 become one: `F * (F + 1) / 2` u32 counters, 302 MB per layer at F = 12288, in a
 memory-mapped file.
 
+### EKOPathRS
+
+A pure-Rust optimizing compiler, being turned into a resident, queryable, reactive
+server. This is **not** derived from a recorded phase profile: EKOPathRS uses no
+WorkTable today, and `benches/arctic_paths.rs` encodes the index question its
+observability design runs into. Read the shapes as a specification.
+
+The workload is small and its shape is unusual, which is the point. A resident
+session holds **354 distinct regions across 163 units**, capped at 512 units, and
+the query reactivity needs is a **prefix scan** - every loop under one function -
+against a structural-path key like `fn:unit000042/loop:1`. Not a point lookup, and
+nowhere near the sizes the portable families above exercise. A backend chosen on
+YCSB numbers is chosen on the wrong workload for this consumer.
+
+| Benchmark | Files | What it guards |
+|---|---|---|
+| Path prefix scan | `benches/arctic_paths.rs` | Arctic against `BTreeMap` on structural-path keys at 163/512/8K/131K, prefix scan and point get, string keys and the same population as `u128`. Arctic wins the prefix scan at every size measured - 40.9 vs 61.0 ns at 163, 51.1 vs 61.2 at 512, 54.2 vs 68.5 at 8,192 - and loses point get, which is the ordinary radix-versus-comparison trade. Carries a null arm: two identical `BTreeMap` arms differ by 0.6 ns, so that is the floor a result must clear. |
+
+**It also pins a live defect, and that is half its value.** `SequentialMap::prefix`
+returns **zero hits for a validated `Str<NonNull>` key** and the correct count for a
+bare `&str`. Both compile and neither errors, so the careful call is the broken one:
+
+    Str::<NonNull>::new("fn:a/").into()   ->  0
+    "fn:a/".into()                        ->  3
+
+A storage review inside EKOPathRS hit exactly this and concluded `BTreeMap` beat
+Arctic by 2x, reporting Arctic "flat at 105 to 143 ns across three orders of
+magnitude" - which is the shape of an always-empty result, timed against real work.
+The bench therefore **asserts both arms find the same non-zero population before
+either is timed**, so the class cannot recur silently, and asserts the validated
+form still returns zero, so the assertion fails when the defect is fixed rather
+than passing quietly on stale expectations. Fix it, and this file tells you to
+re-measure.
+
 ## WorkTable microbenchmark matrix
 
 These are not redundant with YCSB. They isolate the mechanisms behind the
