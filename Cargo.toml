@@ -24,7 +24,14 @@ duckdb-adapter = ["dep:duckdb", "dep:tempfile"]
 external-adapters = ["redb-adapter", "sqlite-adapter", "lmdb-adapter", "duckdb-adapter"]
 
 [dependencies]
-arctic = { package = "arctic-wt", version = "^0.1" }
+arctic = { package = "arctic-wt", version = "^0.1, >=0.1.9" }
+# WorkTablesIndex directly, so benches/arctic_paths.rs can call its BTreeMap on the same
+# footing as std and Arctic rather than through worktable's macro.
+# `concurrent` is on so benches/arctic_concurrent.rs can put WorkTablesIndex's own
+# concurrent map next to Arctic's. It is not an extra build: `worktable` already enables it.
+worktables_index = { package = "WorkTablesIndex", version = "^0.0, >=0.0.11", features = [
+    "concurrent",
+] }
 dashmap = "6"
 derive_more = { version = "2", features = ["from", "error", "display", "debug", "into"] }
 eyre = "0.6"
@@ -47,7 +54,7 @@ uuid = "1"
 # patches; the comparison script substitutes beta13 or beta15 worktrees. No
 # repository-local patch configuration is committed.
 worktable = { version = ">=1.0.0-beta.13, <1.0.0-beta.19", optional = true }
-worktable-vec = { path = "crates/worktable-vec" }
+worktable-vec = { version = "^0.1" }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["async_tokio"] }
@@ -228,4 +235,25 @@ harness = false
 # insert_many, then retire it with per-row delete, delete_many, or delete_range.
 [[bench]]
 name = "moe_pgo2"
+harness = false
+[[bench]]
+name = "arctic_paths"
+harness = false
+
+# Probe order as the independent variable, across std `BTreeMap`, Arctic
+# `SequentialMap` and WorkTablesIndex, at every size the sibling
+# `arctic_paths` bench uses. In key order, seeded shuffle, one fixed key, and
+# YCSB Zipf 0.99. Read as a ratio to each backend's own in-order arm; carries a
+# null twin per order because the floor is not one number.
+[[bench]]
+name = "probe_order"
+harness = false
+
+# Arctic's `ConcurrentMap` against the lock it replaces: `SequentialMap` and
+# `std::BTreeMap` behind an `RwLock`, plus WorkTablesIndex's own concurrent map
+# and a no-op-SMR floor. Read-mostly, threads 1/2/4/8, same key shape and sizes
+# as `arctic_paths` and `probe_order`. Index level, overlapping keys; the
+# table-level backend question is `concurrent_mix`.
+[[bench]]
+name = "arctic_concurrent"
 harness = false
