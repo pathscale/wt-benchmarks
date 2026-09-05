@@ -27,6 +27,8 @@ external-adapters = ["redb-adapter", "sqlite-adapter", "lmdb-adapter", "duckdb-a
 arctic = { package = "arctic-wt", version = "^0.1" }
 # WorkTablesIndex directly, so benches/arctic_paths.rs can call its BTreeMap on the same
 # footing as std and Arctic rather than through worktable's macro.
+# TEMPORARY path dependency, same reason: point this at a published version once there is
+# one to point at. Local paths in a committed manifest build on exactly one machine.
 worktables_index = { package = "WorkTablesIndex", path = "/Users/revenge/code/WorkTablesIndex" }
 dashmap = "6"
 derive_more = { version = "2", features = ["from", "error", "display", "debug", "into"] }
@@ -237,6 +239,13 @@ harness = false
 name = "arctic_paths"
 harness = false
 
+# TEMPORARY, remove when arctic-wt 0.1.9 is published.
+#
+# 0.1.9 carries the validated-string prefix fix that benches/arctic_paths.rs found and
+# pins. crates.io still has 0.1.8, which returns zero hits for a validated prefix key, so
+# without this patch that bench measures the defect rather than the index. When the
+# release lands, delete this section and the `^0.1` requirement resolves correctly on its
+# own. A path patch that outlives its reason is how a pin rots unnoticed.
 [patch.crates-io]
 arctic-wt = { path = "/Users/revenge/code/arctic-wt" }
 
