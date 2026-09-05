@@ -127,6 +127,16 @@ was 12.866 / 18.152 / 20.413 ns. WTI's sequential structure is therefore only
 repeating long shared-prefix comparisons across the outer node-maxima search,
 the inner up-to-1,024-entry node search, and final equality check.
 
+`crates/wti-point-get-case` decomposes that sequential gap with interleaved
+null twins, four node capacities, borrowed and owned string keys, integer
+controls, and equivalent flat searches. The flat `partition_point` arm costs
+90--94% of WTI `get`, while equality-terminating `binary_search_by` is 8--17%
+cheaper. This identifies a recoverable implementation cost: sequential
+`BTreeMap::get_key_value` used lower-bound `partition_point` and then a second
+equality comparison instead of WTI's already-selected exact-search backend.
+The case depends on the registry using a caret. Unreleased source is supplied
+only through an explicit command-line Cargo override.
+
 ### MoE-PGO
 
 Profile-guided re-partitioning of mixture-of-experts boundaries. This is

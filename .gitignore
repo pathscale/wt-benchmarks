@@ -18,3 +18,4 @@ campaigns/**/results-*.csv
 # lockfile would pin what the carets exist to let float, and would silently
 # decide which WorkTable a benchmark measured.
 Cargo.lock
+/crates/**/target/

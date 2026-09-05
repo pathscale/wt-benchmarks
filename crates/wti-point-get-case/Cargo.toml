@@ -1,0 +1,33 @@
+# Standalone case: WorkTablesIndex's sequential `BTreeMap::get` measured against
+# `std::collections::BTreeMap::get` on one population, and then decomposed until
+# the gap is explained or shown to be harness.
+#
+# Deliberately NOT a member of the wt-benchmarks package, and it declares its own
+# empty `[workspace]` so it is not adopted into one either. It owns its dependency
+# edge on purpose: the node-capacity sweep needs `with_maximum_node_size`, and the
+# whole point of a reproducer is that it can be copied into the WorkTablesIndex
+# repository and run there with nothing else present.
+#
+# Master stays registry-resolvable. To measure an unreleased WTI checkout, pass
+# `--config 'patch.crates-io.WorkTablesIndex.path="/path/to/WorkTablesIndex"'`
+# explicitly for that run; never commit the override or a lockfile.
+[package]
+name = "wti-point-get-case"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Isolates the WorkTablesIndex point-get gap against std::collections::BTreeMap"
+publish = false
+
+[workspace]
+
+[dependencies]
+indexset = { package = "WorkTablesIndex", version = "^0.0, >=0.0.11" }
+
+[[bin]]
+name = "wti-point-get-case"
+path = "src/main.rs"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
