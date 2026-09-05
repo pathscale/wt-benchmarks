@@ -229,3 +229,7 @@ harness = false
 [[bench]]
 name = "moe_pgo2"
 harness = false
+
+[[bench]]
+name = "arctic_paths"
+harness = false
