@@ -79,39 +79,10 @@ benchmark.** They were written independently and cover different halves: the
 first has the profile document and the graph shapes, the second has the backend
 grid and the acceptance-versus-durability split. Do not extend both.
 
-Not covered by either, and tracked elsewhere: on-disk footprint
+Not covered by either, and tracked elsewhere: eviction and vacuum reclaim
+(blocked on `pathscale/WorkTable#78`), on-disk footprint
 (`campaigns/footprint`), and concurrency, which this consumer does not yet
 exercise.
-
-**Eviction and vacuum reclaim were listed here as one item blocked on
-`pathscale/WorkTable#78`. They are two items and only one is blocked.** That
-issue is bulk delete and reclaim, so a consumer can evict without unbounded
-growth, and it is still open. This consumer's eviction is not that: it drops
-loaded table handles and never deletes a durable partition, so nothing about it
-waited on #78. It is measured, below. Vacuum reclaim is still blocked, still
-open, still unmeasured.
-
-#### Measured 2026-09-08, in `perf-benchmarks`
-
-Five more benchmarks for this consumer, run as `cargo run --release --bin` in
-[`perf-benchmarks`](../../perf-benchmarks) rather than here, because they need
-`agentcoder-store` itself and it is a light path dependency. Listed here because
-this is the catalog, and a benchmark whose consumer is not written down cannot be
-prioritised against the rest.
-
-| Benchmark | Files | What it guards |
-|---|---|---|
-| Eviction and reopen | `benchmarks/ac-eviction-reopen.rs` | Evicting a hot generation partition and admitting it again, decomposed. Cold against warm is 102 to 153x and eviction is 0.6% of undoing it, so the policy is safe. The decomposition is the part WorkTable should watch: **engine setup 14%, table load 82%, verification 2%**. Index construction is the whole cost of a cold start; verification is a rounding error. |
-| Index backend per pattern | `benchmarks/wt-index-ops.rs`, `benchmarks/wt-reopen.rs` | The four index shapes this consumer uses, live and reopened, kept apart. Reopen is the one to watch: Arctic `u128` against the 64-character string key these rows used to carry is **2.87x at 4,000 rows and 3.00x at 16,000**, spread 1.0 to 1.2x. Key width alone, backend fixed, is 1.36 to 1.38x. Also asserts that Arctic answers an ordered range, and records that it cannot express a non-unique index. |
-| Fixture composition | `benchmarks/ac-fixture-composition.rs` | Whether a synthetic fixture flatters every other number here. Partly: at the term density a real repository shows, reopen costs **1.45 to 1.63x more per fact** than the synthetic ladder says, so those absolutes are a lower bound. Vocabulary overlap is a null result. Ratios within a run are unaffected. |
-| Hot representation A/B | `benchmarks/ac-hot-representation.rs` | What a different representation could recover. Eight `worktable-vec` tables load in 13.8 to 14.2% of rebuilding the persistence engines, so about **86% of a cold reopen is addressable**. An upper bound on a rewrite, not a recommendation. |
-| Fact identity cost | `benchmarks/ac-fact-identity.rs` | Generation-scoped identity against revision-scoped: durable duplication 11.4x, write-side 1.8x, manifest filter 2.7% of touches. The load-bearing line is that retention bounds staleness fan-out and does **not** bound sharding fan-out, which is 1.46x at every window including one generation. |
-
-Two of the "not written" rows above are still not written. **Text-index build**
-remains unmeasured, and it is 37% of an update. **Incremental reuse** remains
-unmeasured, and its floor is 13.7x below current. Neither of the five above
-touches them: they measure reads, reopens and representations, and the two gaps
-are both on the write path.
 
 ### MoE-PGO
 
