@@ -1,0 +1,37 @@
+# Standalone case: the `SequentialMap` vs `BTreeMap` claim, and the silent
+# `prefix` footgun. Deliberately NOT a member of the wt-benchmarks package:
+# Cargo features are additive, so measuring `arctic-wt` with and without its
+# default `smr-ps-reclaim` feature is only possible from a crate that owns the
+# dependency edge and sets `default-features = false`.
+#
+# The path dependency points at the sibling checkout on purpose. Every number
+# this crate produces is a measurement of that working tree, not of whatever
+# `arctic-wt` the registry currently serves.
+[package]
+name = "arctic-seqmap-case"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Isolates the arctic-wt SequentialMap vs BTreeMap measurement and the silent prefix bug"
+publish = false
+
+[features]
+default = []
+# Arm for hypothesis 2: does `SequentialMap` pay for safe memory reclamation?
+arctic-smr = ["arctic-wt/smr-ps-reclaim"]
+# Arm for hypothesis 1 without touching any other crate's codegen. Identical
+# in effect to building arctic-wt with `debug_assertions` on: both feed the
+# same `cfg!(any(feature = "validate", debug_assertions, test))` in
+# arctic-wt/src/lib.rs:137-158.
+arctic-validate = ["arctic-wt/validate"]
+
+[dependencies]
+arctic-wt = { path = "../../../arctic-wt", default-features = false }
+
+[[bin]]
+name = "arctic-seqmap-case"
+path = "src/main.rs"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
