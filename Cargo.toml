@@ -57,6 +57,12 @@ uuid = "1"
 # repository-local patch configuration is committed.
 worktable = { version = ">=1.0.0-beta.13, <1.0.0-beta.19", optional = true }
 worktable-vec = { path = "crates/worktable-vec" }
+# The published crate, alongside the vendored copy above, so benches/wtvec_vs_vec.rs
+# measures what ships rather than a local draft. The vendored copy is an earlier 216-line
+# version with no ArcticTable; src/moe_resident.rs still uses it.
+# TEMPORARY: git, because 0.1.1 is merged but not yet published - crates.io has 0.1.0,
+# which is std and takes Arctic unconditionally. Point this at "0.1.1" once it lands.
+wtvec_pub = { package = "worktable-vec", git = "https://github.com/pathscale/WorkTable-vec", branch = "master", default-features = false }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["async_tokio"] }
@@ -270,4 +276,8 @@ harness = false
 # table-level backend question is `concurrent_mix`.
 [[bench]]
 name = "arctic_concurrent"
+harness = false
+
+[[bench]]
+name = "wtvec_vs_vec"
 harness = false
