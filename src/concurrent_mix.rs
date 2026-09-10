@@ -184,7 +184,25 @@ macro_rules! concurrent_backend {
                                         // nothing. That is exactly what a first
                                         // version did, and it showed up as 50%
                                         // writes running *faster* than 0%.
-                                        if futures::executor::block_on(table.upsert(row)).is_ok() {
+                                        // Through the selected dispatch, not
+                                        // inline. `futures::executor::block_on`
+                                        // polls on the calling thread, so the
+                                        // wake never reaches a scheduler and
+                                        // this benchmark returned the same
+                                        // number under every flavor, which
+                                        // looks like evidence that the flavor
+                                        // does not matter. The fixture insert
+                                        // above stays inline: it is setup, and
+                                        // charging it to the pool would move
+                                        // the cost of loading the table into
+                                        // the thing being compared.
+                                        // The future owns its handle. Pool
+                                        // dispatch spawns, which is `'static`,
+                                        // so a future borrowing this thread's
+                                        // `Arc` does not compile. See the note
+                                        // on `rt::block_on`.
+                                        let handle = Arc::clone(&table);
+                                        if crate::rt::block_on(async move { handle.upsert(row).await }).is_ok() {
                                             wrote += 1;
                                         }
                                     }

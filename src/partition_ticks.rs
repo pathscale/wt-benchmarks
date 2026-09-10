@@ -230,11 +230,17 @@ pub fn run(shape: Shape, ticks_per_reader: u64) -> Outcome {
                 let fresh = table
                     .partition_or_create(symbol)
                     .expect("under the partition limit");
-                let _ = futures::executor::block_on(fresh.insert(TickRow {
+                // Through the selected dispatch, so the churn a measured
+                // reader contends with actually reaches a scheduler. Inline
+                // polling kept every wake on this thread, which is why this
+                // benchmark returned one number for every flavor. `populate`
+                // above stays inline because it is fixture setup.
+                let tick = TickRow {
                     id: rng.below(shape.rows_per_partition),
                     price: 1.0,
                     qty: 1,
-                }));
+                };
+                let _ = crate::rt::block_on(async move { fresh.insert(tick).await });
                 // `remove` retires, advances and collects on its own, so
                 // there is deliberately no `collect` call here: adding one
                 // measures an already-drained queue and always reports zero.
