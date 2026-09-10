@@ -29,11 +29,9 @@ external-adapters = ["redb-adapter", "sqlite-adapter", "lmdb-adapter", "duckdb-a
 persisted-grid = ["worktable-adapter", "dep:tempfile"]
 
 [dependencies]
-arctic = { package = "arctic-wt", version = "^0.1" }
+arctic = { package = "arctic-wt", version = "^0.1, >=0.1.9" }
 # WorkTablesIndex directly, so benches/arctic_paths.rs can call its BTreeMap on the same
 # footing as std and Arctic rather than through worktable's macro.
-# TEMPORARY path dependency, same reason: point this at a published version once there is
-# one to point at. Local paths in a committed manifest build on exactly one machine.
 # `concurrent` is on so benches/arctic_concurrent.rs can put WorkTablesIndex's own
 # concurrent map next to Arctic's. It is not an extra build: `worktable` already enables it.
 worktables_index = { package = "WorkTablesIndex", version = "^0.0, >=0.0.11", features = [
@@ -61,18 +59,11 @@ tempfile = { version = "3", optional = true }
 nagoya = { version = "0.1" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 uuid = "1"
-# Deliberately spans the local historical worktrees used by the version grid.
-# Validation selects the beta18 checkout with command-line Cargo `--config`
-# patches; the comparison script substitutes beta13 or beta15 worktrees. No
+# Follow the rolling beta on ordinary builds. Historical comparisons replace
+# it with beta13 or beta15 through command-line Cargo `--config` patches; no
 # repository-local patch configuration is committed.
-worktable = { version = ">=1.0.0-beta.13, <2", optional = true }
-worktable-vec = { path = "crates/worktable-vec" }
-# The published crate, alongside the vendored copy above, so benches/wtvec_vs_vec.rs
-# measures what ships rather than a local draft. The vendored copy is an earlier 216-line
-# version with no ArcticTable; src/moe_resident.rs still uses it.
-# TEMPORARY: git, because 0.1.1 is merged but not yet published - crates.io has 0.1.0,
-# which is std and takes Arctic unconditionally. Point this at "0.1.1" once it lands.
-wtvec_pub = { package = "worktable-vec", git = "https://github.com/pathscale/WorkTable-vec", branch = "master", default-features = false }
+worktable = { version = "^1.9.0-alpha1", optional = true }
+worktable-vec = { version = "^0.1", features = ["arctic"] }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["async_tokio"] }
@@ -254,21 +245,9 @@ harness = false
 [[bench]]
 name = "moe_pgo2"
 harness = false
-
 [[bench]]
 name = "arctic_paths"
 harness = false
-
-# TEMPORARY, remove when arctic-wt 0.1.9 is published.
-#
-# 0.1.9 carries the validated-string prefix fix that benches/arctic_paths.rs found and
-# pins. crates.io still has 0.1.8, which returns zero hits for a validated prefix key, so
-# without this patch that bench measures the defect rather than the index. When the
-# release lands, delete this section and the `^0.1` requirement resolves correctly on its
-# own. A path patch that outlives its reason is how a pin rots unnoticed.
-[patch.crates-io]
-arctic-wt = { path = "/Users/revenge/code/arctic-wt" }
-
 
 # Probe order as the independent variable, across std `BTreeMap`, Arctic
 # `SequentialMap` and WorkTablesIndex, at every size the sibling
@@ -286,10 +265,6 @@ harness = false
 # table-level backend question is `concurrent_mix`.
 [[bench]]
 name = "arctic_concurrent"
-harness = false
-
-[[bench]]
-name = "wtvec_vs_vec"
 harness = false
 
 [[bin]]
@@ -311,3 +286,8 @@ required-features = ["persisted-grid"]
 name = "backend-grid-worktable"
 path = "src/bin/backend-grid-worktable.rs"
 required-features = ["worktable-adapter"]
+
+# No `required-features`: it reads JSON on stdin and needs no adapter.
+[[bin]]
+name = "summarize-grid"
+path = "src/bin/summarize-grid.rs"

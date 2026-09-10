@@ -28,13 +28,10 @@
 //! nanoseconds mix the backend in with the order; the ratio is the degradation shape, and
 //! the shapes are what is comparable across three structures with different constant costs.
 //!
-//! **All four orders probe an `n`-entry vector**, `fixed` included: it repeats one key `n`
-//! times rather than returning a one-element vector. Only the *map* access pattern is
-//! allowed to differ. Getting this wrong was worth 47% on its own - see `probes` below.
-//!
-//! **The null arms are per order, not one for the whole bench.** Cache pressure differs by
-//! order, and so does the floor. This suite has seen identical arms report 7.8% at
-//! p = 0.00; anything inside the floor is not a result.
+//! **The null arms are per order, not one for the whole bench.** The probe vector is walked
+//! sequentially in every arm, but it is `n` entries long for three of the orders and one
+//! entry long for `fixed`, so the floor is not the same number in each. This suite has seen
+//! identical arms report 7.8% at p = 0.00; anything inside the floor is not a result.
 //!
 //! Run: `cargo bench --bench probe_order`. One axis: `-- 'probe_order/std'`.
 
@@ -62,22 +59,22 @@ const WARM_UP: Duration = Duration::from_millis(400);
 /// YCSB's canonical skew, matching `Config::default().zipf_theta`.
 const ZIPF_THETA: f64 = 0.99;
 
-/// The probe order under test. All four produce `n` probes, so the walk over the probe
-/// vector itself costs the same in every arm and only the map access differs.
+/// The probe order under test. `Fixed` is one key repeated; the other three walk a vector
+/// of `n` probes, so their sequential access to the probe vector itself costs the same.
 #[derive(Clone, Copy)]
 enum Order {
-    InOrder,
+    Ordered,
     Shuffled,
     Fixed,
     Zipf,
 }
 
 impl Order {
-    const ALL: [Self; 4] = [Self::InOrder, Self::Shuffled, Self::Fixed, Self::Zipf];
+    const ALL: [Self; 4] = [Self::Ordered, Self::Shuffled, Self::Fixed, Self::Zipf];
 
     fn as_str(self) -> &'static str {
         match self {
-            Self::InOrder => "in_order",
+            Self::Ordered => "in_order",
             Self::Shuffled => "shuffled",
             Self::Fixed => "fixed",
             Self::Zipf => "zipf",
@@ -94,20 +91,16 @@ fn path_keys(n: usize) -> Vec<String> {
 
 /// The probe sequence for one order over one population.
 ///
-/// **Every order returns `n` probes, `Fixed` included.** Each arm walks its vector with
-/// `i = (i + 1) % len`, so the vector access is sequential and identically shaped
-/// everywhere and only the *map* access pattern differs. The first version of this file
-/// returned a single element for `Fixed`, which changed the modulus, the vector footprint
-/// and the loop shape all at once, and it showed: `std` reported 27.4 ns for `fixed` at 163
-/// keys against 18.6 ns for `shuffled`, a perfectly cache-resident probe losing to a
-/// scattered one. That was the harness, not the index.
+/// Every arm walks its returned vector with `i = (i + 1) % len`, so the vector access
+/// pattern is sequential everywhere and only the *map* access pattern differs. `Fixed`
+/// returns one element, which is the point of it.
 fn probes(keys: &[String], order: Order) -> Vec<&str> {
     match order {
         // `path_keys` emits `fn:unit000000/loop:0`, `..loop:1`, `..loop:2`, `fn:unit000001/..`
         // with a fixed-width unit number, so generation order is already lexicographic
         // order. Sorting anyway, because the arm's claim is "in key order" and that claim
         // should not depend on remembering the format string.
-        Order::InOrder => {
+        Order::Ordered => {
             let mut out: Vec<&str> = keys.iter().map(String::as_str).collect();
             out.sort_unstable();
             out
@@ -118,11 +111,8 @@ fn probes(keys: &[String], order: Order) -> Vec<&str> {
             out
         }
         // The middle key, which is the probe `benches/arctic_paths.rs` uses for its integer
-        // arms, repeated to the same length as the other orders. Hit forever: every level
-        // of every structure stays resident. This is perfect locality, and it is also the
-        // bias an earlier review took to its limit when it probed one key and concluded
-        // `BTreeMap` won everywhere.
-        Order::Fixed => vec![keys[keys.len() / 2].as_str(); keys.len()],
+        // arms. One entry, hit forever: every level of every structure stays resident.
+        Order::Fixed => vec![keys[keys.len() / 2].as_str()],
         // Rank drawn Zipf, then scattered through `mix64` so rank is not position. That is
         // exactly what `ycsb::generator::sample_key` does for `Distribution::Zipfian`; a
         // Zipf directly over position would put the hot set in one contiguous run and

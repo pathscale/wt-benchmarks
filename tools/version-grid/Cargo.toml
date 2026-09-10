@@ -21,7 +21,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 uuid = "1"
-worktable = { version = ">=1.0.0-beta.13, <1.0.0-beta.19" }
+worktable = { version = "^1.0.0-beta" }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["async_tokio"] }

@@ -8,8 +8,9 @@
 # whole point of a reproducer is that it can be copied into the WorkTablesIndex
 # repository and run there with nothing else present.
 #
-# The path dependency points at the sibling checkout on purpose. Every number this
-# crate produces is a measurement of that working tree.
+# Master stays registry-resolvable. To measure an unreleased WTI checkout, pass
+# `--config 'patch.crates-io.WorkTablesIndex.path="/path/to/WorkTablesIndex"'`
+# explicitly for that run; never commit the override or a lockfile.
 [package]
 name = "wti-point-get-case"
 version = "0.1.0"
@@ -21,7 +22,7 @@ publish = false
 [workspace]
 
 [dependencies]
-indexset = { package = "WorkTablesIndex", path = "../../../WorkTablesIndex" }
+indexset = { package = "WorkTablesIndex", version = "^0.0, >=0.0.11" }
 
 [[bin]]
 name = "wti-point-get-case"
