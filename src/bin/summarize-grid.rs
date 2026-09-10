@@ -43,6 +43,31 @@ use std::io::Read;
 
 use serde_json::Value;
 
+/// The keys that name the runtime, in the two row shapes this reads.
+///
+/// `GridRow` says `runtime`/`tuning`; `RunResult`, which ycsb and tatp already
+/// emit per repetition, says `engine`/`runtime_flavor`. Both carry
+/// `ops_per_second`, `cpu_x` and a repetition, so both can be summarised the
+/// same way, and teaching this to read both is cheaper and less duplicative
+/// than making those two benchmarks emit a second row alongside the one they
+/// already print.
+const RUNTIME_KEYS: [&str; 2] = ["runtime", "engine"];
+const TUNING_KEYS: [&str; 2] = ["tuning", "runtime_flavor"];
+/// Dimensions from either shape. A key absent from a row is simply skipped.
+const DIMENSION_KEYS: [&str; 11] = [
+    "dispatch",
+    "page_size",
+    "worker_threads",
+    "threads",
+    "readers",
+    "writers",
+    "ops_per_task",
+    "workload",
+    "distribution",
+    "records_initial",
+    "operations_requested",
+];
+
 /// The measured samples for one cell.
 #[derive(Default)]
 struct Cell {
@@ -87,7 +112,7 @@ fn dimensions(row: &Value) -> String {
         other => other.to_string(),
     });
     let mut parts = vec![get("suite")];
-    for key in ["dispatch", "page_size", "worker_threads", "readers", "writers", "ops_per_task"] {
+    for key in DIMENSION_KEYS {
         let value = get(key);
         if !value.is_empty() {
             parts.push(format!("{key}={value}"));
@@ -104,8 +129,9 @@ fn label(row: &Value) -> String {
         Value::Null => String::new(),
         other => other.to_string(),
     });
-    let mut parts = vec![get("suite"), get("runtime"), get("tuning")];
-    for key in ["dispatch", "page_size", "worker_threads", "readers", "writers", "ops_per_task"] {
+    let first = |keys: &[&str]| keys.iter().map(|k| get(k)).find(|v| !v.is_empty()).unwrap_or_default();
+    let mut parts = vec![get("suite"), first(&RUNTIME_KEYS), first(&TUNING_KEYS)];
+    for key in DIMENSION_KEYS {
         let value = get(key);
         if !value.is_empty() {
             parts.push(format!("{key}={value}"));
