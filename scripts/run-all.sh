@@ -6,12 +6,22 @@
 # in here did not get measured, and a number that is in here was measured the
 # same way as every other.
 #
+# The raw rows are kept under data/<machine>/<date>/ and committed. That is the
+# long-term record: a summary can always be regenerated from rows, and rows can
+# be graphed over time, but a summary alone cannot be re-derived into either.
+#
+# Keyed by machine because these numbers are not portable. This machine has 12
+# performance and 4 efficiency cores, and a run on a different topology is a
+# different measurement, not a later sample of the same one. Mixing them into
+# one series would produce a trend line that is really a hardware change.
+#
 # Usage:
 #   scripts/run-all.sh [output.md]
 #
 # Environment:
 #   WT_ROUNDS_ALL  repetitions for every suite (default 9). Three is not
 #                  enough: it produced two reversals in this study.
+#   WT_MACHINE     override the machine slug (default: derived from the CPU).
 #
 # POSIX sh: no arrays, no [[ ]], no pipefail.
 set -eu
@@ -20,8 +30,20 @@ OUT="${1:-benchmark.md}"
 ROUNDS="${WT_ROUNDS_ALL:-9}"
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 BIN="$ROOT/target/release"
-RAW="$ROOT/target/benchmark-rows"
+
+# A stable slug for this machine. Derived rather than hostname, because a
+# hostname says who owns the laptop and not what the numbers mean.
+if [ -n "${WT_MACHINE:-}" ]; then
+    MACHINE="$WT_MACHINE"
+elif command -v sysctl >/dev/null 2>&1 && sysctl -n machdep.cpu.brand_string >/dev/null 2>&1; then
+    MACHINE=$(sysctl -n machdep.cpu.brand_string | tr 'A-Z ' 'a-z-')-$(sysctl -n hw.ncpu)c
+else
+    MACHINE=$(uname -s | tr 'A-Z' 'a-z')-$(uname -m)
+fi
+DATE=$(date +%Y-%m-%d)
+RAW="$ROOT/data/$MACHINE/$DATE"
 mkdir -p "$RAW"
+echo "machine $MACHINE, date $DATE" >&2
 
 FEATURES="worktable-adapter persisted-grid versioned-row-publication"
 
@@ -85,4 +107,28 @@ echo "ycsb C, 16 threads" >&2
     done
 } > "$OUT"
 
-echo "wrote $OUT" >&2
+# Provenance beside the rows, because a number read a year from now without
+# it is guesswork, and a toolchain or topology change explains more apparent
+# regressions than code changes do.
+{
+    echo "{"
+    echo "  \"date\": \"$DATE\","
+    echo "  \"machine\": \"$MACHINE\","
+    echo "  \"rounds\": $ROUNDS,"
+    echo "  \"commit\": \"$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)\","
+    echo "  \"branch\": \"$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)\","
+    echo "  \"dirty_files\": $(git -C "$ROOT" status --porcelain 2>/dev/null | wc -l | tr -d ' '),"
+    echo "  \"rustc\": \"$(rustc --version)\","
+    echo "  \"host\": \"$(uname -sm)\","
+    echo "  \"logical_cores\": $(sysctl -n hw.ncpu 2>/dev/null || echo 0),"
+    echo "  \"performance_cores\": $(sysctl -n hw.perflevel0.logicalcpu 2>/dev/null || echo 0),"
+    echo "  \"efficiency_cores\": $(sysctl -n hw.perflevel1.logicalcpu 2>/dev/null || echo 0),"
+    echo "  \"features\": \"$FEATURES\""
+    echo "}"
+} > "$RAW/meta.json"
+
+# The summary lives beside its rows as well as at $OUT, so a dated directory
+# is self-contained and readable without regenerating anything.
+cp "$OUT" "$RAW/summary.md"
+
+echo "wrote $OUT and $RAW" >&2

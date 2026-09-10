@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-11",
+  "machine": "apple-m4-max-16c",
+  "rounds": 9,
+  "commit": "c37bc85",
+  "branch": "bench/moe-resident-wt-beta17",
+  "dirty_files": 3,
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+  "host": "Darwin arm64",
+  "logical_cores": 16,
+  "performance_cores": 12,
+  "efficiency_cores": 4,
+  "features": "worktable-adapter persisted-grid versioned-row-publication"
+}
