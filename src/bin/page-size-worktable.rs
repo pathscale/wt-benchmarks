@@ -271,6 +271,9 @@ macro_rules! measure {
                 Driver::Tokio => "tokio multi_thread".to_owned(),
             },
             dispatch: "pool",
+        // No secondary index on this table, so the backend axis does not
+        // apply. Named rather than left blank.
+        index_backend: "none",
             repetition: wt_benchmarks::grid::repetition(),
             page_size: Some($page),
             worker_threads: worker_threads(),

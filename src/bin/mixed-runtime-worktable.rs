@@ -325,6 +325,9 @@ fn emit_row(
         runtime: runtime.to_owned(),
         tuning,
         dispatch: "pool",
+        // No secondary index on this table, so the backend axis does not
+        // apply. Named rather than left blank.
+        index_backend: "none",
         repetition: wt_benchmarks::grid::repetition(),
         page_size: None,
         worker_threads: std::env::var("WT_RUNTIME_WORKERS")
