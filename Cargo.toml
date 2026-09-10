@@ -36,7 +36,7 @@ arctic = { package = "arctic-wt", version = "^0.1" }
 # one to point at. Local paths in a committed manifest build on exactly one machine.
 # `concurrent` is on so benches/arctic_concurrent.rs can put WorkTablesIndex's own
 # concurrent map next to Arctic's. It is not an extra build: `worktable` already enables it.
-worktables_index = { package = "WorkTablesIndex", path = "/Users/revenge/code/WorkTablesIndex", features = [
+worktables_index = { package = "WorkTablesIndex", version = "^0.0, >=0.0.11", features = [
     "concurrent",
 ] }
 dashmap = "6"
@@ -65,7 +65,7 @@ uuid = "1"
 # Validation selects the beta18 checkout with command-line Cargo `--config`
 # patches; the comparison script substitutes beta13 or beta15 worktrees. No
 # repository-local patch configuration is committed.
-worktable = { path = "/private/tmp/claude-501/-Users-revenge-code/821563b2-81fd-4185-ab61-eb4da22fba91/scratchpad/wt-collapse", optional = true }
+worktable = { version = ">=1.0.0-beta.13, <2", optional = true }
 worktable-vec = { path = "crates/worktable-vec" }
 # The published crate, alongside the vendored copy above, so benches/wtvec_vs_vec.rs
 # measures what ships rather than a local draft. The vendored copy is an earlier 216-line
@@ -268,9 +268,6 @@ harness = false
 # own. A path patch that outlives its reason is how a pin rots unnoticed.
 [patch.crates-io]
 arctic-wt = { path = "/Users/revenge/code/arctic-wt" }
-data_bucket = { path = "/private/tmp/claude-501/-Users-revenge-code/821563b2-81fd-4185-ab61-eb4da22fba91/scratchpad/db-collapse" }
-nagoya = { path = "/Users/revenge/code/nagoya" }
-ps-st3 = { path = "/private/tmp/claude-501/-Users-revenge-code/821563b2-81fd-4185-ab61-eb4da22fba91/scratchpad/st3-norevert" }
 
 
 # Probe order as the independent variable, across std `BTreeMap`, Arctic
