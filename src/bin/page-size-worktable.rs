@@ -279,6 +279,8 @@ macro_rules! measure {
             ops_per_task: ops(),
             elapsed_ns: started.elapsed().as_nanos(),
             ops_per_second: total / elapsed,
+            read_ops_per_second: readers() as f64 * ops() as f64 / elapsed,
+            write_ops_per_second: writers() as f64 * ops() as f64 / elapsed,
             cpu_x: cpu / elapsed,
             read_latency: reads.clone(),
             write_latency: writes.clone(),

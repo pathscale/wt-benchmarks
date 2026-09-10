@@ -8,6 +8,10 @@ use crate::config::Config;
 pub struct LatencySummary {
     pub samples: usize,
     pub p50_ns: Option<u64>,
+    /// p90 as well as p95, because it is the one most service dashboards
+    /// alert on and the gap between them says whether a tail is a cliff or a
+    /// slope.
+    pub p90_ns: Option<u64>,
     pub p95_ns: Option<u64>,
     pub p99_ns: Option<u64>,
     pub p999_ns: Option<u64>,
@@ -20,6 +24,7 @@ impl LatencySummary {
         Self {
             samples: samples.len(),
             p50_ns: percentile(&samples, 0.50),
+            p90_ns: percentile(&samples, 0.90),
             p95_ns: percentile(&samples, 0.95),
             p99_ns: percentile(&samples, 0.99),
             p999_ns: percentile(&samples, 0.999),
@@ -195,6 +200,7 @@ mod tests {
     fn summarizes_percentiles() {
         let summary = LatencySummary::from_samples((1..=1_000).collect());
         assert_eq!(summary.p50_ns, Some(501));
+        assert_eq!(summary.p90_ns, Some(901));
         assert_eq!(summary.p99_ns, Some(991));
         assert_eq!(summary.max_ns, Some(1_000));
     }

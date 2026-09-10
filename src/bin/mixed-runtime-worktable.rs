@@ -79,6 +79,20 @@ fn ops_per_task() -> u64 {
         .unwrap_or(320_000 / (readers() + writers()) as u64)
 }
 
+/// Repetitions of every arm.
+///
+/// Three was the old hardcoded value and it is not enough. A page-size effect
+/// read at +31% from three rounds was between -4.3% and +8.6% at eleven, and a
+/// flavor read as 85% better on seven repetitions was 0.2% better on sixteen.
+/// The default is raised and the knob exists so a campaign can raise it again.
+fn rounds() -> u32 {
+    std::env::var("WT_ROUNDS")
+        .ok()
+        .and_then(|raw| raw.trim().parse().ok())
+        .filter(|count| *count > 0)
+        .unwrap_or(9)
+}
+
 fn env_count(name: &str, fallback: usize) -> usize {
     std::env::var(name)
         .ok()
@@ -217,6 +231,8 @@ fn run(read_on: Flavor, write_on: Flavor) -> (f64, f64, f64) {
         "nagoya",
         started.elapsed().as_nanos(),
         (reads + written) / elapsed,
+        reads / elapsed,
+        written / elapsed,
         cpu / elapsed,
     );
     (reads / elapsed, written / elapsed, cpu / elapsed)
@@ -282,6 +298,8 @@ fn tokio_arm(worker_threads: usize) -> (f64, f64, f64) {
         "tokio",
         started.elapsed().as_nanos(),
         (reads + written) / elapsed,
+        reads / elapsed,
+        written / elapsed,
         cpu / elapsed,
     );
     (reads / elapsed, written / elapsed, cpu / elapsed)
@@ -297,6 +315,8 @@ fn emit_row(
     runtime: &str,
     elapsed_ns: u128,
     ops_per_second: f64,
+    read_ops_per_second: f64,
+    write_ops_per_second: f64,
     cpu_x: f64,
 ) {
     wt_benchmarks::grid::GridRow {
@@ -316,6 +336,8 @@ fn emit_row(
         ops_per_task: ops_per_task(),
         elapsed_ns,
         ops_per_second,
+        read_ops_per_second,
+        write_ops_per_second,
         cpu_x,
         read_latency: wt_benchmarks::result::LatencySummary::from_samples(std::mem::take(
             &mut *read_latency.lock().expect("the samples"),
@@ -332,7 +354,7 @@ fn emit_row(
 fn main() {
     println!(
         "{ROWS} rows, {} select tasks and {} upsert tasks live at once,\n\
-         {} operations per task, median of 3, arms interleaved\n",
+         {} operations per task, arms interleaved\n",
         readers(),
         writers(),
         ops_per_task()
@@ -366,7 +388,8 @@ fn main() {
         .unwrap_or_else(|| std::thread::available_parallelism().map_or(8, std::num::NonZeroUsize::get));
     let mut tokio_samples: Vec<(f64, f64, f64)> = Vec::new();
     let mut samples: Vec<Vec<(f64, f64, f64)>> = vec![Vec::new(); uniform.len() + split.len()];
-    for round in 0..3 {
+    println!("  {} repetitions of every arm, interleaved\n", rounds());
+    for round in 0..rounds() {
         wt_benchmarks::grid::set_repetition(round + 1);
         tokio_samples.push(tokio_arm(workers));
         for (slot, flavor) in uniform.iter().enumerate() {

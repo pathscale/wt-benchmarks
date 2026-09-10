@@ -70,6 +70,12 @@ pub struct GridRow {
     pub ops_per_task: u64,
     pub elapsed_ns: u128,
     pub ops_per_second: f64,
+    /// Reads and writes separately, because a combined figure cannot answer a
+    /// release question. A table doing 3M ops/s that is 95% selects is a very
+    /// different proposition from one that is half upserts, and the two sides
+    /// have different costs and different tails.
+    pub read_ops_per_second: f64,
+    pub write_ops_per_second: f64,
     /// Average cores busy: `(user + system) / real`. Without it a low number
     /// cannot be told apart from an idle one.
     pub cpu_x: f64,

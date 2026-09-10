@@ -72,7 +72,20 @@ const DIMENSION_KEYS: [&str; 11] = [
 #[derive(Default)]
 struct Cell {
     ops: Vec<f64>,
+    reads: Vec<f64>,
+    writes: Vec<f64>,
     cpu: Vec<f64>,
+    /// Latency percentiles, one entry per repetition, in nanoseconds.
+    ///
+    /// Kept per repetition and then taken at the median rather than pooled,
+    /// because pooling samples across repetitions would let one slow run
+    /// dominate a percentile and hide that it was one run.
+    read_p50: Vec<f64>,
+    read_p90: Vec<f64>,
+    read_p99: Vec<f64>,
+    write_p50: Vec<f64>,
+    write_p90: Vec<f64>,
+    write_p99: Vec<f64>,
 }
 
 impl Cell {
@@ -95,10 +108,47 @@ impl Cell {
     }
 
     fn cpu_median(&self) -> f64 {
-        let mut v = self.cpu.clone();
+        Self::median_of(&self.cpu)
+    }
+
+    fn median_of(values: &[f64]) -> f64 {
+        let mut v = values.to_vec();
         v.sort_by(|a, b| a.partial_cmp(b).expect("no NaN"));
         Self::median(&v)
     }
+}
+
+/// Microseconds, or a dash when a benchmark sampled no latency.
+fn micros(values: &[f64]) -> String {
+    if values.is_empty() {
+        return "-".to_owned();
+    }
+    format!("{:.1}", Cell::median_of(values) / 1000.0)
+}
+
+/// Pull one percentile out of either row shape.
+///
+/// `GridRow` carries `read_latency`/`write_latency` objects. `RunResult`, from
+/// ycsb and tatp, carries a `latency` map keyed by operation kind, so reads
+/// come from `read` or `scan` and writes from `update`, `insert` or
+/// `read_modify_write`.
+fn percentile_from(row: &Value, side: &str, key: &str) -> Option<f64> {
+    if let Some(summary) = row.get(format!("{side}_latency")) {
+        return summary.get(key).and_then(Value::as_f64);
+    }
+    let map = row.get("latency")?.as_object()?;
+    let kinds: &[&str] = if side == "read" {
+        &["read", "scan"]
+    } else {
+        &["update", "insert", "read_modify_write"]
+    };
+    let mut best: Option<f64> = None;
+    for kind in kinds {
+        if let Some(value) = map.get(*kind).and_then(|s| s.get(key)).and_then(Value::as_f64) {
+            best = Some(best.map_or(value, |b: f64| b.max(value)));
+        }
+    }
+    best
 }
 
 /// Everything about a cell except which runtime ran it.
@@ -169,6 +219,26 @@ fn main() {
         if let Some(cpu) = row.get("cpu_x").and_then(Value::as_f64) {
             cell.cpu.push(cpu);
         }
+        if let Some(v) = row.get("read_ops_per_second").and_then(Value::as_f64) {
+            cell.reads.push(v);
+        }
+        if let Some(v) = row.get("write_ops_per_second").and_then(Value::as_f64) {
+            cell.writes.push(v);
+        }
+        for (side, p50, p90, p99) in [("read", 0usize, 1usize, 2usize), ("write", 3, 4, 5)] {
+            for (key, slot) in [("p50_ns", p50), ("p90_ns", p90), ("p99_ns", p99)] {
+                if let Some(value) = percentile_from(&row, side, key) {
+                    match slot {
+                        0 => cell.read_p50.push(value),
+                        1 => cell.read_p90.push(value),
+                        2 => cell.read_p99.push(value),
+                        3 => cell.write_p50.push(value),
+                        4 => cell.write_p90.push(value),
+                        _ => cell.write_p99.push(value),
+                    }
+                }
+            }
+        }
     }
 
     if cells.is_empty() {
@@ -188,7 +258,12 @@ fn main() {
 
     let format = std::env::var("WT_FORMAT").unwrap_or_else(|_| "md".to_owned());
 
-    let header = ["cell", "n", "min", "p50", "max", "cpu_x", "vs baseline"];
+    let header = [
+        "cell", "n", "min", "p50", "max", "queries/s", "upserts/s", "cpu_x",
+        "r p50 us", "r p90 us", "r p99 us",
+        "w p50 us", "w p90 us", "w p99 us",
+        "vs baseline",
+    ];
     match format.as_str() {
         "toon" => println!("cells[{}]{{{}}}:", cells.len(), header.join(",")),
         "tsv" => println!("{}", header.join("\t")),
@@ -229,7 +304,15 @@ fn main() {
             format!("{:.0}", ops[0]),
             format!("{:.0}", Cell::median(&ops)),
             format!("{:.0}", ops[ops.len() - 1]),
+            if cell.reads.is_empty() { "-".to_owned() } else { format!("{:.0}", Cell::median_of(&cell.reads)) },
+            if cell.writes.is_empty() { "-".to_owned() } else { format!("{:.0}", Cell::median_of(&cell.writes)) },
             format!("{:.1}", cell.cpu_median()),
+            micros(&cell.read_p50),
+            micros(&cell.read_p90),
+            micros(&cell.read_p99),
+            micros(&cell.write_p50),
+            micros(&cell.write_p90),
+            micros(&cell.write_p99),
             verdict,
         ];
         match format.as_str() {
