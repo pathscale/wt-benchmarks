@@ -96,22 +96,48 @@ fn key(state: &mut u64) -> u64 {
     *state % ROWS
 }
 
-async fn read_task(table: Arc<MixedWorkTable>, seed: u64, hits: Arc<AtomicU64>) {
+/// One sample every this many operations.
+///
+/// A timestamp per operation would dominate a read that costs tens of
+/// nanoseconds, so the sample rate is part of the measurement rather than a
+/// detail. Every task keeps its own buffer and merges once at the end, so the
+/// shared lock is taken once per task instead of once per sample.
+const SAMPLE_EVERY: u64 = 1024;
+
+async fn read_task(
+    table: Arc<MixedWorkTable>,
+    seed: u64,
+    hits: Arc<AtomicU64>,
+    latency: Arc<std::sync::Mutex<Vec<u64>>>,
+) {
     let mut state = seed | 1;
     let mut found = 0u64;
-    for _ in 0..ops_per_task() {
+    let mut mine = Vec::with_capacity((ops_per_task() / SAMPLE_EVERY) as usize + 1);
+    for index in 0..ops_per_task() {
+        let at = index.is_multiple_of(SAMPLE_EVERY).then(Instant::now);
         if table.select(key(&mut state)).is_some() {
             found += 1;
         }
+        if let Some(at) = at {
+            mine.push(u64::try_from(at.elapsed().as_nanos()).unwrap_or(u64::MAX));
+        }
     }
     hits.fetch_add(found, Ordering::Relaxed);
+    latency.lock().expect("the samples").extend(mine);
 }
 
-async fn write_task(table: Arc<MixedWorkTable>, seed: u64, done: Arc<AtomicU64>) {
+async fn write_task(
+    table: Arc<MixedWorkTable>,
+    seed: u64,
+    done: Arc<AtomicU64>,
+    latency: Arc<std::sync::Mutex<Vec<u64>>>,
+) {
     let mut state = seed | 1;
     let mut applied = 0u64;
-    for _ in 0..ops_per_task() {
+    let mut mine = Vec::with_capacity((ops_per_task() / SAMPLE_EVERY) as usize + 1);
+    for index in 0..ops_per_task() {
         let id = key(&mut state);
+        let at = index.is_multiple_of(SAMPLE_EVERY).then(Instant::now);
         if table
             .upsert(MixedRow {
                 id,
@@ -123,8 +149,12 @@ async fn write_task(table: Arc<MixedWorkTable>, seed: u64, done: Arc<AtomicU64>)
         {
             applied += 1;
         }
+        if let Some(at) = at {
+            mine.push(u64::try_from(at.elapsed().as_nanos()).unwrap_or(u64::MAX));
+        }
     }
     done.fetch_add(applied, Ordering::Relaxed);
+    latency.lock().expect("the samples").extend(mine);
 }
 
 fn loaded() -> Arc<MixedWorkTable> {
@@ -145,6 +175,8 @@ fn run(read_on: Flavor, write_on: Flavor) -> (f64, f64, f64) {
     let table = loaded();
     let hits = Arc::new(AtomicU64::new(0));
     let writes = Arc::new(AtomicU64::new(0));
+    let read_latency = Arc::new(std::sync::Mutex::new(Vec::<u64>::new()));
+    let write_latency = Arc::new(std::sync::Mutex::new(Vec::<u64>::new()));
 
     let read_pool = executor_for_flavor(read_on);
     let write_pool = executor_for_flavor(write_on);
@@ -157,6 +189,7 @@ fn run(read_on: Flavor, write_on: Flavor) -> (f64, f64, f64) {
             Arc::clone(&table),
             0x9E37_79B9_7F4A_7C15 ^ n as u64,
             Arc::clone(&hits),
+            Arc::clone(&read_latency),
         )));
     }
     for n in 0..writers() {
@@ -164,6 +197,7 @@ fn run(read_on: Flavor, write_on: Flavor) -> (f64, f64, f64) {
             Arc::clone(&table),
             0xD1B5_4A32_D192_ED03 ^ n as u64,
             Arc::clone(&writes),
+            Arc::clone(&write_latency),
         )));
     }
     for handle in handles {
@@ -176,6 +210,15 @@ fn run(read_on: Flavor, write_on: Flavor) -> (f64, f64, f64) {
     let written = writers() as f64 * ops_per_task() as f64;
     assert!(hits.load(Ordering::Relaxed) > 0, "the read arm found nothing");
     assert!(writes.load(Ordering::Relaxed) > 0, "the write arm applied nothing");
+    emit_row(
+        &read_latency,
+        &write_latency,
+        format!("reads={} writes={}", read_on.name(), write_on.name()),
+        "nagoya",
+        started.elapsed().as_nanos(),
+        (reads + written) / elapsed,
+        cpu / elapsed,
+    );
     (reads / elapsed, written / elapsed, cpu / elapsed)
 }
 
@@ -200,6 +243,8 @@ fn tokio_arm(worker_threads: usize) -> (f64, f64, f64) {
     let table = loaded();
     let hits = Arc::new(AtomicU64::new(0));
     let writes = Arc::new(AtomicU64::new(0));
+    let read_latency = Arc::new(std::sync::Mutex::new(Vec::<u64>::new()));
+    let write_latency = Arc::new(std::sync::Mutex::new(Vec::<u64>::new()));
 
     let cpu_before = wt_benchmarks::cpu::cpu_seconds();
     let started = Instant::now();
@@ -210,6 +255,7 @@ fn tokio_arm(worker_threads: usize) -> (f64, f64, f64) {
                 Arc::clone(&table),
                 0x9E37_79B9_7F4A_7C15 ^ n as u64,
                 Arc::clone(&hits),
+                Arc::clone(&read_latency),
             )));
         }
         for n in 0..writers() {
@@ -217,6 +263,7 @@ fn tokio_arm(worker_threads: usize) -> (f64, f64, f64) {
                 Arc::clone(&table),
                 0xD1B5_4A32_D192_ED03 ^ n as u64,
                 Arc::clone(&writes),
+                Arc::clone(&write_latency),
             )));
         }
         for handle in handles {
@@ -228,7 +275,58 @@ fn tokio_arm(worker_threads: usize) -> (f64, f64, f64) {
     let reads = readers() as f64 * ops_per_task() as f64;
     let written = writers() as f64 * ops_per_task() as f64;
     assert!(hits.load(Ordering::Relaxed) > 0, "the tokio read arm found nothing");
+    emit_row(
+        &read_latency,
+        &write_latency,
+        "tokio multi_thread".to_owned(),
+        "tokio",
+        started.elapsed().as_nanos(),
+        (reads + written) / elapsed,
+        cpu / elapsed,
+    );
     (reads / elapsed, written / elapsed, cpu / elapsed)
+}
+
+/// One grid row per arm per repetition, so this benchmark can be summarised
+/// by the same tool as every other and compared with a range rather than a
+/// median. The printed table stays: it is what a person reads.
+fn emit_row(
+    read_latency: &Arc<std::sync::Mutex<Vec<u64>>>,
+    write_latency: &Arc<std::sync::Mutex<Vec<u64>>>,
+    tuning: String,
+    runtime: &str,
+    elapsed_ns: u128,
+    ops_per_second: f64,
+    cpu_x: f64,
+) {
+    wt_benchmarks::grid::GridRow {
+        schema_version: 1,
+        suite: "mixed-runtime",
+        runtime: runtime.to_owned(),
+        tuning,
+        dispatch: "pool",
+        repetition: wt_benchmarks::grid::repetition(),
+        page_size: None,
+        worker_threads: std::env::var("WT_RUNTIME_WORKERS")
+            .ok()
+            .and_then(|raw| raw.trim().parse().ok())
+            .unwrap_or_else(|| std::thread::available_parallelism().map_or(8, std::num::NonZeroUsize::get)),
+        readers: readers(),
+        writers: writers(),
+        ops_per_task: ops_per_task(),
+        elapsed_ns,
+        ops_per_second,
+        cpu_x,
+        read_latency: wt_benchmarks::result::LatencySummary::from_samples(std::mem::take(
+            &mut *read_latency.lock().expect("the samples"),
+        )),
+        write_latency: wt_benchmarks::result::LatencySummary::from_samples(std::mem::take(
+            &mut *write_latency.lock().expect("the samples"),
+        )),
+        target_arch: std::env::consts::ARCH,
+        target_os: std::env::consts::OS,
+    }
+    .emit();
 }
 
 fn main() {
@@ -268,7 +366,8 @@ fn main() {
         .unwrap_or_else(|| std::thread::available_parallelism().map_or(8, std::num::NonZeroUsize::get));
     let mut tokio_samples: Vec<(f64, f64, f64)> = Vec::new();
     let mut samples: Vec<Vec<(f64, f64, f64)>> = vec![Vec::new(); uniform.len() + split.len()];
-    for _ in 0..3 {
+    for round in 0..3 {
+        wt_benchmarks::grid::set_repetition(round + 1);
         tokio_samples.push(tokio_arm(workers));
         for (slot, flavor) in uniform.iter().enumerate() {
             samples[slot].push(run(*flavor, *flavor));
