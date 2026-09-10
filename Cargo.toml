@@ -65,7 +65,7 @@ uuid = "1"
 # Validation selects the beta18 checkout with command-line Cargo `--config`
 # patches; the comparison script substitutes beta13 or beta15 worktrees. No
 # repository-local patch configuration is committed.
-worktable = { version = ">=1.0.0-beta.13, <2", optional = true }
+worktable = { path = "/private/tmp/claude-501/-Users-revenge-code/821563b2-81fd-4185-ab61-eb4da22fba91/scratchpad/wt-collapse", optional = true }
 worktable-vec = { path = "crates/worktable-vec" }
 # The published crate, alongside the vendored copy above, so benches/wtvec_vs_vec.rs
 # measures what ships rather than a local draft. The vendored copy is an earlier 216-line
@@ -268,6 +268,9 @@ harness = false
 # own. A path patch that outlives its reason is how a pin rots unnoticed.
 [patch.crates-io]
 arctic-wt = { path = "/Users/revenge/code/arctic-wt" }
+data_bucket = { path = "/private/tmp/claude-501/-Users-revenge-code/821563b2-81fd-4185-ab61-eb4da22fba91/scratchpad/db-collapse" }
+nagoya = { path = "/Users/revenge/code/nagoya" }
+ps-st3 = { path = "/private/tmp/claude-501/-Users-revenge-code/821563b2-81fd-4185-ab61-eb4da22fba91/scratchpad/st3-norevert" }
 
 
 # Probe order as the independent variable, across std `BTreeMap`, Arctic
@@ -306,3 +309,8 @@ required-features = ["worktable-adapter"]
 name = "persisted-grid-worktable"
 path = "src/bin/persisted-grid-worktable.rs"
 required-features = ["persisted-grid"]
+
+[[bin]]
+name = "backend-grid-worktable"
+path = "src/bin/backend-grid-worktable.rs"
+required-features = ["worktable-adapter"]

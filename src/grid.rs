@@ -53,6 +53,14 @@ pub struct GridRow {
     pub tuning: String,
     /// `inline` or `pool`, where the benchmark has both.
     pub dispatch: &'static str,
+    /// Which index backend the table's secondary index uses.
+    ///
+    /// A dimension because it is a choice made per table and the backends are
+    /// not interchangeable in performance: a comparison that leaves it out is
+    /// really a comparison of whichever one happened to be the default. It
+    /// also decides which crate the numbers belong to, which matters when a
+    /// change lands in `WorkTablesIndex` rather than in `worktable`.
+    pub index_backend: &'static str,
     /// Which repetition of this cell, from 1.
     ///
     /// **A cell measured once has no error bar and must not be compared to

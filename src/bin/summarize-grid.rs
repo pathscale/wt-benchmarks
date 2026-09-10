@@ -54,7 +54,8 @@ use serde_json::Value;
 const RUNTIME_KEYS: [&str; 2] = ["runtime", "engine"];
 const TUNING_KEYS: [&str; 2] = ["tuning", "runtime_flavor"];
 /// Dimensions from either shape. A key absent from a row is simply skipped.
-const DIMENSION_KEYS: [&str; 11] = [
+const DIMENSION_KEYS: [&str; 12] = [
+    "index_backend",
     "dispatch",
     "page_size",
     "worker_threads",
