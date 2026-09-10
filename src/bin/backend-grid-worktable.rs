@@ -20,6 +20,12 @@
 //! raw single-threaded cost, so a fixed thread count answers half the question.
 //! The sweep is over readers and writers together, holding total work constant.
 //!
+//! **In memory only, so far.** Arctic and congee persist through native
+//! checkpoint and WAL adapters rather than the shared page format, so a
+//! persisted comparison is a different write path and these numbers say nothing
+//! about it. `persisted-grid` varies page size but declares no secondary index,
+//! so the two axes have never crossed.
+//!
 //! The secondary index is **unique**, because `congee` supports only unique
 //! indexes and an arm that used a different index shape would not be comparable.
 //! Writes take their indexed value from a process-wide counter, so every upsert
