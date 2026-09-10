@@ -405,7 +405,7 @@ pub async fn accumulate_yield_probe(width: u32, updates: u64) -> Duration {
     for _ in 0..updates {
         let neuron = rng.below(width as u64);
         std::hint::black_box(neuron);
-        tokio::task::yield_now().await;
+        nagoya::yield_now().await;
     }
     start.elapsed()
 }

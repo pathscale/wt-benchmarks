@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use serde::Serialize;
-use tokio::sync::Barrier;
+use nagoya::sync::Barrier;
 use worktable::prelude::*;
 use worktable::worktable;
 use wt_benchmarks::result::LatencySummary;
@@ -311,10 +311,21 @@ struct ResultRow {
     feature_versioned_row_publication: bool,
     target_arch: &'static str,
     target_os: &'static str,
+    /// The pool this run dispatched on, with its full tuning.
+    runtime_flavor: String,
+    /// Average cores busy over the measured window: `(user + system) / real`.
+    cpu_x: f64,
 }
 
-#[tokio::main]
-async fn main() {
+// nagoya drives this, not tokio. It already spawned its client tasks on
+// nagoya's pool while `#[tokio::main]` drove `main`, which put the two halves
+// of the harness on different schedulers contending for the same cores, so
+// the number described neither stack.
+fn main() {
+    nagoya::block_on(run());
+}
+
+async fn run() {
     let config = Config::from_args().unwrap_or_else(|error| {
         eprintln!("error: {error}\nrun with --help for usage");
         std::process::exit(2);
@@ -351,7 +362,10 @@ async fn run_repetition(config: &Config, repetition: usize) -> ResultRow {
         let ready = Arc::clone(&ready);
         let start = Arc::clone(&start);
         let sample_every = config.sample_every;
-        handles.push(tokio::spawn(async move {
+        // The selected pool, not nagoya's process-wide one, so that
+        // `WT_DEFAULT_RUNTIME` reaches the client tasks and the engine's own
+        // background work together.
+        handles.push(worktable::prelude::engine_executor().spawn(async move {
             ready.wait().await;
             start.wait().await;
             run_worker(tables, stream, sample_every).await
@@ -359,6 +373,10 @@ async fn run_repetition(config: &Config, repetition: usize) -> ResultRow {
     }
 
     ready.wait().await;
+    // Read before the barrier releases, so loading the tables is not charged
+    // to the run's CPU; loading is single-threaded and would drag `cpu_x`
+    // toward 1.0 on every arm.
+    let cpu_before = wt_benchmarks::cpu::cpu_seconds();
     let measured_started = Instant::now();
     start.wait().await;
     let mut combined = WorkerResult::default();
@@ -414,6 +432,11 @@ async fn run_repetition(config: &Config, repetition: usize) -> ResultRow {
         feature_versioned_row_publication: cfg!(feature = "versioned-row-publication"),
         target_arch: std::env::consts::ARCH,
         target_os: std::env::consts::OS,
+        runtime_flavor: worktable::prelude::describe_tuning(worktable::prelude::engine_flavor()),
+        cpu_x: {
+            let cpu = wt_benchmarks::cpu::cpu_seconds() - cpu_before;
+            if seconds > 0.0 { cpu / seconds } else { 0.0 }
+        },
     }
 }
 

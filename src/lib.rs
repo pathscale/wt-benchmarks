@@ -5,6 +5,8 @@ pub mod codegraph;
 #[cfg(feature = "worktable-adapter")]
 pub mod concurrent_mix;
 pub mod config;
+pub mod cpu;
+pub mod grid;
 #[cfg(feature = "worktable-adapter")]
 pub mod delete_cost;
 #[cfg(feature = "worktable-adapter")]
@@ -27,6 +29,7 @@ pub mod op_latency;
 #[cfg(feature = "worktable-adapter")]
 pub mod partition_ticks;
 pub mod result;
+pub mod rt;
 pub mod rng;
 pub mod vacuum_stress;
 pub mod vacuum_yield;

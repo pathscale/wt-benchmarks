@@ -4,7 +4,7 @@ use std::hint::black_box;
 use std::sync::Arc;
 use std::time::Instant;
 
-use tokio::sync::Barrier;
+use nagoya::sync::Barrier;
 use worktable::prelude::*;
 use worktable::worktable;
 
@@ -192,7 +192,12 @@ async fn run_backend<T: YcsbTable>(config: &Config, repetition: usize) -> RunRes
         let ready = Arc::clone(&ready);
         let start = Arc::clone(&start);
         let sample_every = config.sample_every;
-        handles.push(tokio::spawn(async move {
+        // The selected pool, not nagoya's process-wide one. A benchmark that
+        // spawned its clients on `background()` would measure whatever
+        // `WT_DEFAULT_RUNTIME` named for the engine's half of the stack and
+        // locality for its own, so the arm would describe a configuration
+        // nobody would ship and the flavor column would be a lie.
+        handles.push(worktable::prelude::engine_executor().spawn(async move {
             ready.wait().await;
             start.wait().await;
             run_worker(table, stream, sample_every, acknowledged).await
@@ -200,6 +205,11 @@ async fn run_backend<T: YcsbTable>(config: &Config, repetition: usize) -> RunRes
     }
 
     ready.wait().await;
+    // Read before the barrier releases, so loading the table is not charged
+    // to the run's CPU. Loading is single-threaded and would drag `cpu_x`
+    // toward 1.0 on every arm, flattening the difference this column exists
+    // to show.
+    let cpu_before = crate::cpu::cpu_seconds();
     let measured_started = Instant::now();
     start.wait().await;
 
@@ -243,6 +253,7 @@ async fn run_backend<T: YcsbTable>(config: &Config, repetition: usize) -> RunRes
         operation_errors,
         latency,
     )
+    .with_runtime_and_cpu(&worktable::prelude::describe_tuning(worktable::prelude::engine_flavor()), cpu_before)
 }
 
 async fn run_worker<T: YcsbTable>(

@@ -22,6 +22,11 @@ sqlite-adapter = ["dep:rusqlite"]
 lmdb-adapter = ["dep:heed", "dep:tempfile"]
 duckdb-adapter = ["dep:duckdb", "dep:tempfile"]
 external-adapters = ["redb-adapter", "sqlite-adapter", "lmdb-adapter", "duckdb-adapter"]
+# The persisted grid needs a fresh directory per cell, because a table that
+# reloaded a previous cell's pages would measure a warm file rather than the
+# page size under test. `tempfile` stays optional because the adapter features
+# already claim it as `dep:tempfile`.
+persisted-grid = ["worktable-adapter", "dep:tempfile"]
 
 [dependencies]
 arctic = { package = "arctic-wt", version = "^0.1" }
@@ -49,13 +54,18 @@ rusqlite = { version = "0.40", features = ["bundled"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tempfile = { version = "3", optional = true }
+# The AFTER arm drives WorkTable with the runtime WorkTable now uses. Measuring
+# the new engine through the old runtime would describe a stack that does not
+# exist: the client tasks and the engine's own background work would be on
+# different schedulers, contending for cores without either one owning them.
+nagoya = { version = "0.1" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 uuid = "1"
 # Deliberately spans the local historical worktrees used by the version grid.
 # Validation selects the beta18 checkout with command-line Cargo `--config`
 # patches; the comparison script substitutes beta13 or beta15 worktrees. No
 # repository-local patch configuration is committed.
-worktable = { version = ">=1.0.0-beta.13, <1.0.0-beta.19", optional = true }
+worktable = { version = ">=1.0.0-beta.13, <2", optional = true }
 worktable-vec = { path = "crates/worktable-vec" }
 # The published crate, alongside the vendored copy above, so benches/wtvec_vs_vec.rs
 # measures what ships rather than a local draft. The vendored copy is an earlier 216-line
@@ -281,3 +291,18 @@ harness = false
 [[bench]]
 name = "wtvec_vs_vec"
 harness = false
+
+[[bin]]
+name = "mixed-runtime-worktable"
+path = "src/bin/mixed-runtime-worktable.rs"
+required-features = ["worktable-adapter"]
+
+[[bin]]
+name = "page-size-worktable"
+path = "src/bin/page-size-worktable.rs"
+required-features = ["worktable-adapter"]
+
+[[bin]]
+name = "persisted-grid-worktable"
+path = "src/bin/persisted-grid-worktable.rs"
+required-features = ["persisted-grid"]

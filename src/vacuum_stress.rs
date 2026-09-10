@@ -341,7 +341,7 @@ macro_rules! vacuum_stress_backend {
                 let mut pages_after_drain = table.0.data.allocated_pages();
                 let mut stable_for = 0u32;
                 while drain_started.elapsed() < DRAIN_LIMIT {
-                    tokio::time::sleep(Duration::from_millis(50)).await;
+                    nagoya::sleep(Duration::from_millis(50)).await;
                     let current = table.0.data.allocated_pages();
                     if current < pages_after_drain {
                         pages_after_drain = current;
@@ -365,7 +365,7 @@ macro_rules! vacuum_stress_backend {
                 };
 
                 if let Some(task) = vacuum_task {
-                    task.abort();
+                    task.cancel();
                 }
                 timer.join().expect("timer");
 

@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::config::Config;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct LatencySummary {
     pub samples: usize,
     pub p50_ns: Option<u64>,
@@ -36,7 +36,7 @@ fn percentile(samples: &[u64], fraction: f64) -> Option<u64> {
     samples.get(rank).copied()
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct RunResult {
     pub schema_version: u32,
     pub suite: &'static str,
@@ -57,6 +57,19 @@ pub struct RunResult {
     pub load_elapsed_ns: u128,
     pub elapsed_ns: u128,
     pub ops_per_second: f64,
+    /// The nagoya pool this run dispatched on, as `WT_DEFAULT_RUNTIME` spells
+    /// it.
+    ///
+    /// Recorded rather than assumed. An A/B where one arm silently fell back
+    /// to the default is the easiest way to publish a wrong table, and it has
+    /// happened on this project already.
+    pub runtime_flavor: String,
+    /// Average cores busy over the measured window: `(user + system) / real`.
+    ///
+    /// See `crate::cpu`. Without it, low throughput cannot be told apart from
+    /// idle cores, and those want opposite fixes.
+    pub cpu_x: f64,
+    pub cpu_seconds: f64,
     pub feature_versioned_row_publication: bool,
     pub transaction_semantics: &'static str,
     pub read_ownership: &'static str,
@@ -103,6 +116,14 @@ impl RunResult {
             load_elapsed_ns,
             elapsed_ns,
             ops_per_second: completed as f64 / seconds,
+            // Filled in by the caller, which is the only thing that knows
+            // where the measured window started. Zero here would be a
+            // plausible-looking number rather than an obviously missing one,
+            // so callers that do not set it are caught by the `cpu_x` of a
+            // run being 0.0, which no real run produces.
+            runtime_flavor: String::new(),
+            cpu_x: 0.0,
+            cpu_seconds: 0.0,
             feature_versioned_row_publication: cfg!(feature = "versioned-row-publication"),
             transaction_semantics: "WorkTable operations; read-modify-write is two application calls",
             read_ownership: "materialized-owned-row",
@@ -113,6 +134,18 @@ impl RunResult {
             operation_errors,
             latency,
         }
+    }
+
+    /// Record what the run actually dispatched on and what it cost in CPU.
+    ///
+    /// `cpu_before` is [`crate::cpu::cpu_seconds`] read immediately before the
+    /// measured window, so that loading the table is not charged to it.
+    pub fn with_runtime_and_cpu(mut self, flavor: &str, cpu_before: f64) -> Self {
+        let seconds = self.elapsed_ns as f64 / 1_000_000_000.0;
+        self.runtime_flavor = flavor.to_owned();
+        self.cpu_seconds = crate::cpu::cpu_seconds() - cpu_before;
+        self.cpu_x = if seconds > 0.0 { self.cpu_seconds / seconds } else { 0.0 };
+        self
     }
 
     #[allow(clippy::too_many_arguments)]
